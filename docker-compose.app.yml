@@ -1,0 +1,58 @@
+services:
+  travel-agent-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    environment:
+      SPRING_AI_OPENAI_API_KEY: ${SPRING_AI_OPENAI_API_KEY:-dummy-local-compose}
+      SPRING_AI_OPENAI_CHAT_MODEL: ${SPRING_AI_OPENAI_CHAT_MODEL:-gpt-4.1-mini}
+      SPRING_AI_OPENAI_EMBEDDING_MODEL: ${SPRING_AI_OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      TRAVEL_AGENT_TOOL_PROVIDER: ${TRAVEL_AGENT_TOOL_PROVIDER:-LOCAL}
+      TRAVEL_AGENT_AMAP_MCP_ENABLED: ${TRAVEL_AGENT_AMAP_MCP_ENABLED:-false}
+      TRAVEL_AGENT_AMAP_MCP_INITIALIZED: ${TRAVEL_AGENT_AMAP_MCP_INITIALIZED:-true}
+      TRAVEL_AGENT_AMAP_MCP_BASE_URL: http://travel-agent-amap-mcp-server:8090
+      TRAVEL_AGENT_AMAP_MCP_ENDPOINT: ${TRAVEL_AGENT_AMAP_MCP_ENDPOINT:-/mcp}
+      TRAVEL_AGENT_AMAP_API_KEY: ${TRAVEL_AGENT_AMAP_API_KEY:-}
+      TRAVEL_AGENT_AMAP_BASE_URL: ${TRAVEL_AGENT_AMAP_BASE_URL:-https://restapi.amap.com}
+      TRAVEL_AGENT_ALLOWED_ORIGIN: ${TRAVEL_AGENT_ALLOWED_ORIGIN:-http://localhost:8088}
+      TRAVEL_AGENT_MEMORY_PROVIDER: ${TRAVEL_AGENT_MEMORY_PROVIDER:-AUTO}
+      TRAVEL_AGENT_MILVUS_ENABLED: ${TRAVEL_AGENT_MILVUS_ENABLED:-false}
+      TRAVEL_AGENT_MILVUS_URI: ${TRAVEL_AGENT_MILVUS_URI:-http://milvus-standalone-local:19530}
+      TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED:-false}
+      TRAVEL_AGENT_KNOWLEDGE_VECTOR_URI: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_URI:-http://milvus-standalone-local:19530}
+      TRAVEL_AGENT_KNOWLEDGE_VECTOR_DATABASE_NAME: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_DATABASE_NAME:-default}
+      TRAVEL_AGENT_KNOWLEDGE_VECTOR_COLLECTION_NAME: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_COLLECTION_NAME:-travel_agent_knowledge}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - travel-agent-amap-mcp-server
+
+  travel-agent-amap-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    environment:
+      TRAVEL_AGENT_AMAP_API_KEY: ${TRAVEL_AGENT_AMAP_API_KEY:-}
+      TRAVEL_AGENT_AMAP_BASE_URL: ${TRAVEL_AGENT_AMAP_BASE_URL:-https://restapi.amap.com}
+      AMAP_MCP_SERVER_PORT: 8090
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    profiles:
+      - mcp
+
+  travel-agent-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_AMAP_WEB_KEY: ${VITE_AMAP_WEB_KEY:-}
+        VITE_AMAP_SECURITY_JS_CODE: ${VITE_AMAP_SECURITY_JS_CODE:-}
+    ports:
+      - "8088:80"
+    restart: unless-stopped
+    depends_on:
+      - travel-agent-app

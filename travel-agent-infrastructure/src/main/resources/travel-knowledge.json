@@ -1,0 +1,50 @@
+[
+  {
+    "city": "Hangzhou",
+    "topic": "scenic",
+    "title": "West Lake core loop works best in half a day",
+    "content": "For first-time visitors, West Lake, Broken Bridge, and nearby lakefront walking routes fit better as a half-day block than a full-day marathon. Keep Lingyin Temple on a separate half day to reduce cross-city movement.",
+    "tags": ["hangzhou", "west lake", "broken bridge", "relaxed pace", "lakefront"],
+    "source": "local-curated"
+  },
+  {
+    "city": "Hangzhou",
+    "topic": "food",
+    "title": "Hangzhou food planning works better around Hefang Street and Wulin",
+    "content": "If the trip includes local food, cluster evening food stops around Hefang Street, Hubin, or Wulin so the user can walk between snacks instead of taking repeated taxis after dinner.",
+    "tags": ["hangzhou", "food", "hefang street", "wulin", "night market"],
+    "source": "local-curated"
+  },
+  {
+    "city": "Hangzhou",
+    "topic": "hotel",
+    "title": "Hotel choice should favor West Lake east side or metro-connected districts",
+    "content": "For short city breaks, hotel locations on the east side of West Lake or near major metro transfers reduce repeated detours and keep early-morning departures more stable.",
+    "tags": ["hangzhou", "hotel", "metro", "west lake", "district"],
+    "source": "local-curated"
+  },
+  {
+    "city": "Xiamen",
+    "topic": "scenic",
+    "title": "Gulangyu and Zhongshan Road should not be squeezed into too many fragments",
+    "content": "In Xiamen, Gulangyu usually deserves a focused half day or more. Zhongshan Road works best as a same-evening food and walking block instead of a separate commute-heavy day.",
+    "tags": ["xiamen", "gulangyu", "zhongshan road", "food", "walking"],
+    "source": "local-curated"
+  },
+  {
+    "city": "Beijing",
+    "topic": "museum",
+    "title": "Museum-heavy Beijing itineraries need reservation and buffer time",
+    "content": "If the user prefers museums in Beijing, reserve large blocks for each museum cluster and avoid adding far-away evening stops on the same day because security checks and queues add uncertainty.",
+    "tags": ["beijing", "museum", "reservation", "buffer", "queue"],
+    "source": "local-curated"
+  },
+  {
+    "city": "Shanghai",
+    "topic": "nightlife",
+    "title": "Night views are easier when Bund and nearby districts stay on one day",
+    "content": "For short Shanghai trips, Bund, Nanjing East Road, and nearby night-view stops should stay on the same day to avoid repeated river-crossing transit at night.",
+    "tags": ["shanghai", "bund", "nanjing east road", "night view", "transit"],
+    "source": "local-curated"
+  }
+]

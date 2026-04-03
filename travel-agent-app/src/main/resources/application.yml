@@ -1,0 +1,98 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: travel-agent
+  datasource:
+    url: jdbc:sqlite:./data/travel-agent.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+      minimum-idle: 1
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY:}
+      base-url: ${SPRING_AI_OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${SPRING_AI_OPENAI_CHAT_MODEL:gpt-4.1-mini}
+          temperature: 0.2
+      embedding:
+        options:
+          model: ${SPRING_AI_OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+    mcp:
+      client:
+        enabled: ${TRAVEL_AGENT_AMAP_MCP_ENABLED:true}
+        type: SYNC
+        initialized: ${TRAVEL_AGENT_AMAP_MCP_INITIALIZED:true}
+        request-timeout: 20s
+        toolcallback:
+          enabled: true
+        streamable-http:
+          connections:
+            amap:
+              url: ${TRAVEL_AGENT_AMAP_MCP_BASE_URL:http://localhost:8090}
+              endpoint: ${TRAVEL_AGENT_AMAP_MCP_ENDPOINT:/mcp}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: ${TRAVEL_AGENT_TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+travel:
+  agent:
+    memory-window: 12
+    summary-threshold: 6
+    tool-provider: ${TRAVEL_AGENT_TOOL_PROVIDER:MCP}
+    memory-provider: ${TRAVEL_AGENT_MEMORY_PROVIDER:AUTO}
+    allowed-origins:
+      - ${TRAVEL_AGENT_ALLOWED_ORIGIN:http://localhost:5173}
+    amap:
+      api-key: ${TRAVEL_AGENT_AMAP_API_KEY:}
+      base-url: ${TRAVEL_AGENT_AMAP_BASE_URL:https://restapi.amap.com}
+      mock-when-missing-key: true
+      mock-on-error: true
+    memory:
+      milvus:
+        enabled: ${TRAVEL_AGENT_MILVUS_ENABLED:false}
+        uri: ${TRAVEL_AGENT_MILVUS_URI:http://localhost:19530}
+        username: ${TRAVEL_AGENT_MILVUS_USERNAME:}
+        password: ${TRAVEL_AGENT_MILVUS_PASSWORD:}
+        database-name: ${TRAVEL_AGENT_MILVUS_DATABASE:default}
+        collection-name: ${TRAVEL_AGENT_MILVUS_COLLECTION:travel_agent_memory}
+        embedding-dimension: ${TRAVEL_AGENT_MILVUS_EMBEDDING_DIMENSION:1536}
+        initialize-schema: ${TRAVEL_AGENT_MILVUS_INITIALIZE_SCHEMA:true}
+        index-type: ${TRAVEL_AGENT_MILVUS_INDEX_TYPE:IVF_FLAT}
+        metric-type: ${TRAVEL_AGENT_MILVUS_METRIC_TYPE:COSINE}
+        index-parameters: ${TRAVEL_AGENT_MILVUS_INDEX_PARAMETERS:{"nlist":1024}}
+      simple:
+        enabled: ${TRAVEL_AGENT_SIMPLE_MEMORY_ENABLED:false}
+        file-path: ${TRAVEL_AGENT_SIMPLE_MEMORY_FILE:./data/simple-vector-store.json}
+    knowledge:
+      vector:
+        enabled: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED:${TRAVEL_AGENT_MILVUS_ENABLED:false}}
+        uri: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_URI:${TRAVEL_AGENT_MILVUS_URI:http://localhost:19530}}
+        username: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_USERNAME:${TRAVEL_AGENT_MILVUS_USERNAME:}}
+        password: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_PASSWORD:${TRAVEL_AGENT_MILVUS_PASSWORD:}}
+        database-name: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_DATABASE_NAME:default}
+        collection-name: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_COLLECTION_NAME:travel_agent_knowledge}
+        embedding-dimension: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_EMBEDDING_DIMENSION:256}
+        initialize-schema: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_INITIALIZE_SCHEMA:true}
+        index-type: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_INDEX_TYPE:IVF_FLAT}
+        metric-type: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_METRIC_TYPE:COSINE}
+        index-parameters: ${TRAVEL_AGENT_KNOWLEDGE_VECTOR_INDEX_PARAMETERS:{"nlist":512}}

@@ -1,0 +1,15 @@
+.git
+.idea
+.m2
+.tooling
+node_modules
+web/node_modules
+web/dist
+target
+**/target
+dist
+data/milvus
+data/runtime
+*.log
+*.pid
+.env.travel-agent

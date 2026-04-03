@@ -1,0 +1,34 @@
+server:
+  port: ${AMAP_MCP_SERVER_PORT:8090}
+
+spring:
+  application:
+    name: travel-agent-amap-mcp-server
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE
+        type: SYNC
+        name: travel-agent-amap
+        version: 0.1.0
+        instructions: Amap-backed MCP server for China weather, geocoding, reverse geocoding, and place suggestions.
+        capabilities:
+          resource: false
+          prompt: false
+          completion: false
+        streamable-http:
+          mcp-endpoint: /mcp
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+travel:
+  agent:
+    amap:
+      api-key: ${TRAVEL_AGENT_AMAP_API_KEY:}
+      base-url: ${TRAVEL_AGENT_AMAP_BASE_URL:https://restapi.amap.com}
+      mock-when-missing-key: false
+      mock-on-error: false

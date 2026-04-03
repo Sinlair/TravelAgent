@@ -1,0 +1,634 @@
+[
+  {
+    "city": "Beijing",
+    "page": "Beijing",
+    "aliases": [
+      "北京"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shanghai",
+    "page": "Shanghai",
+    "aliases": [
+      "上海"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Tianjin",
+    "page": "Tianjin",
+    "aliases": [
+      "天津"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Chongqing",
+    "page": "Chongqing",
+    "aliases": [
+      "重庆"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Guangzhou",
+    "page": "Guangzhou",
+    "aliases": [
+      "广州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shenzhen",
+    "page": "Shenzhen",
+    "aliases": [
+      "深圳"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Hangzhou",
+    "page": "Hangzhou",
+    "aliases": [
+      "杭州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Nanjing",
+    "page": "Nanjing",
+    "aliases": [
+      "南京"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Suzhou",
+    "page": "Suzhou",
+    "aliases": [
+      "苏州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Wuxi",
+    "page": "Wuxi",
+    "aliases": [
+      "无锡"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Ningbo",
+    "page": "Ningbo",
+    "aliases": [
+      "宁波"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Qingdao",
+    "page": "Qingdao",
+    "aliases": [
+      "青岛"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Dalian",
+    "page": "Dalian",
+    "aliases": [
+      "大连"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Xiamen",
+    "page": "Xiamen",
+    "aliases": [
+      "厦门"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Fuzhou",
+    "page": "Fuzhou",
+    "aliases": [
+      "福州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Quanzhou",
+    "page": "Quanzhou",
+    "aliases": [
+      "泉州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Zhuhai",
+    "page": "Zhuhai",
+    "aliases": [
+      "珠海"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Foshan",
+    "page": "Foshan",
+    "aliases": [
+      "佛山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Dongguan",
+    "page": "Dongguan",
+    "aliases": [
+      "东莞"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shantou",
+    "page": "Shantou",
+    "aliases": [
+      "汕头"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Wenzhou",
+    "page": "Wenzhou",
+    "aliases": [
+      "温州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jiaxing",
+    "page": "Jiaxing",
+    "aliases": [
+      "嘉兴"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shaoxing",
+    "page": "Shaoxing",
+    "aliases": [
+      "绍兴"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Yangzhou",
+    "page": "Yangzhou",
+    "aliases": [
+      "扬州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Chengdu",
+    "page": "Chengdu",
+    "aliases": [
+      "成都"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Xi'an",
+    "page": "Xi'an",
+    "aliases": [
+      "西安"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Wuhan",
+    "page": "Wuhan",
+    "aliases": [
+      "武汉"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Changsha",
+    "page": "Changsha",
+    "aliases": [
+      "长沙"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Kunming",
+    "page": "Kunming",
+    "aliases": [
+      "昆明"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Guiyang",
+    "page": "Guiyang",
+    "aliases": [
+      "贵阳"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Nanning",
+    "page": "Nanning",
+    "aliases": [
+      "南宁"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Haikou",
+    "page": "Haikou",
+    "aliases": [
+      "海口"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Sanya",
+    "page": "Sanya",
+    "aliases": [
+      "三亚"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Guilin",
+    "page": "Guilin",
+    "aliases": [
+      "桂林"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Lijiang",
+    "page": "Lijiang",
+    "aliases": [
+      "丽江"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Dali",
+    "page": "Dali",
+    "aliases": [
+      "大理"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Zhangjiajie",
+    "page": "Zhangjiajie",
+    "aliases": [
+      "张家界"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Luoyang",
+    "page": "Luoyang",
+    "aliases": [
+      "洛阳"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Harbin",
+    "page": "Harbin",
+    "aliases": [
+      "哈尔滨"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Changchun",
+    "page": "Changchun",
+    "aliases": [
+      "长春"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shenyang",
+    "page": "Shenyang",
+    "aliases": [
+      "沈阳"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jinan",
+    "page": "Jinan",
+    "aliases": [
+      "济南"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Zhengzhou",
+    "page": "Zhengzhou",
+    "aliases": [
+      "郑州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Taiyuan",
+    "page": "Taiyuan",
+    "aliases": [
+      "太原"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Shijiazhuang",
+    "page": "Shijiazhuang",
+    "aliases": [
+      "石家庄"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Hohhot",
+    "page": "Hohhot",
+    "aliases": [
+      "呼和浩特"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Lanzhou",
+    "page": "Lanzhou",
+    "aliases": [
+      "兰州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Xining",
+    "page": "Xining",
+    "aliases": [
+      "西宁"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Yinchuan",
+    "page": "Yinchuan",
+    "aliases": [
+      "银川"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Urumqi",
+    "page": "Urumqi",
+    "aliases": [
+      "乌鲁木齐"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Lhasa",
+    "page": "Lhasa",
+    "aliases": [
+      "拉萨"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Hefei",
+    "page": "Hefei",
+    "aliases": [
+      "合肥"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Nanchang",
+    "page": "Nanchang",
+    "aliases": [
+      "南昌"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Changzhou",
+    "page": "Changzhou",
+    "aliases": [
+      "常州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Taizhou",
+    "page": "Taizhou",
+    "aliases": [
+      "台州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jinhua",
+    "page": "Jinhua",
+    "aliases": [
+      "金华"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Yantai",
+    "page": "Yantai",
+    "aliases": [
+      "烟台"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Weihai",
+    "page": "Weihai",
+    "aliases": [
+      "威海"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Nantong",
+    "page": "Nantong",
+    "aliases": [
+      "南通"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Xuzhou",
+    "page": "Xuzhou",
+    "aliases": [
+      "徐州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Yancheng",
+    "page": "Yancheng",
+    "aliases": [
+      "盐城"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jiaozuo",
+    "page": "Jiaozuo",
+    "aliases": [
+      "焦作"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Huizhou",
+    "page": "Huizhou",
+    "aliases": [
+      "惠州"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Zhongshan",
+    "page": "Zhongshan",
+    "aliases": [
+      "中山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jilin",
+    "page": "Jilin",
+    "aliases": [
+      "吉林"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Datong",
+    "page": "Datong",
+    "aliases": [
+      "大同"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Yichang",
+    "page": "Yichang",
+    "aliases": [
+      "宜昌"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Mianyang",
+    "page": "Mianyang",
+    "aliases": [
+      "绵阳"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Leshan",
+    "page": "Leshan",
+    "aliases": [
+      "乐山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jiujiang",
+    "page": "Jiujiang",
+    "aliases": [
+      "九江"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Zhenjiang",
+    "page": "Zhenjiang",
+    "aliases": [
+      "镇江"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Putian",
+    "page": "Putian",
+    "aliases": [
+      "莆田"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Wuyishan",
+    "page": "Wuyishan",
+    "aliases": [
+      "武夷山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Huangshan",
+    "page": "Huangshan",
+    "aliases": [
+      "黄山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Jingdezhen",
+    "page": "Jingdezhen",
+    "aliases": [
+      "景德镇"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Kaifeng",
+    "page": "Kaifeng",
+    "aliases": [
+      "开封"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Anshan",
+    "page": "Anshan",
+    "aliases": [
+      "鞍山"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Siping",
+    "page": "Siping",
+    "aliases": [
+      "四平"
+    ],
+    "country": "China"
+  },
+  {
+    "city": "Qinhuangdao",
+    "page": "Qinhuangdao",
+    "aliases": [
+      "秦皇岛"
+    ],
+    "country": "China"
+  }
+]
