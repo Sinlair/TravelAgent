@@ -271,6 +271,12 @@
 
 ## 架构
 
+<p align="center">
+  <img src="./docs/assets/system-architecture.svg" alt="TravelAgent 系统架构图" width="100%" />
+</p>
+
+> 可编辑源文件：[`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio)
+
 | 模块 | 职责 |
 | --- | --- |
 | `travel-agent-types` | 通用 API 响应和异常类型 |

@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-labelledby="title desc">
+  <title id="title">TravelAgent System Architecture</title>
+  <desc id="desc">Architecture diagram showing the TravelAgent frontend, application orchestration, domain contracts, infrastructure adapters, Amap integration, optional MCP server, and external systems.</desc>
+  <defs>
+    <style>
+      .title { font: 700 30px 'Segoe UI', Arial, sans-serif; fill: #1f2937; }
+      .section { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .box-title { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .box-module { font: 13px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .box-text { font: 14px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .label { font: 13px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .frame-runtime { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; }
+      .frame-external { fill: #f8fafc; stroke: #94a3b8; stroke-width: 2; }
+      .box { stroke-width: 2; }
+      .ui { fill: #fff7d6; stroke: #d4a72c; }
+      .types { fill: #fce7f3; stroke: #ec4899; }
+      .app { fill: #ffe2c6; stroke: #e67e22; }
+      .domain { fill: #dbeafe; stroke: #3b82f6; }
+      .infra { fill: #dcfce7; stroke: #22c55e; }
+      .integration { fill: #ede9fe; stroke: #8b5cf6; }
+      .external { fill: #ffffff; stroke: #94a3b8; }
+      .actor { fill: #f8fafc; stroke: #94a3b8; }
+      .arrow { fill: none; stroke: #475569; stroke-width: 2.5; marker-end: url(#arrowhead); }
+      .arrow-dashed { stroke-dasharray: 8 6; }
+    </style>
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <text x="40" y="62" class="title">TravelAgent System Architecture</text>
+
+  <rect x="250" y="100" width="720" height="760" rx="24" class="frame-runtime" />
+  <text x="278" y="142" class="section">Runtime Modules</text>
+
+  <rect x="995" y="100" width="365" height="760" rx="24" class="frame-external" />
+  <text x="1023" y="142" class="section">External Systems</text>
+
+  <rect x="40" y="300" width="180" height="100" rx="18" class="box actor" />
+  <text x="60" y="332" class="box-title">Traveler / Browser</text>
+  <text x="60" y="354" class="box-module">Human entry point</text>
+  <text x="60" y="380" class="box-text">
+    <tspan x="60" dy="0">Chat input</tspan>
+    <tspan x="60" dy="22">Plan review</tspan>
+    <tspan x="60" dy="22">Feedback actions</tspan>
+  </text>
+
+  <rect x="290" y="180" width="230" height="140" rx="18" class="box ui" />
+  <text x="310" y="212" class="box-title">Web Frontend</text>
+  <text x="310" y="234" class="box-module">module: web</text>
+  <text x="310" y="268" class="box-text">
+    <tspan x="310" dy="0">Vue 3 / Vite</tspan>
+    <tspan x="310" dy="24">Chat + Plan panel</tspan>
+    <tspan x="310" dy="24">Timeline + Feedback</tspan>
+  </text>
+
+  <rect x="290" y="380" width="230" height="100" rx="18" class="box types" />
+  <text x="310" y="412" class="box-title">Shared API Types</text>
+  <text x="310" y="434" class="box-module">module: travel-agent-types</text>
+  <text x="310" y="458" class="box-text">
+    <tspan x="310" dy="0">Response codes</tspan>
+    <tspan x="310" dy="22">Response envelope</tspan>
+    <tspan x="310" dy="22">Exception types</tspan>
+  </text>
+
+  <rect x="550" y="170" width="250" height="210" rx="18" class="box app" />
+  <text x="570" y="202" class="box-title">Application Orchestrator</text>
+  <text x="570" y="224" class="box-module">module: travel-agent-app</text>
+  <text x="570" y="258" class="box-text">
+    <tspan x="570" dy="0">REST API / SSE</tspan>
+    <tspan x="570" dy="24">ConversationWorkflow</tspan>
+    <tspan x="570" dy="24">AgentRouter</tspan>
+    <tspan x="570" dy="24">TimelinePublisher</tspan>
+  </text>
+
+  <rect x="550" y="420" width="250" height="110" rx="18" class="box domain" />
+  <text x="570" y="452" class="box-title">Domain Contracts</text>
+  <text x="570" y="474" class="box-module">module: travel-agent-domain</text>
+  <text x="570" y="500" class="box-text">
+    <tspan x="570" dy="0">Entities + value objects</tspan>
+    <tspan x="570" dy="22">Repository ports</tspan>
+    <tspan x="570" dy="22">Service contracts</tspan>
+  </text>
+
+  <rect x="550" y="560" width="250" height="180" rx="18" class="box infra" />
+  <text x="570" y="592" class="box-title">Infra Adapters</text>
+  <text x="570" y="614" class="box-module">module: travel-agent-infrastructure</text>
+  <text x="570" y="646" class="box-text">
+    <tspan x="570" dy="0">Specialist agents</tspan>
+    <tspan x="570" dy="24">Retrieval + enrichment</tspan>
+    <tspan x="570" dy="24">Validation + repair</tspan>
+    <tspan x="570" dy="24">SQLite / Milvus adapters</tspan>
+  </text>
+
+  <rect x="820" y="220" width="130" height="110" rx="18" class="box integration" />
+  <text x="838" y="250" class="box-title" font-size="15">Amap MCP Server</text>
+  <text x="838" y="270" class="box-module">module:</text>
+  <text x="838" y="288" class="box-module">travel-agent-amap-</text>
+  <text x="838" y="304" class="box-module">mcp-server</text>
+  <text x="838" y="324" class="box-text">Optional MCP tools</text>
+
+  <rect x="820" y="610" width="130" height="110" rx="18" class="box integration" />
+  <text x="838" y="640" class="box-title">Amap Gateway</text>
+  <text x="838" y="660" class="box-module">module:</text>
+  <text x="838" y="678" class="box-module">travel-agent-amap</text>
+  <text x="838" y="698" class="box-text">HTTP gateway</text>
+
+  <rect x="1035" y="190" width="285" height="120" rx="18" class="box external" />
+  <text x="1055" y="222" class="box-title">OpenAI-Compatible LLM</text>
+  <text x="1055" y="258" class="box-text">
+    <tspan x="1055" dy="0">Chat model</tspan>
+    <tspan x="1055" dy="24">Embeddings</tspan>
+  </text>
+
+  <rect x="1035" y="360" width="285" height="120" rx="18" class="box external" />
+  <text x="1055" y="392" class="box-title">Amap / Gaode APIs</text>
+  <text x="1055" y="428" class="box-text">
+    <tspan x="1055" dy="0">Weather</tspan>
+    <tspan x="1055" dy="24">POI / routing</tspan>
+    <tspan x="1055" dy="24">Geocoding</tspan>
+  </text>
+
+  <rect x="1035" y="560" width="130" height="110" rx="18" class="box external" />
+  <text x="1055" y="592" class="box-title">SQLite</text>
+  <text x="1055" y="624" class="box-text">
+    <tspan x="1055" dy="0">Conversations</tspan>
+    <tspan x="1055" dy="22">Memory</tspan>
+    <tspan x="1055" dy="22">Feedback</tspan>
+  </text>
+
+  <rect x="1190" y="560" width="130" height="110" rx="18" class="box external" />
+  <text x="1210" y="592" class="box-title">Milvus</text>
+  <text x="1210" y="624" class="box-text">
+    <tspan x="1210" dy="0">Optional</tspan>
+    <tspan x="1210" dy="22">vector search</tspan>
+  </text>
+
+  <path d="M 220 350 L 255 350 L 255 250 L 290 250" class="arrow" />
+  <text x="118" y="286" class="label">browser UI</text>
+
+  <path d="M 520 250 L 550 250 L 550 275" class="arrow" />
+  <text x="532" y="238" class="label">REST / uploads</text>
+
+  <path d="M 550 315 L 530 315 L 530 300 L 520 300" class="arrow" />
+  <text x="530" y="332" class="label">SSE timeline + plan</text>
+
+  <path d="M 550 340 L 530 340 L 530 430 L 520 430" class="arrow" />
+  <text x="418" y="360" class="label">shared responses</text>
+
+  <path d="M 675 380 L 675 420" class="arrow" />
+  <text x="696" y="404" class="label">use cases + orchestration</text>
+
+  <path d="M 675 560 L 675 530" class="arrow" />
+  <text x="696" y="548" class="label">implements ports</text>
+
+  <path d="M 800 275 L 820 275" class="arrow arrow-dashed" />
+  <text x="748" y="258" class="label">optional MCP tool calls</text>
+
+  <path d="M 800 645 L 820 645" class="arrow" />
+  <text x="734" y="628" class="label">AmapGateway</text>
+
+  <path d="M 800 600 L 900 600 L 900 250 L 1035 250" class="arrow" />
+  <text x="905" y="240" class="label">LLM + embeddings</text>
+
+  <path d="M 800 640 L 915 640 L 915 615 L 1035 615" class="arrow" />
+  <text x="918" y="602" class="label">conversation store</text>
+
+  <path d="M 800 690 L 960 690 L 960 615 L 1190 615" class="arrow" />
+  <text x="970" y="702" class="label">vector search</text>
+
+  <path d="M 950 275 L 980 275 L 980 420 L 1035 420" class="arrow arrow-dashed" />
+  <text x="990" y="332" class="label">tool execution</text>
+
+  <path d="M 950 665 L 980 665 L 980 420 L 1035 420" class="arrow" />
+  <text x="988" y="642" class="label">HTTP integration</text>
+</svg>

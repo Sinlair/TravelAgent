@@ -271,6 +271,12 @@ Natural extension points already visible in the design:
 
 ## Architecture
 
+<p align="center">
+  <img src="./docs/assets/system-architecture.svg" alt="TravelAgent system architecture diagram" width="100%" />
+</p>
+
+> Editable source: [`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio)
+
 | Module | Responsibility |
 | --- | --- |
 | `travel-agent-types` | Shared API response and exception types |
