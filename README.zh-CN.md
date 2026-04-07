@@ -59,9 +59,11 @@
 
 <p align="center">
   <a href="#为什么是-travel-agent">为什么是 Travel Agent</a> •
+  <a href="#架构风格">架构风格</a> •
   <a href="#功能总览">功能总览</a> •
   <a href="#多-agent-设计">多 Agent 设计</a> •
   <a href="#rag-设计">RAG 设计</a> •
+  <a href="#使用到的设计模式">设计模式</a> •
   <a href="#快速开始">快速开始</a> •
   <a href="#项目结构">项目结构</a> •
   <a href="#未来增强方向">未来增强方向</a> •
@@ -86,22 +88,41 @@
 
 这个项目的价值不只是“做一个会规划旅行的聊天机器人”：
 
-- 产品价值：把模糊的聊天需求转成可查看、可修改、可执行的结构化出行方案。
-- 工程价值：把多 agent 路由、共享记忆、校验、修复、RAG、运维脚本放进同一个真实仓库里，而不是只做单点 demo。
-- 数据价值：已经可以记录显式推荐结果，为后续评测、失败分析和策略优化打基础。
-- 交付价值：仓库从一开始就包含健康检查、Smoke、Docker、前端和脚本，不是只面向模型演示。
+- 💼 产品价值：把模糊的聊天需求转成可查看、可修改、可执行的结构化出行方案。
+- 🏗️ 工程价值：把多 agent 路由、共享记忆、校验、修复、RAG、运维脚本放进同一个真实仓库里，而不是只做单点 demo。
+- 📊 数据价值：已经可以记录显式推荐结果，为后续评测、失败分析和策略优化打基础。
+- 🚚 交付价值：仓库从一开始就包含健康检查、Smoke、Docker、前端和脚本，不是只面向模型演示。
+
+## 架构风格
+
+是的，这个项目现在依然是 DDD 风格，只是更准确地说，它属于“DDD 启发下的分层架构”，同时带有 ports-and-adapters 的特点。
+
+具体来说：
+
+- 🧠 `travel-agent-domain` 定义实体、值对象、仓储接口、gateway 和服务契约。
+- 🎛️ `travel-agent-app` 充当应用层和编排层，负责用例编排与会话工作流。
+- ⚙️ `travel-agent-infrastructure` 提供持久化、检索、向量集成、LLM agent、校验与修复等具体实现。
+- 🗺️ `travel-agent-amap` 作为外部地图能力集成模块，通过 domain gateway 暴露。
+- 🖥️ `web` 作为 UI 层，消费 HTTP API 和 SSE 时间线。
+
+所以它不是“每个 tactical DDD 模式都完整上满”的教科书式 DDD，但非常明确地遵循了：
+
+- 领域契约优先
+- 应用编排与领域对象分离
+- 基础设施通过接口隔离
+- 外部系统通过适配器接入
 
 ## 功能总览
 
-| 模块 | 能力 |
-| --- | --- |
-| 多智能体工作流 | 在 `WEATHER`、`GEO`、`TRAVEL_PLANNER`、`GENERAL` 之间路由，并共享记忆和时间线 |
-| 结构化规划 | 生成行程摘要、每日路线、预算拆分、酒店建议和约束检查 |
-| 地图增强 | 使用高德 / Amap 做天气快照、POI 匹配、住宿片区解析和通勤增强 |
-| 旅行 RAG | 从本地整理数据或 Milvus 向量检索中获取目的地知识，并附带来源和风格提示 |
-| 图片输入 | 支持上传旅行图片，提取旅行事实，并在用户确认后并入正常规划链路 |
-| 反馈闭环 | 记录 `ACCEPTED`、`PARTIAL`、`REJECTED`，导出数据集，并按需做聚合分析 |
-| 运维能力 | 预检、启停脚本、release smoke、Docker、健康检查和 CI |
+| 图标 | 模块 | 能力 |
+| --- | --- | --- |
+| 🤖 | 多智能体工作流 | 在 `WEATHER`、`GEO`、`TRAVEL_PLANNER`、`GENERAL` 之间路由，并共享记忆和时间线 |
+| 🧳 | 结构化规划 | 生成行程摘要、每日路线、预算拆分、酒店建议和约束检查 |
+| 🗺️ | 地图增强 | 使用高德 / Amap 做天气快照、POI 匹配、住宿片区解析和通勤增强 |
+| 🧠 | 旅行 RAG | 从本地整理数据或 Milvus 向量检索中获取目的地知识，并附带来源和风格提示 |
+| 🖼️ | 图片输入 | 支持上传旅行图片，提取旅行事实，并在用户确认后并入正常规划链路 |
+| 🔁 | 反馈闭环 | 记录 `ACCEPTED`、`PARTIAL`、`REJECTED`，导出数据集，并按需做聚合分析 |
+| 🛠️ | 运维能力 | 预检、启停脚本、release smoke、Docker、健康检查和 CI |
 
 ## 多 Agent 设计
 
@@ -109,21 +130,21 @@
 
 ### 核心角色
 
-| 组件 | 作用 |
-| --- | --- |
-| `ConversationWorkflow` | 总调度器。负责接收请求、组装记忆、路由、调用 specialist、持久化结果和发布时间线。 |
-| `AgentRouter` | 根据当前上下文选择本轮最合适的 agent，也可以在规划关键信息不足时提出澄清问题。 |
-| `SpecialistAgent` | 执行某一个明确角色，并统一返回 `AgentExecutionResult`。 |
-| `TimelinePublisher` | 把后端执行过程发布成结构化时间线事件，供前端展示。 |
+| 图标 | 组件 | 作用 |
+| --- | --- | --- |
+| 🎛️ | `ConversationWorkflow` | 总调度器。负责接收请求、组装记忆、路由、调用 specialist、持久化结果和发布时间线。 |
+| 🧭 | `AgentRouter` | 根据当前上下文选择本轮最合适的 agent，也可以在规划关键信息不足时提出澄清问题。 |
+| 🧩 | `SpecialistAgent` | 执行某一个明确角色，并统一返回 `AgentExecutionResult`。 |
+| 📡 | `TimelinePublisher` | 把后端执行过程发布成结构化时间线事件，供前端展示。 |
 
 ### 各 agent 的角色
 
-| Agent | 职责 |
-| --- | --- |
-| `WEATHER` | 处理天气、气温、下雨风险、出行和穿衣建议。 |
-| `GEO` | 处理地理编码、逆地理编码、坐标、地址和地点消歧。 |
-| `TRAVEL_PLANNER` | 生成结构化行程，并接上增强、校验、修复和 RAG 支撑。 |
-| `GENERAL` | 处理不属于天气、地理、正式行程规划的泛旅行问题。 |
+| 图标 | Agent | 职责 |
+| --- | --- | --- |
+| 🌦️ | `WEATHER` | 处理天气、气温、下雨风险、出行和穿衣建议。 |
+| 📍 | `GEO` | 处理地理编码、逆地理编码、坐标、地址和地点消歧。 |
+| 🧳 | `TRAVEL_PLANNER` | 生成结构化行程，并接上增强、校验、修复和 RAG 支撑。 |
+| 💬 | `GENERAL` | 处理不属于天气、地理、正式行程规划的泛旅行问题。 |
 
 ### 多 agent 怎么通信
 
@@ -139,10 +160,10 @@
 
 所以这套通信模型的特点是：
 
-- agent 选择是中心化的
-- 上下文通过 orchestrator 共享
-- 输出通过统一结果对象归一化
-- 前端通过持久化状态和 SSE 时间线拿到更新
+- 🎯 agent 选择是中心化的
+- 🧠 上下文通过 orchestrator 共享
+- 📦 输出通过统一结果对象归一化
+- 📺 前端通过持久化状态和 SSE 时间线拿到更新
 
 ### 工具调用怎么接入
 
@@ -165,12 +186,12 @@
 
 ### 数据链路
 
-| 阶段 | 说明 |
-| --- | --- |
-| 种子知识 | `travel-knowledge.json` 提供一小批手工整理的初始知识。 |
-| 采集 | `scripts/collect_travel_attractions.py` 从 Wikivoyage 抓取城市旅行内容。 |
-| 清洗 | `scripts/clean_travel_knowledge.py` 去掉解析噪音、短垃圾片段和弱价值记录，并按 topic 做上限控制。 |
-| 运行时数据 | `travel-knowledge.cleaned.json` 是当前主要的本地运行时知识库。 |
+| 图标 | 阶段 | 说明 |
+| --- | --- | --- |
+| 🌱 | 种子知识 | `travel-knowledge.json` 提供一小批手工整理的初始知识。 |
+| 🕸️ | 采集 | `scripts/collect_travel_attractions.py` 从 Wikivoyage 抓取城市旅行内容。 |
+| 🧹 | 清洗 | `scripts/clean_travel_knowledge.py` 去掉解析噪音、短垃圾片段和弱价值记录，并按 topic 做上限控制。 |
+| 📚 | 运行时数据 | `travel-knowledge.cleaned.json` 是当前主要的本地运行时知识库。 |
 
 ### 检索路径
 
@@ -196,12 +217,12 @@
 
 当前实现已经不是纯文本检索，而是强调：
 
-- destination 作为强约束或近似硬约束
-- 根据用户问题和偏好一起推断 topic
-- 推断 `relaxed`、`family`、`foodie`、`museum` 等 trip style
-- 不是简单 top-k，而是做 topic-balanced selection
-- 对 hotel 和 transit 做 subtype 感知排序
-- 把来源和检索元数据返回给前端
+- 🎯 destination 作为强约束或近似硬约束
+- 🧭 根据用户问题和偏好一起推断 topic
+- 🎨 推断 `relaxed`、`family`、`foodie`、`museum` 等 trip style
+- ⚖️ 不是简单 top-k，而是做 topic-balanced selection
+- 🏷️ 对 hotel 和 transit 做 subtype 感知排序
+- 🔍 把来源和检索元数据返回给前端
 
 ### RAG 最终怎么进入 planner
 
@@ -213,6 +234,40 @@
 - 校验与修复结果
 
 最后再输出结构化 travel plan 和最终回答。
+
+## 使用到的设计模式
+
+这个仓库不是靠一个“大而全框架模式”撑起来的，而是组合了几种很实用的设计模式：
+
+| 模式 | 出现位置 | 作用 |
+| --- | --- | --- |
+| Repository | `ConversationRepository`、`LongTermMemoryRepository`、`TravelKnowledgeRepository` | 把领域契约和 SQLite / 向量存储实现隔开。 |
+| Strategy | `AgentRouter`、`SpecialistAgent`、多个 specialist 实现 | 让系统按请求类型选择不同执行策略。 |
+| Template Method | `AbstractOpenAiSpecialistAgent` | 复用 LLM agent 的通用执行骨架，同时保留各 agent 的 prompt 和 fallback 差异。 |
+| Gateway / Adapter | `AmapGateway` 与 `AmapHttpGateway` | 把外部高德 API 包装成面向领域的接口。 |
+| Orchestrator | `ConversationWorkflow` | 集中协调路由、记忆、agent 执行、持久化和时间线。 |
+| Publish / Subscribe | `TimelinePublisher`、`ConversationStreamHub` | 把后端执行事件转成前端可见的时间线流。 |
+| Fallback | router、retrieval、weather / geo 的 fallback 路径 | 在模型或检索能力退化时，尽量保证系统还能工作。 |
+| Pipeline | build → enrich → validate → repair → revalidate | 让 planner 流程显式可扩展，而不是藏在一个大 prompt 里。 |
+
+## 创新点与可扩展点
+
+这个仓库真正有意思的地方，不只是“用了 Spring AI”，而是这些偏产品化的设计：
+
+- ✨ 面向 planner 的 RAG，而不是通用 top-k 拼 prompt。
+- ✨ 推荐反馈闭环和规划上下文强绑定。
+- ✨ 图片辅助输入不会另起一套链路，而是回流进同一个 planner 工作流。
+- ✨ 执行时间线直接暴露给前端，编排可观测。
+- ✨ 行程生成外面包了一层约束校验和修复流程。
+
+从扩展性上看，当前代码已经留出了这些自然扩展位：
+
+- 🔌 实现一个新的 `SpecialistAgent` 并扩展 router 规则，就能新增 agent。
+- 🔌 替换或扩展 `AmapGateway` / MCP callback，就能切换地图或工具提供方。
+- 🔌 在 repository 接口后面替换存储后端。
+- 🔌 在 `TravelKnowledgeRetrievalSupport` 里继续增强检索排序逻辑。
+- 🔌 在 `ImageAttachmentInterpreter` 后面提高多模态抽取质量。
+- 🔌 在反馈数据集之上叠加更强的评测、rerank 或偏好优化能力。
 
 ## 架构
 
@@ -360,17 +415,17 @@ docker compose -f docker-compose.milvus.yml up -d
 
 仓库是按职责拆分的，不只是按前后端分一下目录。
 
-| 目录 | 作用 |
-| --- | --- |
-| `travel-agent-app/` | 应用层：REST API、SSE 时间线、健康检查、DTO、启动逻辑和主工作流。 |
-| `travel-agent-domain/` | 核心领域契约：实体、值对象、仓储接口、路由上下文、执行上下文和服务接口。 |
-| `travel-agent-infrastructure/` | 具体实现：LLM agents、检索、SQLite 持久化、Milvus 集成、校验器、修复器和 Amap 适配。 |
-| `travel-agent-amap/` | 主应用使用的 Amap HTTP 网关模块。 |
-| `travel-agent-amap-mcp-server/` | 把 Amap 能力暴露成 MCP 工具的独立服务。 |
-| `travel-agent-types/` | 公用响应码、响应包装和异常类型。 |
-| `web/` | Vue 前端工作台，包括聊天区、方案区、时间线和反馈闭环面板。 |
-| `scripts/` | 采集、清洗、启动、Smoke、导出和运维脚本。 |
-| `docs/` | 说明文档、release checklist、RAG 文档、多模态文档和 README 截图资源。 |
+| 图标 | 目录 | 作用 |
+| --- | --- | --- |
+| 🚪 | `travel-agent-app/` | 应用层：REST API、SSE 时间线、健康检查、DTO、启动逻辑和主工作流。 |
+| 🧠 | `travel-agent-domain/` | 核心领域契约：实体、值对象、仓储接口、路由上下文、执行上下文和服务接口。 |
+| ⚙️ | `travel-agent-infrastructure/` | 具体实现：LLM agents、检索、SQLite 持久化、Milvus 集成、校验器、修复器和 Amap 适配。 |
+| 🗺️ | `travel-agent-amap/` | 主应用使用的 Amap HTTP 网关模块。 |
+| 🔌 | `travel-agent-amap-mcp-server/` | 把 Amap 能力暴露成 MCP 工具的独立服务。 |
+| 📦 | `travel-agent-types/` | 公用响应码、响应包装和异常类型。 |
+| 🖥️ | `web/` | Vue 前端工作台，包括聊天区、方案区、时间线和反馈闭环面板。 |
+| 🛠️ | `scripts/` | 采集、清洗、启动、Smoke、导出和运维脚本。 |
+| 📚 | `docs/` | 说明文档、release checklist、RAG 文档、多模态文档和 README 截图资源。 |
 
 ```text
 .
@@ -406,19 +461,19 @@ docker compose -f docker-compose.milvus.yml up -d
 
 后面真正值得加强的点，不是简单“多写几个 prompt”，而是这些结构性能力：
 
-- 更强的 RAG schema：
+- 🧠 更强的 RAG schema：
   - 把 hotel 和 transit 进一步拆成更适合 planner 的结构化知识
   - 增强城市别名和偏好归一化能力
-- 更稳定的 planner 评测：
+- 📏 更稳定的 planner 评测：
   - 建立同时覆盖“有用性”和“硬约束”的离线 benchmark
   - 系统比较 accepted / partial / rejected 的差异
-- 更明确的多 agent 协作策略：
+- 🤝 更明确的多 agent 协作策略：
   - 设计 planner、weather、geo 之间更清晰的 handoff 规则
   - 决定哪些子步骤值得并行或显式暴露
-- 更强的多模态输入：
+- 🖼️ 更强的多模态输入：
   - 提升截图里的结构化事实提取质量
   - 只在 vision-first 不够稳定的场景下再补 OCR fallback
-- 更强的生产化：
+- 🔐 更强的生产化：
   - 完善 secrets 管理模板
   - 补齐反向代理和 TLS 部署范例
   - 补更多 observability dashboard 和告警接入

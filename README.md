@@ -59,9 +59,11 @@
 
 <p align="center">
   <a href="#why-travel-agent">Why Travel Agent</a> •
+  <a href="#architecture-style">Architecture Style</a> •
   <a href="#feature-overview">Feature Overview</a> •
   <a href="#multi-agent-design">Multi-Agent Design</a> •
   <a href="#rag-design">RAG Design</a> •
+  <a href="#design-patterns-in-use">Design Patterns</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#project-structure">Project Structure</a> •
   <a href="#future-improvements">Future Improvements</a> •
@@ -86,22 +88,41 @@ Most travel assistants stop at chat. This repository is built around a more prod
 
 This project matters for more than itinerary generation itself:
 
-- Product value: it turns vague travel chat into plans that can actually be reviewed, adjusted, and executed.
-- Engineering value: it demonstrates a practical multi-agent architecture with routing, shared memory, validation, repair, retrieval, and operational scripts in one repository.
-- Data value: it already captures explicit recommendation outcomes, which makes later evaluation and planner improvement much more realistic.
-- Delivery value: it is structured like an MVP product, not only a model demo, so health checks, smoke scripts, Docker, and frontend workflow are part of the design.
+- 💼 Product value: it turns vague travel chat into plans that can actually be reviewed, adjusted, and executed.
+- 🏗️ Engineering value: it demonstrates a practical multi-agent architecture with routing, shared memory, validation, repair, retrieval, and operational scripts in one repository.
+- 📊 Data value: it already captures explicit recommendation outcomes, which makes later evaluation and planner improvement much more realistic.
+- 🚚 Delivery value: it is structured like an MVP product, not only a model demo, so health checks, smoke scripts, Docker, and frontend workflow are part of the design.
+
+## Architecture Style
+
+Yes, the project is still DDD-inspired.
+
+More precisely, it is a DDD-style layered architecture with ports-and-adapters characteristics:
+
+- 🧠 `travel-agent-domain` defines entities, value objects, repository interfaces, gateways, and service contracts.
+- 🎛️ `travel-agent-app` acts as the application layer and orchestration layer around use cases and conversation workflows.
+- ⚙️ `travel-agent-infrastructure` provides concrete implementations for persistence, retrieval, vector integration, LLM agents, validation, and repair.
+- 🗺️ `travel-agent-amap` is an external integration module behind the domain gateway interface.
+- 🖥️ `web` is the UI layer and consumes HTTP APIs plus the SSE timeline stream.
+
+So this repo is not "DDD with every tactical pattern everywhere", but it clearly follows:
+
+- domain contracts first
+- application orchestration separated from domain objects
+- infrastructure behind interfaces
+- external services wrapped as adapters
 
 ## Feature Overview
 
-| Area | What it does |
-| --- | --- |
-| Multi-agent workflow | Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists with shared memory and timeline events |
-| Structured planning | Generates itinerary summaries, day-by-day routes, budget breakdowns, hotel suggestions, and constraint checks |
-| Grounded enrichment | Uses Amap / Gaode for weather snapshots, POI matching, hotel area resolution, and transit enrichment |
-| Travel RAG | Retrieves destination hints from local curated data or Milvus-backed vector search with provenance and trip-style hints |
-| Image-assisted intake | Accepts image attachments, extracts travel facts, and merges confirmed facts back into the normal planning flow |
-| Feedback loop | Stores `ACCEPTED`, `PARTIAL`, and `REJECTED` outcomes, exports datasets, and aggregates feedback signals on demand |
-| Operations | Includes preflight checks, start/stop scripts, release smoke, Docker assets, health endpoints, and CI |
+| Icon | Area | What it does |
+| --- | --- | --- |
+| 🤖 | Multi-agent workflow | Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists with shared memory and timeline events |
+| 🧳 | Structured planning | Generates itinerary summaries, day-by-day routes, budget breakdowns, hotel suggestions, and constraint checks |
+| 🗺️ | Grounded enrichment | Uses Amap / Gaode for weather snapshots, POI matching, hotel area resolution, and transit enrichment |
+| 🧠 | Travel RAG | Retrieves destination hints from local curated data or Milvus-backed vector search with provenance and trip-style hints |
+| 🖼️ | Image-assisted intake | Accepts image attachments, extracts travel facts, and merges confirmed facts back into the normal planning flow |
+| 🔁 | Feedback loop | Stores `ACCEPTED`, `PARTIAL`, and `REJECTED` outcomes, exports datasets, and aggregates feedback signals on demand |
+| 🛠️ | Operations | Includes preflight checks, start/stop scripts, release smoke, Docker assets, health endpoints, and CI |
 
 ## Multi-Agent Design
 
@@ -109,21 +130,21 @@ The project uses an orchestrated multi-agent model, not peer-to-peer agent chat.
 
 ### Core roles
 
-| Component | Responsibility |
-| --- | --- |
-| `ConversationWorkflow` | The orchestrator. It owns request intake, memory assembly, routing, specialist invocation, persistence, and timeline publication. |
-| `AgentRouter` | Chooses one specialist for the current turn and may request a clarification question when key planning fields are missing. |
-| `SpecialistAgent` | Executes one well-scoped role against the shared context and returns a unified `AgentExecutionResult`. |
-| `TimelinePublisher` | Emits machine-readable timeline events so the UI can display what the backend is doing. |
+| Icon | Component | Responsibility |
+| --- | --- | --- |
+| 🎛️ | `ConversationWorkflow` | The orchestrator. It owns request intake, memory assembly, routing, specialist invocation, persistence, and timeline publication. |
+| 🧭 | `AgentRouter` | Chooses one specialist for the current turn and may request a clarification question when key planning fields are missing. |
+| 🧩 | `SpecialistAgent` | Executes one well-scoped role against the shared context and returns a unified `AgentExecutionResult`. |
+| 📡 | `TimelinePublisher` | Emits machine-readable timeline events so the UI can display what the backend is doing. |
 
 ### Specialist roles
 
-| Agent | Role |
-| --- | --- |
-| `WEATHER` | Handles weather questions and clothing / travel advice for a resolved city or district. |
-| `GEO` | Handles geocoding, reverse geocoding, coordinates, and place disambiguation. |
-| `TRAVEL_PLANNER` | Builds structured travel plans, runs enrichment, validation, repair, and RAG-backed planning support. |
-| `GENERAL` | Handles travel-adjacent questions that do not need weather, geo, or itinerary-planning behavior. |
+| Icon | Agent | Role |
+| --- | --- | --- |
+| 🌦️ | `WEATHER` | Handles weather questions and clothing / travel advice for a resolved city or district. |
+| 📍 | `GEO` | Handles geocoding, reverse geocoding, coordinates, and place disambiguation. |
+| 🧳 | `TRAVEL_PLANNER` | Builds structured travel plans, runs enrichment, validation, repair, and RAG-backed planning support. |
+| 💬 | `GENERAL` | Handles travel-adjacent questions that do not need weather, geo, or itinerary-planning behavior. |
 
 ### How agents communicate
 
@@ -139,10 +160,10 @@ Agents do not message each other directly. Communication happens through shared 
 
 That means the communication model is:
 
-- agent selection is centralized
-- context is shared through the orchestrator
-- outputs are normalized through `AgentExecutionResult`
-- UI updates arrive through persisted state and timeline streaming
+- 🎯 agent selection is centralized
+- 🧠 context is shared through the orchestrator
+- 📦 outputs are normalized through `AgentExecutionResult`
+- 📺 UI updates arrive through persisted state and timeline streaming
 
 ### Tool communication
 
@@ -165,12 +186,12 @@ The RAG path is destination-aware and planner-oriented. It is not a generic "dum
 
 ### Data pipeline
 
-| Stage | What happens |
-| --- | --- |
-| Seed knowledge | `travel-knowledge.json` provides small hand-curated seed knowledge. |
-| Collection | `scripts/collect_travel_attractions.py` collects destination content from Wikivoyage. |
-| Cleaning | `scripts/clean_travel_knowledge.py` removes parser noise, short junk, weak entries, and applies topic-specific caps. |
-| Runtime source | `travel-knowledge.cleaned.json` is the main local runtime dataset when available. |
+| Icon | Stage | What happens |
+| --- | --- | --- |
+| 🌱 | Seed knowledge | `travel-knowledge.json` provides small hand-curated seed knowledge. |
+| 🕸️ | Collection | `scripts/collect_travel_attractions.py` collects destination content from Wikivoyage. |
+| 🧹 | Cleaning | `scripts/clean_travel_knowledge.py` removes parser noise, short junk, weak entries, and applies topic-specific caps. |
+| 📚 | Runtime source | `travel-knowledge.cleaned.json` is the main local runtime dataset when available. |
 
 ### Retrieval path
 
@@ -196,12 +217,12 @@ The plan is then reused by both vector retrieval and local fallback so the two p
 
 The planner does not treat retrieval as unstructured decoration. The current implementation already emphasizes:
 
-- destination as a hard or near-hard filter
-- topic inference from both user message and preferences
-- trip-style inference such as `relaxed`, `family`, `foodie`, `museum`
-- topic-balanced selection instead of one raw top-k slice
-- subtype-aware ranking for hotel and transit knowledge
-- provenance and retrieval metadata returned to the frontend
+- 🎯 destination as a hard or near-hard filter
+- 🧭 topic inference from both user message and preferences
+- 🎨 trip-style inference such as `relaxed`, `family`, `foodie`, `museum`
+- ⚖️ topic-balanced selection instead of one raw top-k slice
+- 🏷️ subtype-aware ranking for hotel and transit knowledge
+- 🔍 provenance and retrieval metadata returned to the frontend
 
 ### How RAG reaches the planner
 
@@ -213,6 +234,40 @@ The planner does not treat retrieval as unstructured decoration. The current imp
 - validation and repair results
 
 to build the final structured travel plan and rendered answer.
+
+## Design Patterns In Use
+
+The codebase uses several concrete patterns instead of relying on one framework abstraction:
+
+| Pattern | Where it appears | Why it is used |
+| --- | --- | --- |
+| Repository | `ConversationRepository`, `LongTermMemoryRepository`, `TravelKnowledgeRepository` | Keeps domain contracts separate from SQLite and vector-store implementations. |
+| Strategy | `AgentRouter`, `SpecialistAgent`, multiple specialist implementations | Lets the system select one execution strategy per turn. |
+| Template Method | `AbstractOpenAiSpecialistAgent` | Shares the common LLM-agent execution skeleton while letting each agent customize prompt and fallback behavior. |
+| Gateway / Adapter | `AmapGateway` and `AmapHttpGateway` | Wraps external Amap APIs behind a domain-facing port. |
+| Orchestrator | `ConversationWorkflow` | Coordinates routing, memory, specialist execution, persistence, and timeline updates. |
+| Publish / Subscribe | `TimelinePublisher`, `ConversationStreamHub` | Turns backend execution events into frontend-visible timeline streaming. |
+| Fallback | router, retrieval, weather / geo fallback paths | Keeps the product usable when model or retrieval paths degrade. |
+| Pipeline | build → enrich → validate → repair → revalidate | Makes the planner flow explicit and extensible instead of hiding everything in one prompt. |
+
+## Innovation And Extensibility
+
+The interesting parts of the repository are product-oriented and extensible, not just “it uses an LLM”:
+
+- ✨ Planner-oriented RAG instead of generic top-k stuffing.
+- ✨ Explicit recommendation feedback loop tied to planning context.
+- ✨ Image-assisted intake that feeds confirmed facts back into the same workflow.
+- ✨ UI-visible execution timeline so orchestration is inspectable.
+- ✨ Constraint validation and repair around itinerary generation.
+
+Natural extension points already visible in the design:
+
+- 🔌 Add a new specialist by implementing `SpecialistAgent` and extending router rules.
+- 🔌 Swap or extend map / tool providers behind `AmapGateway` or MCP callbacks.
+- 🔌 Replace or enrich storage backends behind repository interfaces.
+- 🔌 Add richer retrieval scoring inside `TravelKnowledgeRetrievalSupport`.
+- 🔌 Improve multimodal extraction behind `ImageAttachmentInterpreter`.
+- 🔌 Introduce stronger evaluation, reranking, or preference learning on top of the feedback dataset.
 
 ## Architecture
 
@@ -360,17 +415,17 @@ docker compose -f docker-compose.milvus.yml up -d
 
 The repository is split by responsibility rather than by framework layer only.
 
-| Directory | Purpose |
-| --- | --- |
-| `travel-agent-app/` | Application layer: REST API, SSE stream, health endpoints, DTOs, bootstrapping, and the main conversation workflow. |
-| `travel-agent-domain/` | Core domain contracts: entities, value objects, repository interfaces, routing context, execution context, and service interfaces. |
-| `travel-agent-infrastructure/` | Concrete implementations: LLM agents, retrieval, SQLite persistence, Milvus integration, validators, repairers, and Amap-backed adapters. |
-| `travel-agent-amap/` | Amap HTTP gateway module used by the main app. |
-| `travel-agent-amap-mcp-server/` | Standalone MCP server so Amap capabilities can be exposed as tools. |
-| `travel-agent-types/` | Shared response codes, response envelope, and exception types. |
-| `web/` | Vue frontend workspace with chat, plan panel, timeline panel, and feedback-loop UI. |
-| `scripts/` | Collection, cleaning, launch, smoke, export, and operational PowerShell / Python scripts. |
-| `docs/` | Supporting documentation, release checklist, RAG notes, multimodal notes, and README screenshot assets. |
+| Icon | Directory | Purpose |
+| --- | --- | --- |
+| 🚪 | `travel-agent-app/` | Application layer: REST API, SSE stream, health endpoints, DTOs, bootstrapping, and the main conversation workflow. |
+| 🧠 | `travel-agent-domain/` | Core domain contracts: entities, value objects, repository interfaces, routing context, execution context, and service interfaces. |
+| ⚙️ | `travel-agent-infrastructure/` | Concrete implementations: LLM agents, retrieval, SQLite persistence, Milvus integration, validators, repairers, and Amap-backed adapters. |
+| 🗺️ | `travel-agent-amap/` | Amap HTTP gateway module used by the main app. |
+| 🔌 | `travel-agent-amap-mcp-server/` | Standalone MCP server so Amap capabilities can be exposed as tools. |
+| 📦 | `travel-agent-types/` | Shared response codes, response envelope, and exception types. |
+| 🖥️ | `web/` | Vue frontend workspace with chat, plan panel, timeline panel, and feedback-loop UI. |
+| 🛠️ | `scripts/` | Collection, cleaning, launch, smoke, export, and operational PowerShell / Python scripts. |
+| 📚 | `docs/` | Supporting documentation, release checklist, RAG notes, multimodal notes, and README screenshot assets. |
 
 ```text
 .
@@ -406,19 +461,19 @@ The repository is split by responsibility rather than by framework layer only.
 
 The most valuable next steps are not "just add more prompts". They are mostly structural:
 
-- Stronger RAG schemas:
+- 🧠 Stronger RAG schemas:
   - split hotel and transit knowledge into more explicit planner-facing schemas
   - add better city aliases and richer preference normalization
-- Better planner evaluation:
+- 📏 Better planner evaluation:
   - build a stable offline benchmark for usefulness plus hard constraints
   - compare accepted vs partial vs rejected plans systematically
-- Richer multi-agent coordination:
+- 🤝 Richer multi-agent coordination:
   - add more explicit handoff policies between planner, weather, and geo contexts
   - decide when parallel sub-steps are worth exposing or not
-- Better multimodal intake:
+- 🖼️ Better multimodal intake:
   - improve structured extraction from screenshots
   - add OCR fallback only where vision-first extraction is too noisy
-- Production hardening:
+- 🔐 Production hardening:
   - stronger secret management templates
   - polished reverse-proxy and TLS deployment examples
   - more explicit observability dashboards and alerting hooks
