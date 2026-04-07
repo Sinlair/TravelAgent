@@ -48,6 +48,14 @@ function Import-EnvPairs {
     return $pairs
 }
 
+function Contains-EnvName {
+    param(
+        [string[]]$Pairs,
+        [string]$Name
+    )
+    return $Pairs | Where-Object { $_ -match ("^" + [Regex]::Escape($Name) + "=") } | Select-Object -First 1
+}
+
 function Ensure-Service {
     param(
         [string]$ServiceName,
@@ -82,7 +90,9 @@ try {
 $envPairs = Import-EnvPairs (Join-Path $repoRoot $EnvFile)
 $commonPairs = [System.Collections.Generic.List[string]]::new()
 $commonPairs.AddRange($envPairs)
-$commonPairs.Add("SPRING_AI_OPENAI_API_KEY=dummy-local-service")
+if (-not (Contains-EnvName -Pairs $envPairs -Name "SPRING_AI_OPENAI_API_KEY")) {
+    $commonPairs.Add("SPRING_AI_OPENAI_API_KEY=dummy-local-service")
+}
 $commonPairs.Add("TRAVEL_AGENT_ALLOWED_ORIGIN=http://localhost:$FrontendPort")
 $commonPairs.Add("TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED=false")
 $commonPairs.Add("TRAVEL_AGENT_MILVUS_ENABLED=false")

@@ -1,0 +1,5 @@
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: when_authorized

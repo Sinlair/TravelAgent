@@ -9,6 +9,7 @@ public class AmapProperties {
     private String baseUrl = "https://restapi.amap.com";
     private boolean mockWhenMissingKey = true;
     private boolean mockOnError = true;
+    private double requestsPerSecond = 3.0;
 
     public String getApiKey() {
         return apiKey;
@@ -40,5 +41,13 @@ public class AmapProperties {
 
     public void setMockOnError(boolean mockOnError) {
         this.mockOnError = mockOnError;
+    }
+
+    public double getRequestsPerSecond() {
+        return requestsPerSecond;
+    }
+
+    public void setRequestsPerSecond(double requestsPerSecond) {
+        this.requestsPerSecond = requestsPerSecond;
     }
 }

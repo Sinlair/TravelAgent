@@ -29,6 +29,8 @@ public class AmapHttpGateway implements AmapGateway {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final AmapProperties properties;
+    private final Object throttleMonitor = new Object();
+    private long lastHttpCallAt = 0L;
 
     public AmapHttpGateway(RestClient.Builder restClientBuilder, ObjectMapper objectMapper, AmapProperties properties) {
         this.restClient = restClientBuilder.build();
@@ -399,6 +401,7 @@ public class AmapHttpGateway implements AmapGateway {
             actual.put("key", properties.getApiKey());
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(properties.getBaseUrl() + path);
             actual.forEach(builder::queryParam);
+            throttleBeforeCall();
             String body = restClient.get()
                     .uri(builder.build().encode().toUri())
                     .retrieve()
@@ -439,5 +442,26 @@ public class AmapHttpGateway implements AmapGateway {
     private String text(JsonNode node, String field, String fallback) {
         JsonNode child = node.path(field);
         return child.isMissingNode() || child.isNull() || child.asText().isBlank() ? fallback : child.asText();
+    }
+
+    private void throttleBeforeCall() {
+        double requestsPerSecond = properties.getRequestsPerSecond();
+        if (requestsPerSecond <= 0) {
+            return;
+        }
+        long minIntervalMillis = Math.max(334L, (long) Math.ceil(1000.0 / requestsPerSecond));
+        synchronized (throttleMonitor) {
+            long now = System.currentTimeMillis();
+            long waitMillis = (lastHttpCallAt + minIntervalMillis) - now;
+            if (waitMillis > 0) {
+                try {
+                    Thread.sleep(waitMillis);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Interrupted while throttling Amap HTTP requests", exception);
+                }
+            }
+            lastHttpCallAt = System.currentTimeMillis();
+        }
     }
 }

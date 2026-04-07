@@ -1,5 +1,6 @@
 param(
     [string]$BackendUrl = "http://localhost:8080",
+    [string]$EnvFile = ".env.travel-agent",
     [switch]$SkipHealthCheck
 )
 
@@ -9,6 +10,26 @@ Set-Location $repoRoot
 
 $checks = [System.Collections.Generic.List[object]]::new()
 $bundledJava = Join-Path $repoRoot ".tooling\jdk-21\jdk-21.0.10+7\bin\java.exe"
+
+function Import-EnvFile {
+    param([string]$Path)
+    if (-not (Test-Path $Path)) {
+        return
+    }
+    Get-Content $Path | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith("#")) {
+            return
+        }
+        $index = $line.IndexOf("=")
+        if ($index -lt 1) {
+            return
+        }
+        $name = $line.Substring(0, $index).Trim()
+        $value = $line.Substring($index + 1).Trim()
+        [System.Environment]::SetEnvironmentVariable($name, $value, "Process")
+    }
+}
 
 function Add-Check {
     param(
@@ -29,6 +50,8 @@ function Test-EnvConfigured {
     $normalized = $Value.Trim().ToLowerInvariant()
     return -not ($normalized.Contains("dummy") -or $normalized.Contains("placeholder") -or $normalized.Contains("example"))
 }
+
+Import-EnvFile (Join-Path $repoRoot $EnvFile)
 
 try {
     $previousErrorAction = $ErrorActionPreference
@@ -91,14 +114,13 @@ if ($knowledgeVectorEnabled) {
 $knowledgeFile = Join-Path $repoRoot "travel-agent-infrastructure\src\main\resources\travel-knowledge.cleaned.json"
 if (Test-Path $knowledgeFile) {
     try {
-        $records = @'
-import json, sys
-from pathlib import Path
-path = Path(sys.argv[1])
-records = json.loads(path.read_text(encoding="utf-8"))
-print(len(records))
-'@ | python - $knowledgeFile
-        Add-Check "KnowledgeData" "PASS" "cleaned records=$records"
+        $records = Get-Content $knowledgeFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        $recordCount = @($records).Count
+        if ($recordCount -gt 0) {
+            Add-Check "KnowledgeData" "PASS" "cleaned records=$recordCount"
+        } else {
+            Add-Check "KnowledgeData" "FAIL" "cleaned knowledge file is empty"
+        }
     } catch {
         Add-Check "KnowledgeData" "FAIL" "Failed to parse cleaned knowledge file"
     }

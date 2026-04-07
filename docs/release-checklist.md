@@ -4,8 +4,11 @@
 
 - Copy [.env.travel-agent.example](/E:/Internship/program/TravelAgent/.env.travel-agent.example) to `.env.travel-agent`.
 - Set:
+  - `SPRING_PROFILES_ACTIVE=prod`
   - `SPRING_AI_OPENAI_API_KEY`
+  - `SPRING_AI_OPENAI_BASE_URL` when using an OpenAI-compatible gateway
   - `TRAVEL_AGENT_AMAP_API_KEY`
+  - `TRAVEL_AGENT_AMAP_REQUESTS_PER_SECOND` to stay within your Amap quota
   - `VITE_AMAP_WEB_KEY`
   - `VITE_AMAP_SECURITY_JS_CODE`
 - Decide whether the deployment uses:
@@ -23,6 +26,7 @@
 powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
 ```
 
+- The script loads `.env.travel-agent` automatically when the file exists.
 - Confirm:
   - `Java` is `PASS`
   - `KnowledgeData` is `PASS`
@@ -92,6 +96,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-windows-services.ps
 ```text
 GET /actuator/health
 ```
+
+- In `prod`, actuator health details are reduced unless the caller is authorized.
 
 ## Release Gate
 

@@ -97,7 +97,7 @@ if ($ToolProvider -eq "LOCAL") {
 }
 
 if ($RunPreflight) {
-    $preflightArgs = @("-ExecutionPolicy", "Bypass", "-File", ".\scripts\preflight-travel-agent.ps1")
+    $preflightArgs = @("-ExecutionPolicy", "Bypass", "-File", ".\scripts\preflight-travel-agent.ps1", "-EnvFile", $EnvFile)
     if ($ToolProvider -eq "LOCAL") {
         $preflightArgs += "-SkipHealthCheck"
     }

@@ -67,6 +67,7 @@ travel:
       base-url: ${TRAVEL_AGENT_AMAP_BASE_URL:https://restapi.amap.com}
       mock-when-missing-key: true
       mock-on-error: true
+      requests-per-second: ${TRAVEL_AGENT_AMAP_REQUESTS_PER_SECOND:3.0}
     memory:
       milvus:
         enabled: ${TRAVEL_AGENT_MILVUS_ENABLED:false}

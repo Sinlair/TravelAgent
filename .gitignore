@@ -3,6 +3,11 @@
 *.db
 *.db-shm
 *.db-wal
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
 .idea/
 .vscode/
 .DS_Store
@@ -13,8 +18,13 @@ dist/
 target/
 amap-mcp-server*.log
 
-web/.env.local
+.env
+.env.*
+!.env.travel-agent.example
+web/.env.*
+!web/.env.example
 .env.travel-agent
+web/.env.local
 data/runtime/
 data/milvus/
 release-smoke.backend.stdout.log

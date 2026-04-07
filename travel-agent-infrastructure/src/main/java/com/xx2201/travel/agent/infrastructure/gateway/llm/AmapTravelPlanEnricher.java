@@ -211,6 +211,7 @@ public class AmapTravelPlanEnricher {
         String location = hotelAreaGeo.longitude() == null || hotelAreaGeo.longitude().isBlank()
                 ? null
                 : hotelAreaGeo.longitude() + "," + hotelAreaGeo.latitude();
+        String hotelAreaKeyword = canonicalKeyword(plan.hotelArea());
 
         timelinePublisher.publish(TimelineEvent.of(
                 conversationId,
@@ -248,7 +249,28 @@ public class AmapTravelPlanEnricher {
         int hotelMin = plan.budget().stream().filter(item -> "Hotel".equals(item.category())).findFirst().map(item -> item.minAmount() / nights).orElse(380);
         int hotelMax = plan.budget().stream().filter(item -> "Hotel".equals(item.category())).findFirst().map(item -> item.maxAmount() / nights).orElse(680);
 
-        List<TravelHotelRecommendation> results = unique.values().stream()
+        List<ScoredHotelCandidate> rankedCandidates = unique.values().stream()
+                .map(suggestion -> new ScoredHotelCandidate(
+                        suggestion,
+                        scoreHotelCandidate(hotelAreaKeyword, city, hotelAreaGeo, suggestion),
+                        distanceMeters(hotelAreaGeo.longitude(), hotelAreaGeo.latitude(), splitLocation(suggestion.location())[0], splitLocation(suggestion.location())[1])
+                ))
+                .sorted(Comparator.comparingDouble(ScoredHotelCandidate::score).reversed()
+                        .thenComparingInt(candidate -> candidate.distanceMeters() == Integer.MAX_VALUE ? Integer.MAX_VALUE : candidate.distanceMeters()))
+                .toList();
+
+        if (!rankedCandidates.isEmpty()
+                && rankedCandidates.get(0).distanceMeters() > 8000
+                && !blank(hotelAreaGeo.longitude())
+                && !blank(hotelAreaGeo.latitude())) {
+            return List.of(fallbackHotelBase(plan, hotelAreaGeo, hotelMin, hotelMax, preferChinese));
+        }
+
+        List<PlaceSuggestion> rankedSuggestions = rankedCandidates.stream()
+                .map(ScoredHotelCandidate::suggestion)
+                .toList();
+
+        List<TravelHotelRecommendation> results = rankedSuggestions.stream()
                 .limit(3)
                 .map(suggestion -> {
                     String[] coordinate = splitLocation(suggestion.location());
@@ -258,7 +280,7 @@ public class AmapTravelPlanEnricher {
                             composeAddress(city, suggestion),
                             hotelMin,
                             hotelMax,
-                            hotelReasonForSuggestion(suggestion, preferChinese, resultsIndex(unique.values().stream().toList(), suggestion)),
+                            hotelReasonForSuggestion(suggestion, preferChinese, resultsIndex(rankedSuggestions, suggestion)),
                             coordinate[0],
                             coordinate[1],
                             "MCP.amap_input_tips"
@@ -270,7 +292,7 @@ public class AmapTravelPlanEnricher {
             return results;
         }
 
-        return List.of(new TravelHotelRecommendation(
+        return List.of(fallbackHotelBase(plan, hotelAreaGeo, hotelMin, hotelMax, preferChinese)); /*
                 preferChinese ? plan.hotelArea() + "优先酒店位" : plan.hotelArea() + " hotel base",
                 plan.hotelArea(),
                 hotelAreaGeo.address(),
@@ -280,7 +302,7 @@ public class AmapTravelPlanEnricher {
                 hotelAreaGeo.longitude(),
                 hotelAreaGeo.latitude(),
                 "MCP.amap_geocode"
-        ));
+        )); */
     }
 
     private GeoLocation resolveHotelArea(String hotelArea, String city, String conversationId) {
@@ -290,7 +312,7 @@ public class AmapTravelPlanEnricher {
                 "Resolve hotel district center with Amap",
                 Map.of("hotelArea", hotelArea, "city", city)
         ));
-        return amapMcpGateway.geocode(city + hotelArea, conversationId);
+        return amapMcpGateway.geocode(city + " " + hotelArea, conversationId);
     }
 
     private List<String> hotelKeywords(String hotelArea, String city, boolean preferChinese) {
@@ -386,7 +408,7 @@ public class AmapTravelPlanEnricher {
             TravelHotelRecommendation hotel = hotels.get(0);
             return new LocationRef(hotel.name(), hotel.area(), hotel.longitude(), hotel.latitude());
         }
-        GeoLocation geo = amapMcpGateway.geocode(city + hotelArea, conversationId);
+        GeoLocation geo = amapMcpGateway.geocode(city + " " + hotelArea, conversationId);
         return new LocationRef(hotelArea, hotelArea, geo.longitude(), geo.latitude());
     }
 
@@ -405,7 +427,7 @@ public class AmapTravelPlanEnricher {
                 Map.of("from", from.name(), "to", to.name(), "city", city)
         ));
         TransitRoutePlan route = amapMcpGateway.transitRoute(new TransitRouteQuery(from.longitude(), from.latitude(), to.longitude(), to.latitude(), city), conversationId);
-        return new TravelTransitLeg(
+        TravelTransitLeg rawLeg = new TravelTransitLeg(
                 from.name(),
                 to.name(),
                 route.mode(),
@@ -432,9 +454,11 @@ public class AmapTravelPlanEnricher {
                 route.polyline(),
                 "MCP.amap_transit_route"
         );
+        TravelTransitLeg fallback = fallbackLeg(from, to, preferChinese);
+        return shouldPreferFallback(route, fallback, from, to) ? fallback : rawLeg;
     }
 
-    private TravelTransitLeg fallbackLeg(LocationRef from, LocationRef to, boolean preferChinese) {
+    private TravelTransitLeg fallbackLegLegacy(LocationRef from, LocationRef to, boolean preferChinese) {
         String fromName = from == null ? (preferChinese ? "出发点" : "start") : from.name();
         String toName = to == null ? (preferChinese ? "下一站" : "next stop") : to.name();
         String summary = preferChinese ? "按片区估算，建议优先地铁或短距离打车。"
@@ -453,6 +477,132 @@ public class AmapTravelPlanEnricher {
                 List.of(),
                 "RULE.fallback"
         );
+    }
+
+    private TravelTransitLeg fallbackLeg(LocationRef from, LocationRef to, boolean preferChinese) {
+        String fromName = from == null ? "start" : from.name();
+        String toName = to == null ? "next stop" : to.name();
+        int directDistance = estimateDistanceMeters(from, to);
+        int durationMinutes = directDistance <= 1500 ? Math.max(10, directDistance / 80)
+                : directDistance <= 8000 ? Math.max(18, directDistance / 280)
+                : Math.max(25, directDistance / 380);
+        int walkingMinutes = directDistance <= 1500 ? durationMinutes : Math.min(10, Math.max(4, directDistance / 800));
+        int cost = directDistance <= 1500 ? 0 : directDistance <= 8000 ? 4 : Math.max(18, directDistance / 700);
+        String mode = directDistance <= 1500 ? "WALK" : directDistance <= 8000 ? "SUBWAY" : "TAXI";
+        String summary = preferChinese
+                ? "估算为更可执行的市内交通方案，优先地铁或短程打车。"
+                : "Estimated with a more practical in-city fallback. Prefer metro or a short taxi hop.";
+        return new TravelTransitLeg(
+                fromName,
+                toName,
+                mode,
+                summary,
+                durationMinutes,
+                directDistance,
+                walkingMinutes,
+                cost,
+                List.of(),
+                List.of(new TravelTransitStep(mode, summary, summary, "", fromName, toName, durationMinutes, directDistance, 0, List.of())),
+                List.of(),
+                "RULE.fallback"
+        );
+    }
+
+    private TravelHotelRecommendation fallbackHotelBase(TravelPlan plan, GeoLocation hotelAreaGeo, int hotelMin, int hotelMax, boolean preferChinese) {
+        return new TravelHotelRecommendation(
+                plan.hotelArea() + (preferChinese ? "优先酒店位" : " hotel base"),
+                plan.hotelArea(),
+                hotelAreaGeo.address(),
+                hotelMin,
+                hotelMax,
+                preferChinese ? "高德酒店候选不够稳定时，先按推荐住宿区保留落脚点。" : "Fallback hotel base when Amap cannot return a close concrete hotel candidate.",
+                hotelAreaGeo.longitude(),
+                hotelAreaGeo.latitude(),
+                "MCP.amap_geocode"
+        );
+    }
+
+    private double scoreHotelCandidate(String hotelAreaKeyword, String city, GeoLocation hotelAreaGeo, PlaceSuggestion suggestion) {
+        String keyword = normalize(hotelAreaKeyword);
+        String name = normalize(suggestion.name());
+        String district = normalize(suggestion.district());
+        String address = normalize(suggestion.address());
+        double score = 0;
+
+        if (!keyword.isBlank() && (name.contains(keyword) || district.contains(keyword) || address.contains(keyword))) {
+            score += 35;
+        }
+        if (!blank(city)) {
+            String normalizedCity = normalize(city);
+            if (district.contains(normalizedCity) || address.contains(normalizedCity)) {
+                score += 8;
+            }
+        }
+        if (!blank(suggestion.location())) {
+            score += 15;
+        }
+
+        int distance = distanceMeters(hotelAreaGeo.longitude(), hotelAreaGeo.latitude(), splitLocation(suggestion.location())[0], splitLocation(suggestion.location())[1]);
+        if (distance != Integer.MAX_VALUE) {
+            score += Math.max(0, 60 - (distance / 200.0));
+        }
+        return score;
+    }
+
+    private boolean shouldPreferFallback(TransitRoutePlan route, TravelTransitLeg fallback, LocationRef from, LocationRef to) {
+        if (route == null || fallback == null) {
+            return true;
+        }
+        int rawDuration = safe(route.durationMinutes());
+        int fallbackDuration = safe(fallback.durationMinutes());
+        int directDistance = estimateDistanceMeters(from, to);
+        int routeDistance = safe(route.distanceMeters()) > 0 ? safe(route.distanceMeters()) : directDistance;
+
+        if (directDistance <= 2000 && rawDuration > 35) {
+            return true;
+        }
+        if (directDistance <= 5000 && rawDuration > 55) {
+            return true;
+        }
+        if (routeDistance <= 12000 && rawDuration > fallbackDuration + 25) {
+            return true;
+        }
+        return safe(route.walkingMinutes()) > 45 && routeDistance <= 5000;
+    }
+
+    private int estimateDistanceMeters(LocationRef from, LocationRef to) {
+        if (from == null || to == null) {
+            return 4500;
+        }
+        int distance = distanceMeters(from.longitude(), from.latitude(), to.longitude(), to.latitude());
+        return distance == Integer.MAX_VALUE ? 4500 : distance;
+    }
+
+    private int distanceMeters(String fromLongitude, String fromLatitude, String toLongitude, String toLatitude) {
+        if (blank(fromLongitude) || blank(fromLatitude) || blank(toLongitude) || blank(toLatitude)) {
+            return Integer.MAX_VALUE;
+        }
+        double originLongitude;
+        double originLatitude;
+        double destinationLongitude;
+        double destinationLatitude;
+        try {
+            originLongitude = Double.parseDouble(fromLongitude);
+            originLatitude = Double.parseDouble(fromLatitude);
+            destinationLongitude = Double.parseDouble(toLongitude);
+            destinationLatitude = Double.parseDouble(toLatitude);
+        } catch (Exception exception) {
+            return Integer.MAX_VALUE;
+        }
+
+        double radians = Math.PI / 180;
+        double latitudeDistance = (destinationLatitude - originLatitude) * radians;
+        double longitudeDistance = (destinationLongitude - originLongitude) * radians;
+        double a = Math.sin(latitudeDistance / 2) * Math.sin(latitudeDistance / 2)
+                + Math.cos(originLatitude * radians) * Math.cos(destinationLatitude * radians)
+                * Math.sin(longitudeDistance / 2) * Math.sin(longitudeDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return (int) Math.round(6371000 * c);
     }
 
     private TravelCostBreakdown mergeTransitCost(TravelCostBreakdown current, int transitCost) {
@@ -572,5 +722,8 @@ public class AmapTravelPlanEnricher {
     }
 
     private record LocationRef(String name, String area, String longitude, String latitude) {
+    }
+
+    private record ScoredHotelCandidate(PlaceSuggestion suggestion, double score, int distanceMeters) {
     }
 }
