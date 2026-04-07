@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Travel Agent Homepage Screenshot</title>
+    <link rel="stylesheet" href="../../web/src/style.css" />
+    <style>
+      body {
+        min-width: 1520px;
+      }
+
+      .shell {
+        min-height: auto;
+        height: 1260px;
+      }
+
+      .chat-list,
+      .timeline-list,
+      .plan-panel,
+      .timeline-panel {
+        overflow: hidden;
+      }
+
+      .workspace__side {
+        min-height: auto;
+      }
+
+      .composer {
+        align-items: stretch;
+      }
+
+      .composer textarea {
+        min-height: 116px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="sidebar__header">
+          <p class="sidebar__eyebrow">History</p>
+          <h1>My Trips</h1>
+          <button class="sidebar__new">Start A New Plan</button>
+        </div>
+
+        <div class="sidebar__list">
+          <article class="sidebar__item sidebar__item--active">
+            <div>
+              <strong>Hangzhou 3-day city break</strong>
+              <p>West Lake pacing, tea village stop, rainy-day fallback, and hotel shortlist.</p>
+            </div>
+            <button class="sidebar__delete">Delete</button>
+          </article>
+
+          <article class="sidebar__item">
+            <div>
+              <strong>Shanghai food weekend</strong>
+              <p>Late-night dining route, metro-friendly hotel area, and budget split.</p>
+            </div>
+            <button class="sidebar__delete">Delete</button>
+          </article>
+
+          <article class="sidebar__item">
+            <div>
+              <strong>Suzhou gardens day trip</strong>
+              <p>Fast train arrival, walking-heavy route, and flexible lunch options.</p>
+            </div>
+            <button class="sidebar__delete">Delete</button>
+          </article>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="hero">
+          <p>旅行小助手</p>
+          <h1>把目的地、天数、预算和偏好告诉我，我会整理成一份更容易执行的出行方案。</h1>
+          <span>也可以直接上传酒店、机票或行程截图，系统会先提取旅行信息，再接入同一条规划链路。</span>
+        </header>
+
+        <section class="panel feedback-loop-panel">
+          <div class="panel__header feedback-loop-panel__header">
+            <div>
+              <p class="panel__eyebrow">Feedback Loop</p>
+              <h2>Analyze Recent Feedback On Demand</h2>
+              <p class="feedback-loop-panel__hint">Recommendation outcomes, failure patterns, and suggested actions stay visible in the same workspace.</p>
+            </div>
+            <div class="feedback-loop-panel__controls">
+              <select class="feedback-loop-panel__select">
+                <option>200</option>
+              </select>
+              <button class="feedback-loop-panel__action">Refresh</button>
+            </div>
+          </div>
+
+          <div class="feedback-loop-panel__body">
+            <div class="feedback-loop-panel__stats">
+              <article class="feedback-loop-panel__stat">
+                <span>Accepted</span>
+                <strong>41.67%</strong>
+              </article>
+              <article class="feedback-loop-panel__stat">
+                <span>Usable</span>
+                <strong>75.00%</strong>
+              </article>
+              <article class="feedback-loop-panel__stat">
+                <span>Structured plan coverage</span>
+                <strong>83.33%</strong>
+              </article>
+              <article class="feedback-loop-panel__stat">
+                <span>Samples</span>
+                <strong>48</strong>
+              </article>
+            </div>
+
+            <div class="feedback-loop-panel__grid">
+              <section class="feedback-loop-panel__section">
+                <div class="feedback-loop-panel__section-title">Top reason codes</div>
+                <div class="feedback-loop-panel__list">
+                  <article class="feedback-loop-panel__list-item">
+                    <strong>edited_before_use</strong>
+                    <p>14 total / 100.00% usable</p>
+                  </article>
+                  <article class="feedback-loop-panel__list-item">
+                    <strong>not_useful</strong>
+                    <p>9 total / 0.00% usable</p>
+                  </article>
+                </div>
+              </section>
+
+              <section class="feedback-loop-panel__section">
+                <div class="feedback-loop-panel__section-title">Key findings</div>
+                <div class="feedback-loop-panel__finding-list">
+                  <article class="feedback-loop-panel__finding">
+                    <div class="feedback-loop-panel__finding-header">
+                      <strong>validationFailCount&gt;0</strong>
+                      <span class="plan-insight-card__badge">VALIDATION_FAIL</span>
+                    </div>
+                    <p>Sample 11 | Usable 36.36%</p>
+                    <p>Review failing constraint checks before tuning prompts globally.</p>
+                  </article>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <div class="workspace__grid">
+          <section class="panel chat-panel">
+            <div class="panel__header">
+              <div>
+                <p class="panel__eyebrow">Conversation</p>
+                <h2>Hangzhou 3-day city break</h2>
+              </div>
+              <div class="memory-tags">
+                <span>Destination: Hangzhou</span>
+                <span>Days: 3</span>
+                <span>Budget: 3000 CNY</span>
+                <span>Preference: relaxed pace</span>
+              </div>
+            </div>
+
+            <div class="chat-list">
+              <article class="message message--user">
+                <span class="message__role">User</span>
+                <p>Help me plan a relaxed three-day Hangzhou trip. Budget around 3000 CNY. I want West Lake, tea culture, and not too much cross-city transit.</p>
+              </article>
+
+              <article class="message message--assistant">
+                <span class="message__role">Assistant</span>
+                <div class="message__markdown">
+                  <h3>Suggested direction</h3>
+                  <p>I routed this to the structured planner and built a low-friction Hangzhou itinerary.</p>
+                  <ul>
+                    <li>Hotel area centered on West Lake east side for easier morning starts</li>
+                    <li>One tea-culture afternoon in Longjing village</li>
+                    <li>Rain-friendly museum fallback and explicit pacing checks</li>
+                  </ul>
+                </div>
+              </article>
+            </div>
+
+            <div class="composer">
+              <div class="composer__toolbar">
+                <button class="composer__attach">Add Images</button>
+              </div>
+              <textarea placeholder="Type the destination, trip length, budget, preferences, or explain how the uploaded images should be used..."></textarea>
+              <button class="composer__submit">
+                <span class="composer__submit-main">Plan Trip</span>
+                <span class="composer__submit-sub">Ctrl + Enter</span>
+              </button>
+            </div>
+          </section>
+
+          <div class="workspace__side">
+            <section class="panel plan-panel">
+              <div class="panel__header">
+                <div>
+                  <p class="panel__eyebrow">Plan</p>
+                  <h2>Suggested Plan</h2>
+                </div>
+                <button class="plan-export">Export Scrapbook</button>
+              </div>
+
+              <article class="plan-summary">
+                <div>
+                  <p class="plan-summary__label">Summary</p>
+                  <h3>Three calm days around West Lake, tea hills, and compact evening food stops.</h3>
+                </div>
+                <div class="plan-highlights">
+                  <span>West Lake sunrise walk</span>
+                  <span>Longjing tea village</span>
+                  <span>Rain backup included</span>
+                </div>
+                <div class="plan-summary__stats">
+                  <div>
+                    <span>Estimated Total</span>
+                    <strong>2600-3200 CNY</strong>
+                  </div>
+                  <div>
+                    <span>Recommended Hotel Area</span>
+                    <strong>West Lake East</strong>
+                  </div>
+                </div>
+              </article>
+
+              <section class="plan-section">
+                <div class="plan-section__title">Constraint Checks</div>
+                <article class="plan-check plan-check--pass">
+                  <strong>Budget within range</strong>
+                  <p>Total estimate remains inside the requested ceiling with room for weather-driven taxi use.</p>
+                </article>
+                <article class="plan-check plan-check--warn">
+                  <strong>Saturday afternoon crowd risk</strong>
+                  <p>Shift Longjing tea village departure earlier to avoid peak ride-hailing congestion.</p>
+                </article>
+              </section>
+
+              <section class="plan-section">
+                <div class="plan-section__title">Budget Breakdown</div>
+                <div class="plan-budget-list">
+                  <article class="plan-budget-item">
+                    <div>
+                      <strong>Hotel</strong>
+                      <p>Mid-range hotel close to lakeside entrances and metro access.</p>
+                    </div>
+                    <strong>1200-1600</strong>
+                  </article>
+                  <article class="plan-budget-item">
+                    <div>
+                      <strong>Food</strong>
+                      <p>Tea house, local noodle stop, and one nicer dinner.</p>
+                    </div>
+                    <strong>550-780</strong>
+                  </article>
+                </div>
+              </section>
+
+              <section class="plan-section">
+                <div class="plan-section__title">Daily Route</div>
+                <article class="plan-day">
+                  <div class="plan-day__header">
+                    <div>
+                      <p>Day 1</p>
+                      <h4>West Lake arrival and slow scenic loop</h4>
+                    </div>
+                    <div class="plan-day__meta">
+                      <span>Activity 280 min</span>
+                      <span>Transit 54 min</span>
+                      <span>Cost 820 CNY</span>
+                    </div>
+                  </div>
+
+                  <div class="plan-stops">
+                    <article class="plan-stop">
+                      <div class="plan-stop__slot">MORNING</div>
+                      <div class="plan-stop__body">
+                        <strong>Broken Bridge to Bai Causeway walk</strong>
+                        <p>Warm-up route with low transit load and easy lake views before crowds build.</p>
+                        <div class="plan-stop__costs">
+                          <span>Ticket 0</span>
+                          <span>Food 35</span>
+                          <span>Transit 12</span>
+                        </div>
+                      </div>
+                    </article>
+
+                    <article class="plan-stop">
+                      <div class="plan-stop__slot">AFTERNOON</div>
+                      <div class="plan-stop__body">
+                        <strong>China National Tea Museum</strong>
+                        <p>Rain-friendly fallback preserved in the same district to keep the day compact.</p>
+                        <div class="plan-stop__costs">
+                          <span>Ticket 0</span>
+                          <span>Food 58</span>
+                          <span>Transit 18</span>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                </article>
+              </section>
+            </section>
+
+            <section class="panel timeline-panel">
+              <div class="panel__header">
+                <div>
+                  <p class="panel__eyebrow">Execution</p>
+                  <h2>How This Plan Was Built</h2>
+                </div>
+              </div>
+
+              <div class="timeline-list">
+                <article class="timeline-item">
+                  <div class="timeline-item__stage">ANALYZE_QUERY</div>
+                  <div>
+                    <strong>Understand the trip request</strong>
+                    <p>Destination, days, budget, and relaxed pacing preference were detected from the latest turn.</p>
+                  </div>
+                </article>
+
+                <article class="timeline-item">
+                  <div class="timeline-item__stage">RECALL_MEMORY</div>
+                  <div>
+                    <strong>Recall recent context</strong>
+                    <p>Short-term memory and long-term snippets were merged before routing.</p>
+                    <div class="timeline-item__details">
+                      <span class="timeline-item__pill">longTermCount: 3</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="timeline-item">
+                  <div class="timeline-item__stage">CALL_TOOL</div>
+                  <div>
+                    <strong>Resolve map and weather context</strong>
+                    <p>Amap-backed weather, POI, and transit checks were used to ground the itinerary.</p>
+                    <div class="timeline-item__details">
+                      <span class="timeline-item__pill">source: Amap</span>
+                      <span class="timeline-item__pill">destination: Hangzhou</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="timeline-item">
+                  <div class="timeline-item__stage">VALIDATE_PLAN</div>
+                  <div>
+                    <strong>Validate feasibility</strong>
+                    <p>Budget and pacing passed; a crowd warning remained visible instead of being silently hidden.</p>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

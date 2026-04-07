@@ -37,6 +37,43 @@ export interface ConversationMessage {
   content: string
   agentType?: AgentType
   createdAt: string
+  metadata?: ConversationMessageMetadata
+}
+
+export interface ConversationMessageImageAttachment {
+  id: string
+  name: string
+  mediaType: string
+  sizeBytes: number
+}
+
+export interface ConversationImageContext {
+  conversationId: string
+  summary: string
+  facts: ConversationImageFacts
+  attachments: ConversationMessageImageAttachment[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ConversationImageFacts {
+  origin?: string
+  destination?: string
+  startDate?: string
+  endDate?: string
+  days?: number
+  budget?: string
+  hotelName?: string
+  hotelArea?: string
+  activities: string[]
+  missingFields: string[]
+}
+
+export interface ConversationMessageMetadata {
+  imageAttachments?: ConversationMessageImageAttachment[]
+  imageAttachmentCount?: number
+  imageContextSummary?: string
+  imageFacts?: ConversationImageFacts
 }
 
 export interface TaskMemory {
@@ -210,6 +247,78 @@ export interface TravelPlan {
   updatedAt: string
 }
 
+export interface ConversationFeedback {
+  conversationId: string
+  label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED'
+  reasonCode?: string
+  note?: string
+  agentType?: AgentType
+  destination?: string
+  days?: number
+  budget?: string
+  hasTravelPlan: boolean
+  metadata: Record<string, string | number | boolean | string[] | null>
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ConversationFeedbackRequest {
+  label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED'
+  reasonCode?: string
+  note?: string
+}
+
+export interface ChatImageAttachmentRequest {
+  name: string
+  mediaType: string
+  dataUrl: string
+}
+
+export interface ChatRequest {
+  conversationId?: string
+  message?: string
+  attachments?: ChatImageAttachmentRequest[]
+  imageContextAction?: 'CONFIRM' | 'DISMISS'
+}
+
+export interface FeedbackBreakdownItem {
+  key: string
+  totalCount: number
+  acceptedCount: number
+  partialCount: number
+  rejectedCount: number
+  acceptedRatePct: number
+  usableRatePct: number
+}
+
+export interface FeedbackLoopFinding {
+  type: string
+  key: string
+  totalCount: number
+  acceptedCount: number
+  partialCount: number
+  rejectedCount: number
+  usableRatePct: number
+  recommendation: string
+}
+
+export interface FeedbackLoopSummaryResponse {
+  generatedAt: string
+  limitApplied: number
+  sampleCount: number
+  acceptedCount: number
+  partialCount: number
+  rejectedCount: number
+  acceptedRatePct: number
+  usableRatePct: number
+  structuredPlanCount: number
+  structuredPlanCoveragePct: number
+  topReasonCodes: FeedbackBreakdownItem[]
+  topDestinations: FeedbackBreakdownItem[]
+  topAgentTypes: FeedbackBreakdownItem[]
+  keyFindings: FeedbackLoopFinding[]
+}
+
 export interface TimelineEvent {
   id: string
   conversationId: string
@@ -234,4 +343,6 @@ export interface ConversationDetailResponse {
   timeline: TimelineEvent[]
   taskMemory: TaskMemory
   travelPlan: TravelPlan | null
+  feedback: ConversationFeedback | null
+  imageContextCandidate: ConversationImageContext | null
 }

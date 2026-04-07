@@ -2,7 +2,7 @@
 
 ## Environment
 
-- Copy [.env.travel-agent.example](/E:/Internship/program/TravelAgent/.env.travel-agent.example) to `.env.travel-agent`.
+- Copy [`.env.travel-agent.example`](../.env.travel-agent.example) to `.env.travel-agent`.
 - Set:
   - `SPRING_PROFILES_ACTIVE=prod`
   - `SPRING_AI_OPENAI_API_KEY`
@@ -65,6 +65,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps
 
 ## Runtime
 
+- Script and local output layout:
+  - [`docs/operations.md`](./operations.md)
 - Start services:
 
 ```powershell
@@ -76,6 +78,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
 ```
+
+- Runtime logs should appear under `logs/runtime/`.
+- Release smoke logs should appear under `logs/release-smoke/`.
 
 ### Windows service mode
 

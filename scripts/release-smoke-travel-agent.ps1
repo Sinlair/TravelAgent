@@ -11,8 +11,9 @@ $bundledJava = Join-Path $repoRoot ".tooling\jdk-21\jdk-21.0.10+7\bin\java.exe"
 $java = if (Test-Path $bundledJava) { $bundledJava } else { "java" }
 $jarPath = Join-Path $repoRoot "travel-agent-app\target\travel-agent-app.jar"
 $backendUrl = "http://localhost:$BackendPort"
-$stdoutLog = Join-Path $repoRoot "release-smoke.backend.stdout.log"
-$stderrLog = Join-Path $repoRoot "release-smoke.backend.stderr.log"
+$logDir = Join-Path $repoRoot "logs\release-smoke"
+$stdoutLog = Join-Path $logDir "backend.stdout.log"
+$stderrLog = Join-Path $logDir "backend.stderr.log"
 $samplePayload = @{
     message = "Plan a 2 day Hangzhou trip from Shanghai with a 1800 CNY budget. I want a relaxed pace, West Lake, local food, and a museum."
 } | ConvertTo-Json -Depth 5
@@ -69,6 +70,7 @@ if (-not (Test-Path $jarPath)) {
     throw "Backend jar not found at $jarPath"
 }
 
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 if (Test-Path $stdoutLog) { Remove-Item $stdoutLog -Force }
 if (Test-Path $stderrLog) { Remove-Item $stderrLog -Force }
 

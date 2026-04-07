@@ -33,7 +33,7 @@ The following must never be committed:
 - `.env.travel-agent`
 - real OpenAI or OpenAI-compatible provider keys
 - real Amap / Gaode keys
-- local runtime logs under `data/runtime`
+- local runtime logs under `logs/`
 - private certificates, keystores, or token files
 
 If a secret is exposed:

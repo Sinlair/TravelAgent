@@ -6,273 +6,127 @@
 </p>
 
 <p align="center">
-  <img alt="agent routing" src="https://img.shields.io/badge/Agent-Routing-111827?style=for-the-badge" />
-  <img alt="travel planning" src="https://img.shields.io/badge/Structured-Planning-0F766E?style=for-the-badge" />
-  <img alt="rag" src="https://img.shields.io/badge/RAG-Travel%20Knowledge-7C3AED?style=for-the-badge" />
-  <img alt="amap" src="https://img.shields.io/badge/Amap-Gaode-0284C7?style=for-the-badge" />
+  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white" />
+  <img alt="Spring Boot 4" src="https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white" />
+  <img alt="Spring AI" src="https://img.shields.io/badge/Spring%20AI-2.0-0F766E" />
+  <img alt="Vue 3" src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white" />
+  <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" />
+  <img alt="Vitest" src="https://img.shields.io/badge/Vitest-3-6E9F18?logo=vitest&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white" />
+  <img alt="Milvus Optional" src="https://img.shields.io/badge/Milvus-Optional-00A1EA" />
+  <img alt="OpenAI Compatible" src="https://img.shields.io/badge/OpenAI-Compatible-10A37F?logo=openai&logoColor=white" />
+  <img alt="Amap Gaode" src="https://img.shields.io/badge/Amap-Gaode-1677FF" />
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-Tooling-7C3AED" />
+  <img alt="Docker Ready" src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" />
 </p>
 
 [![CI](https://github.com/Sinlair/TravelAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/Sinlair/TravelAgent/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
-![Spring Boot 4](https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white)
-![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
 
-An open-source multi-agent travel planning application built with Spring Boot, Spring AI, Vue 3, SQLite, optional Amap MCP integration, and a city-level travel knowledge RAG pipeline.
+Travel Agent is a full-stack multi-agent travel planning application built with Spring Boot, Spring AI, Vue 3, SQLite, optional Amap MCP integration, and an opinionated travel knowledge RAG pipeline.
 
-The project is designed to do more than return free-form chat. It routes requests to specialized agents, builds structured itineraries, validates them against practical constraints, enriches them with weather and map context, and keeps a UI-friendly execution timeline.
+It is designed to produce more than chat answers. The system routes requests to specialist agents, builds structured itineraries, validates feasibility, enriches plans with map and weather context, keeps a visible execution timeline, and closes the loop with explicit recommendation feedback.
 
-## At a Glance
+## Homepage
 
-- 🤖 Multi-agent routing for weather, geo, planning, and general requests
-- 🧭 Structured itinerary generation with validation and repair
-- 🗺️ Amap / Gaode enrichment for POIs, weather, and transit
-- 🧠 Travel knowledge RAG with provenance and trip-style hints
-- 🖥️ Full-stack developer workflow with scripts, Docker, smoke tests, and CI
-
-## Overview
-
-- `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialist routing
-- structured itinerary generation with validation and repair
-- Amap / Gaode enrichment for weather, geocoding, POI matching, and transit
-- destination knowledge retrieval from local data or Milvus
-- full-stack delivery with Vue UI, health checks, scripts, Docker, and CI
-
-## Contents
-
-- [What It Does](#what-it-does)
-- [Why This Repo Exists](#why-this-repo-exists)
-- [Technology Stack](#technology-stack)
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [Manual Run](#manual-run)
-- [Docker Deployment](#docker-deployment)
-- [Testing and CI](#testing-and-ci)
-- [Travel Knowledge RAG](#travel-knowledge-rag)
-- [Security Notes](#security-notes)
-- [Contributing](#contributing)
-- [License](#license)
+<p align="center">
+  <img src="./docs/assets/homepage.png" alt="Travel Agent homepage" />
+</p>
 
 ## What It Does
 
-- Routes user requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL`
-- Generates structured travel plans with budget, pace, opening-hours, and transit-load checks
-- Enriches itinerary stops with Amap / Gaode map data
-- Retrieves destination-specific travel knowledge from a local dataset or Milvus
-- Stores conversations, task memory, timelines, and travel plans in SQLite
-- Exposes a Vue 3 frontend for chat, plan visualization, timeline inspection, and retrieval provenance
+- Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists.
+- Produces structured plans with hotel area suggestions, budget ranges, day-by-day routes, and constraint checks.
+- Uses Amap / Gaode data for weather, geocoding, POI grounding, and transit enrichment.
+- Supports text input plus image attachments, then feeds extracted image context into the same planning workflow.
+- Retrieves destination hints from curated local knowledge or Milvus-backed vector search.
+- Stores conversations, task memory, travel plans, feedback, and timeline events in SQLite.
+- Exposes a Vue workspace for chat, execution trace, plan review, and feedback analysis.
 
-## Why This Repo Exists
+## Core Features
 
-Most travel assistants stop at chat completion. This project focuses on a more product-like workflow:
+| Area | What you get |
+| --- | --- |
+| Multi-agent workflow | LLM-first routing with fallback logic and specialist execution contexts |
+| Structured planning | Budget-aware itineraries, daily stops, travel checks, validation, and repair |
+| Grounded enrichment | Amap-backed weather snapshots, POI matches, hotel area resolution, and transit routes |
+| Multimodal intake | Image uploads for bookings, tickets, maps, or screenshots with extracted travel facts |
+| Retrieval | Travel knowledge RAG with topic inference, trip-style hints, provenance, and local fallback |
+| Feedback loop | `ACCEPTED` / `PARTIAL` / `REJECTED` labels, exportable datasets, and on-demand summary analysis |
+| Operations | Preflight checks, smoke tests, start/stop scripts, Docker assets, and CI |
 
-- deterministic plan structure instead of only prose
-- validation and repair loops instead of single-shot generation
-- visible planner context instead of hidden internal reasoning
-- operational scripts, health checks, smoke tests, and CI instead of demo-only code
+## How It Works
 
-## Highlights
+1. A user message enters `ConversationWorkflow`.
+2. Recent history, task memory, conversation summary, and long-term memory are assembled.
+3. `AgentRouter` chooses the best specialist.
+4. Planner requests go through generation, enrichment, validation, repair, and persistence.
+5. The UI receives the final answer together with task memory, timeline events, and structured plan data.
 
-- Agent-based request routing instead of a single general-purpose reply path
-- Constraint-aware itinerary generation with budget, pace, opening-hours, and transit checks
-- Real map enrichment through Amap / Gaode plus optional MCP-based tool execution
-- Travel knowledge RAG with topic inference, trip-style hints, and provenance
-- Full-stack developer experience with frontend, scripts, Docker, smoke tests, and CI
-
-## Technology Stack
-
-- Backend
-  - Java 21
-  - Spring Boot 4
-  - Spring WebFlux
-  - Spring Validation
-  - Spring Boot Actuator
-  - JDBC + SQLite
-  - Jackson
-- AI and orchestration
-  - Spring AI
-  - OpenAI chat and embedding integration
-  - OpenAI-compatible gateway support via `SPRING_AI_OPENAI_BASE_URL`
-  - Model Context Protocol (MCP)
-  - standalone Amap MCP server built with Spring AI MCP Server WebMVC
-- Retrieval and memory
-  - local curated + cleaned travel knowledge dataset
-  - optional Milvus vector store
-  - long-term memory + destination knowledge retrieval
-- Frontend
-  - Vue 3
-  - TypeScript
-  - Vite
-  - Pinia
-  - Vitest
-  - Vue Test Utils
-  - jsdom
-- Delivery and operations
-  - Maven Wrapper
-  - npm
-  - Docker and Docker Compose
-  - Nginx
-  - PowerShell automation scripts
-  - GitHub Actions CI
-  - Micrometer + OpenTelemetry tracing
-  - NSSM-based Windows service deployment
+For image-assisted turns, uploaded images are first summarized into travel-relevant facts, then the confirmed facts are merged back into the same workflow instead of branching into a separate path.
 
 ## Architecture
 
-High-level request flow:
+| Module | Responsibility |
+| --- | --- |
+| `travel-agent-types` | Shared API response and exception types |
+| `travel-agent-domain` | Domain entities, value objects, repository interfaces, and service contracts |
+| `travel-agent-amap` | Amap HTTP gateway and configuration |
+| `travel-agent-infrastructure` | Spring AI agents, retrieval, persistence adapters, and vector integrations |
+| `travel-agent-app` | WebFlux API, health endpoints, timeline streaming, and bootstrapping |
+| `travel-agent-amap-mcp-server` | Standalone MCP server for Amap-backed tools |
+| `web` | Vue 3 frontend workspace |
 
-1. A user message enters `ConversationWorkflow`.
-2. Short-term history, task memory, summary, and long-term memory are assembled.
-3. `AgentRouter` selects the most suitable specialist.
-4. The specialist executes with shared context.
-5. Planner requests go through generate, enrich, validate, repair, and revalidate stages.
-6. The final answer, task memory, timeline, and structured plan are persisted.
+## Stack
 
-Core modules:
-
-- `travel-agent-types`: shared response and exception types
-- `travel-agent-domain`: entities, value objects, repository interfaces, domain services
-- `travel-agent-amap`: HTTP Amap gateway and configuration
-- `travel-agent-infrastructure`: Spring AI agents, retrieval, vector stores, persistence adapters
-- `travel-agent-app`: WebFlux API, health endpoints, timeline streaming, bootstrap runners
-- `travel-agent-amap-mcp-server`: standalone MCP server for Amap-backed tools
-- `web`: Vue 3 frontend
-
-## Repository Layout
-
-- [`travel-agent-app`](travel-agent-app)
-- [`travel-agent-domain`](travel-agent-domain)
-- [`travel-agent-infrastructure`](travel-agent-infrastructure)
-- [`travel-agent-amap`](travel-agent-amap)
-- [`travel-agent-amap-mcp-server`](travel-agent-amap-mcp-server)
-- [`travel-agent-types`](travel-agent-types)
-- [`web`](web)
-- [`scripts`](scripts)
-- [`docs`](docs)
-
-## Current Status
-
-This repository is already suitable for:
-
-- local development
-- demos and experiments
-- self-hosted MVP deployment
-- release-style smoke validation
-
-It already includes:
-
-- health indicators
-- preflight checks
-- release smoke scripts
-- start / stop scripts
-- Docker deployment assets
-- GitHub Actions CI
-
-## Prerequisites
-
-- Java 21
-- Node.js / npm for frontend development
-- Docker Desktop if you want Milvus or containerized deployment
-- Python 3 only if you want to rerun the knowledge collection / cleaning pipeline
-
-Current automation is Windows-first because the operational scripts are PowerShell-based, but the application itself is not conceptually tied to Windows.
-
-## Configuration
-
-Copy [`.env.travel-agent.example`](.env.travel-agent.example) to `.env.travel-agent` and fill the values you need.
-
-The example file defaults to `LOCAL` mode so the fastest local path works without MCP.
-
-Important environment variables:
-
-- OpenAI / compatible provider
-  - `SPRING_AI_OPENAI_API_KEY`
-  - `SPRING_AI_OPENAI_BASE_URL`
-  - `SPRING_AI_OPENAI_CHAT_MODEL`
-  - `SPRING_AI_OPENAI_EMBEDDING_MODEL`
-  - `SPRING_PROFILES_ACTIVE=prod` for deployed environments
-- Amap / tools
-  - `TRAVEL_AGENT_TOOL_PROVIDER=LOCAL|MCP`
-  - `TRAVEL_AGENT_AMAP_MCP_ENABLED=true|false`
-  - `TRAVEL_AGENT_AMAP_API_KEY`
-  - `TRAVEL_AGENT_AMAP_REQUESTS_PER_SECOND`
-- Retrieval
-  - `TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED`
-  - `TRAVEL_AGENT_KNOWLEDGE_VECTOR_URI`
-  - `TRAVEL_AGENT_KNOWLEDGE_VECTOR_COLLECTION_NAME`
-  - `TRAVEL_AGENT_MILVUS_ENABLED`
-  - `TRAVEL_AGENT_MILVUS_URI`
-- Frontend
-  - `VITE_AMAP_WEB_KEY`
-  - `VITE_AMAP_SECURITY_JS_CODE`
-
-Notes:
-
-- `SPRING_AI_OPENAI_BASE_URL` allows the backend to work with OpenAI-compatible gateways.
-- `TRAVEL_AGENT_AMAP_REQUESTS_PER_SECOND` defaults to `3.0`, which matches a conservative Amap HTTP quota.
-- `.env.travel-agent` is ignored by Git and must not be committed.
+| Layer | Technology |
+| --- | --- |
+| Backend | Java 21, Spring Boot 4, Spring WebFlux, Spring Validation, Spring Boot Actuator |
+| AI | Spring AI, OpenAI-compatible chat integration, MCP |
+| Storage | SQLite, optional Milvus |
+| Frontend | Vue 3, TypeScript, Vite, Pinia, Vitest |
+| Ops | PowerShell scripts, Docker, Docker Compose, Nginx, GitHub Actions |
 
 ## Quick Start
 
-### 1. Preflight
+### 1. Prepare your environment
+
+- Java 21
+- Node.js with npm
+- Docker Desktop if you want Milvus or containerized deployment
+- Python 3 only if you want to rerun collection / cleaning scripts
+
+Copy the example environment file:
+
+```powershell
+Copy-Item .env.travel-agent.example .env.travel-agent
+```
+
+### 2. Run preflight
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
 ```
 
-What it checks:
-
-- Java availability
-- OpenAI key presence / placeholder shape
-- MCP reachability when MCP mode is enabled
-- cleaned knowledge dataset availability
-- backend health when requested
-
-The preflight script loads `.env.travel-agent` automatically when the file exists.
-
-To validate a different env file explicitly:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1 -EnvFile .env.travel-agent.example -SkipHealthCheck
-```
-
-### 2. Fast Local Startup
+### 3. Start the app
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend -RunPreflight -ToolProvider LOCAL
 ```
 
-Stop it with:
+Default local endpoints:
+
+- Backend: `http://localhost:18080`
+- Frontend: `http://localhost:4173`
+
+### 4. Stop the app
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
 ```
 
-Default local endpoints:
-
-- backend: `http://localhost:18080`
-- frontend: `http://localhost:4173`
-
-### 3. Release Smoke
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1
-```
-
-The smoke path verifies:
-
-- backend startup
-- actuator health response
-- planner API wrapper success
-- structured `travelPlan`
-- weather snapshot presence
-- knowledge retrieval presence
-- frontend build artifact presence
-
-## Manual Run
+## Manual Development
 
 ### Backend
 
@@ -281,215 +135,161 @@ $env:SPRING_AI_OPENAI_API_KEY = "<your-openai-key>"
 .\mvnw.cmd -pl travel-agent-app -am spring-boot:run
 ```
 
-For deployed environments:
+### Frontend
 
 ```powershell
-$env:SPRING_PROFILES_ACTIVE = "prod"
+Set-Location .\web
+npm.cmd ci
+npm.cmd run dev
 ```
 
-For an OpenAI-compatible provider:
-
-```powershell
-$env:SPRING_AI_OPENAI_BASE_URL = "https://api.example.com"
-$env:SPRING_AI_OPENAI_CHAT_MODEL = "gpt-5.4"
-```
-
-### Standalone Amap MCP Server
+### Standalone Amap MCP server
 
 ```powershell
 $env:TRAVEL_AGENT_AMAP_API_KEY = "<your-amap-web-service-key>"
 .\mvnw.cmd -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
-### Frontend
+## Configuration
 
-```powershell
-cd web
-npm.cmd ci
-npm.cmd run dev
-```
+The repo is Windows-first operationally because the automation is PowerShell-based, but the application itself is not tied to Windows.
 
-## Docker Deployment
+Important environment variables:
+
+| Category | Variables |
+| --- | --- |
+| OpenAI / compatible provider | `SPRING_AI_OPENAI_API_KEY`, `SPRING_AI_OPENAI_BASE_URL`, `SPRING_AI_OPENAI_CHAT_MODEL`, `SPRING_AI_OPENAI_EMBEDDING_MODEL` |
+| Tool provider | `TRAVEL_AGENT_TOOL_PROVIDER`, `TRAVEL_AGENT_AMAP_MCP_ENABLED`, `TRAVEL_AGENT_AMAP_API_KEY`, `TRAVEL_AGENT_AMAP_REQUESTS_PER_SECOND` |
+| Retrieval | `TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED`, `TRAVEL_AGENT_KNOWLEDGE_VECTOR_URI`, `TRAVEL_AGENT_KNOWLEDGE_VECTOR_COLLECTION_NAME`, `TRAVEL_AGENT_MILVUS_ENABLED`, `TRAVEL_AGENT_MILVUS_URI` |
+| Frontend map rendering | `VITE_AMAP_WEB_KEY`, `VITE_AMAP_SECURITY_JS_CODE` |
+| Deployment profile | `SPRING_PROFILES_ACTIVE=prod` |
+
+Notes:
+
+- `SPRING_AI_OPENAI_BASE_URL` lets the backend work with OpenAI-compatible gateways.
+- `TRAVEL_AGENT_TOOL_PROVIDER` supports `LOCAL` and `MCP`.
+- `.env.travel-agent` is ignored by Git and should never be committed.
+
+## Docker
 
 Included assets:
 
-- [`Dockerfile.app`](Dockerfile.app)
-- [`Dockerfile.mcp`](Dockerfile.mcp)
-- [`docker-compose.app.yml`](docker-compose.app.yml)
-- [`docker-compose.milvus.yml`](docker-compose.milvus.yml)
-- [`web/Dockerfile`](web/Dockerfile)
-- [`web/nginx.conf`](web/nginx.conf)
+- [`Dockerfile.app`](./Dockerfile.app)
+- [`Dockerfile.mcp`](./Dockerfile.mcp)
+- [`docker-compose.app.yml`](./docker-compose.app.yml)
+- [`docker-compose.milvus.yml`](./docker-compose.milvus.yml)
+- [`web/Dockerfile`](./web/Dockerfile)
+- [`web/nginx.conf`](./web/nginx.conf)
 
-Run the app stack:
+Start the main stack:
 
 ```powershell
 docker compose -f docker-compose.app.yml up --build -d
 ```
 
-Default containerized ports:
-
-- backend: `8080`
-- MCP server: `8090` when the `mcp` profile is enabled
-- frontend: `8088`
-
-Run the app stack with MCP:
+Start the stack with MCP enabled:
 
 ```powershell
 docker compose -f docker-compose.app.yml --profile mcp up --build -d
 ```
 
-Start Milvus separately when vector retrieval is needed:
+Start Milvus separately when vector retrieval is enabled:
 
 ```powershell
 docker compose -f docker-compose.milvus.yml up -d
 ```
 
-The Docker app stack defaults the backend container to `SPRING_PROFILES_ACTIVE=prod`, so `/actuator/health` remains available while detailed component output is reduced for unauthenticated callers.
+## Testing
 
-## Windows Service Deployment
-
-This repository includes Windows service helpers built around NSSM:
-
-- [`scripts/install-windows-services.ps1`](scripts/install-windows-services.ps1)
-- [`scripts/uninstall-windows-services.ps1`](scripts/uninstall-windows-services.ps1)
-- [`web/server.mjs`](web/server.mjs)
-
-Install example:
+### Backend
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-windows-services.ps1 -NssmPath C:\tools\nssm\nssm.exe -Build
+.\mvnw.cmd test
 ```
 
-Remove example:
+### Frontend
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-windows-services.ps1 -NssmPath C:\tools\nssm\nssm.exe
-```
-
-## Testing and CI
-
-GitHub Actions workflow:
-
-- [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
-- runs on pushes to `main`, pull requests, and manual dispatch
-- executes backend Maven tests and frontend test/build validation
-
-Backend:
-
-```powershell
-.\mvnw.cmd -B test
-```
-
-Planner-focused backend regression set:
-
-```powershell
-.\mvnw.cmd -pl travel-agent-infrastructure,travel-agent-app -am "-Dtest=TravelKnowledgeRetrievalSupportTest,TravelKnowledgeVectorStoreRepositoryTest,LocalTravelKnowledgeRepositoryTest,RoutingTravelKnowledgeRepositoryTest,TravelKnowledgeSeedServiceTest,TravelPlannerAgentTest,ConversationWorkflowPlannerDemoTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
-```
-
-Frontend:
-
-```powershell
-cd web
-npm.cmd ci
+Set-Location .\web
 npm.cmd run test
 npm.cmd run build
 ```
 
-## Health and Observability
+### Release smoke
 
-Available actuator endpoint:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1
+```
 
-- `GET /actuator/health`
+## Feedback, RAG, and Multimodal
 
-Current health contributors include:
+The project already contains the first practical data flywheel for itinerary quality improvement:
 
-- `openAi`
-- `toolProvider`
-- `knowledgeDataset`
-- `knowledgeVector`
+- recommendation feedback can be stored per conversation
+- recent feedback can be exported as raw records or aggregated summaries
+- planner failures can be analyzed by destination, reason code, agent type, and validation signals
 
-Tracing configuration:
+It also supports image-assisted travel intake:
 
-- `OTEL_EXPORTER_OTLP_ENDPOINT`
-- `TRAVEL_AGENT_TRACING_SAMPLING_PROBABILITY`
+- users can upload travel images in chat
+- extracted travel facts are staged for confirmation
+- confirmed facts are merged into the existing planning context
 
-## Travel Knowledge RAG
+Related docs:
 
-Knowledge files:
+- [`docs/knowledge-rag.md`](./docs/knowledge-rag.md)
+- [`docs/multimodal-roadmap.md`](./docs/multimodal-roadmap.md)
+- [`docs/multimodal-roadmap.zh-CN.md`](./docs/multimodal-roadmap.zh-CN.md)
+- [`docs/operations.md`](./docs/operations.md)
+- [`docs/release-checklist.md`](./docs/release-checklist.md)
 
-- [`travel-agent-infrastructure/src/main/resources/travel-knowledge.json`](travel-agent-infrastructure/src/main/resources/travel-knowledge.json)
-- [`travel-agent-infrastructure/src/main/resources/travel-knowledge.collected.json`](travel-agent-infrastructure/src/main/resources/travel-knowledge.collected.json)
-- [`travel-agent-infrastructure/src/main/resources/travel-knowledge.cleaned.json`](travel-agent-infrastructure/src/main/resources/travel-knowledge.cleaned.json)
+## Operational Scripts
 
-Current retrieval behavior:
+| Script | Purpose |
+| --- | --- |
+| [`scripts/preflight-travel-agent.ps1`](./scripts/preflight-travel-agent.ps1) | Validate local prerequisites and configuration |
+| [`scripts/start-travel-agent.ps1`](./scripts/start-travel-agent.ps1) | Start backend and optional frontend / MCP services |
+| [`scripts/stop-travel-agent.ps1`](./scripts/stop-travel-agent.ps1) | Stop processes started by the launch script |
+| [`scripts/release-smoke-travel-agent.ps1`](./scripts/release-smoke-travel-agent.ps1) | Run a release-style backend and frontend smoke check |
+| [`scripts/export-feedback-dataset.ps1`](./scripts/export-feedback-dataset.ps1) | Export raw feedback records |
+| [`scripts/analyze-feedback-loop.ps1`](./scripts/analyze-feedback-loop.ps1) | Build aggregated feedback summaries and markdown reports |
 
-- Milvus-first, local fallback second
-- city alias resolution
-- topic inference
-- trip-style inference
-- topic-balanced selection
-- planner-oriented subtype ranking
-- retrieval observability exposed to planner and frontend
+## Known Limits
 
-More detail:
+- Amap-backed grounding is the strongest path today, so the planner currently fits China-focused travel scenarios best.
+- Some retrieval chunks are still more listing-shaped than ideal planner guidance.
+- Production packaging is usable, but secrets, TLS, and reverse-proxy templates are not deeply opinionated yet.
+- Full value from the planner requires valid model-provider and map-provider configuration.
 
-- [`docs/knowledge-rag.md`](docs/knowledge-rag.md)
+## Repository Layout
 
-Collector / cleaner scripts:
-
-- [`scripts/collect_travel_attractions.py`](scripts/collect_travel_attractions.py)
-- [`scripts/clean_travel_knowledge.py`](scripts/clean_travel_knowledge.py)
-- [`scripts/seed-travel-knowledge.ps1`](scripts/seed-travel-knowledge.ps1)
-
-## Security Notes
-
-Before publishing or pushing:
-
-- never commit `.env.travel-agent`
-- never commit real OpenAI, Amap, or other provider secrets
-- never commit local runtime logs under `data/runtime`
-- remove generated smoke logs before publishing
-- rotate any credential that has already been exposed in chat, screenshots, or terminal history
-
-The current Git ignore rules already cover local env files, runtime output, and common key / certificate file types.
-
-## Known Limitations
-
-- Some transit knowledge chunks are still more listing-like than ideal planner guidance.
-- Release smoke is easiest to run in `LOCAL` tool mode.
-- The planner currently handles some requests more robustly than others when map enrichment produces heavy cross-district transit.
-- Production packaging still lacks polished templates for TLS / domain reverse proxy and external secret managers.
+```text
+.
+|- travel-agent-app
+|- travel-agent-domain
+|- travel-agent-infrastructure
+|- travel-agent-amap
+|- travel-agent-amap-mcp-server
+|- travel-agent-types
+|- web
+|- scripts
+`- docs
+```
 
 ## Contributing
 
 Issues and pull requests are welcome.
 
-If you want to contribute, the most useful areas right now are:
+Useful contribution areas right now:
 
-- planner robustness under real map data
+- planner robustness and validation logic
 - retrieval quality and ranking
-- deployment templates and production hardening
-- frontend UX polish
-- dataset cleaning and travel knowledge coverage
+- frontend workflow polish
+- production deployment hardening
+- travel knowledge dataset quality
 
-## Docs
-
-- [`LICENSE`](LICENSE)
-- [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- [`SECURITY.md`](SECURITY.md)
-- [`docs/knowledge-rag.md`](docs/knowledge-rag.md)
-- [`docs/release-checklist.md`](docs/release-checklist.md)
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) and [`SECURITY.md`](./SECURITY.md) before sending changes.
 
 ## License
 
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
-
-## Suggested Release Flow
-
-1. Fill `.env.travel-agent`
-2. Run preflight
-3. Run backend and frontend tests
-4. Confirm GitHub Actions CI is green
-5. Run release smoke
-6. Start the target deployment mode
-7. Verify `/actuator/health`
+This project is licensed under the MIT License. See [`LICENSE`](./LICENSE).

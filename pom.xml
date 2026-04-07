@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.xx2201</groupId>
+    <groupId>com.travalagent</groupId>
     <artifactId>travel-agent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>

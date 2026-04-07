@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS conversation_message (
     role TEXT NOT NULL,
     content TEXT NOT NULL,
     agent_type TEXT,
+    metadata_json TEXT,
     created_at TEXT NOT NULL
 );
 
@@ -61,3 +62,26 @@ CREATE TABLE IF NOT EXISTS long_term_memory (
 CREATE INDEX IF NOT EXISTS idx_long_term_memory_conversation_time
     ON long_term_memory (conversation_id, created_at);
 
+CREATE TABLE IF NOT EXISTS conversation_feedback (
+    conversation_id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    reason_code TEXT,
+    note TEXT,
+    agent_type TEXT,
+    destination TEXT,
+    days INTEGER,
+    budget TEXT,
+    has_travel_plan INTEGER NOT NULL,
+    metadata_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS conversation_image_context (
+    conversation_id TEXT PRIMARY KEY,
+    summary TEXT NOT NULL,
+    facts_json TEXT,
+    attachments_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import PlanPanel from './PlanPanel.vue'
-import type { TravelPlan } from '../types/api'
+import type { ConversationFeedback, TravelPlan } from '../types/api'
 
 const travelPlan: TravelPlan = {
   conversationId: 'conversation-1',
@@ -61,11 +61,30 @@ const travelPlan: TravelPlan = {
   updatedAt: '2026-04-03T08:00:00Z'
 }
 
+const feedback: ConversationFeedback = {
+  conversationId: 'conversation-1',
+  label: 'PARTIAL',
+  reasonCode: 'edited_before_use',
+  note: 'Adjusted the hotel pick.',
+  agentType: 'TRAVEL_PLANNER',
+  destination: 'Hangzhou',
+  days: 2,
+  budget: '1800 CNY',
+  hasTravelPlan: true,
+  metadata: {
+    dayCount: 2
+  },
+  createdAt: '2026-04-03T08:00:00Z',
+  updatedAt: '2026-04-03T08:00:00Z'
+}
+
 describe('PlanPanel', () => {
   it('renders weather, knowledge, and closest feasible alternative sections', () => {
     const wrapper = mount(PlanPanel, {
       props: {
         travelPlan,
+        feedback,
+        feedbackSaving: false,
         preferChinese: false
       },
       global: {
@@ -78,6 +97,9 @@ describe('PlanPanel', () => {
     })
 
     expect(wrapper.text()).toContain('Closest Feasible Alternative')
+    expect(wrapper.text()).toContain('Recommendation Feedback')
+    expect(wrapper.text()).toContain('Partially accepted')
+    expect(wrapper.text()).toContain('Use with Edits')
     expect(wrapper.text()).toContain('Weather Snapshot')
     expect(wrapper.text()).toContain('Retrieved Knowledge')
     expect(wrapper.text()).toContain('Point-in-time snapshot')
@@ -89,5 +111,29 @@ describe('PlanPanel', () => {
     expect(wrapper.text()).toContain('Stay area')
     expect(wrapper.text()).toContain('Strong 38')
     expect(wrapper.text()).toContain('Hubin works well for a first-night meal')
+  })
+
+  it('emits structured feedback when the user accepts the plan', async () => {
+    const wrapper = mount(PlanPanel, {
+      props: {
+        travelPlan,
+        feedback: null,
+        feedbackSaving: false,
+        preferChinese: false
+      },
+      global: {
+        stubs: {
+          PlanMap: {
+            template: '<div class="plan-map-stub">Map</div>'
+          }
+        }
+      }
+    })
+
+    await wrapper.get('.plan-feedback-button').trigger('click')
+
+    expect(wrapper.emitted('feedback')).toEqual([
+      [{ label: 'ACCEPTED', reasonCode: 'used_as_is' }]
+    ])
   })
 })

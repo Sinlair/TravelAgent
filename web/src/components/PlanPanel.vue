@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PlanMap from './PlanMap.vue'
-import type { TravelKnowledgeSelection, TravelPlan, TravelPlanStop, TravelTransitLeg, TravelTransitStep } from '../types/api'
+import type {
+  ConversationFeedback,
+  ConversationFeedbackRequest,
+  TravelKnowledgeSelection,
+  TravelPlan,
+  TravelPlanStop,
+  TravelTransitLeg,
+  TravelTransitStep
+} from '../types/api'
 import { downloadTravelScrapbook } from '../utils/travelScrapbook'
 import { hotelPointId, stopPointId } from '../utils/travelPlan'
 
 const props = defineProps<{
   travelPlan: TravelPlan | null
+  feedback: ConversationFeedback | null
+  feedbackSaving: boolean
   preferChinese: boolean
+}>()
+
+const emit = defineEmits<{
+  feedback: [payload: ConversationFeedbackRequest]
 }>()
 
 const activePointId = ref('')
@@ -274,6 +288,48 @@ async function exportScrapbook() {
   await downloadTravelScrapbook(props.travelPlan, props.preferChinese)
 }
 
+function submitFeedback(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED') {
+  const reasonCode = {
+    ACCEPTED: 'used_as_is',
+    PARTIAL: 'edited_before_use',
+    REJECTED: 'not_useful'
+  }[label]
+  emit('feedback', { label, reasonCode })
+}
+
+const feedbackLabel = computed(() => {
+  if (!props.feedback) {
+    return props.preferChinese ? '未记录' : 'Not recorded'
+  }
+  return {
+    ACCEPTED: props.preferChinese ? '已接受' : 'Accepted',
+    PARTIAL: props.preferChinese ? '部分接受' : 'Partially accepted',
+    REJECTED: props.preferChinese ? '已拒绝' : 'Rejected'
+  }[props.feedback.label]
+})
+
+const feedbackReason = computed(() => {
+  if (!props.feedback?.reasonCode) {
+    return ''
+  }
+  return {
+    used_as_is: props.preferChinese ? '基本无需修改' : 'Used as-is',
+    edited_before_use: props.preferChinese ? '使用前做了调整' : 'Edited before use',
+    not_useful: props.preferChinese ? '当前不打算采用' : 'Not useful enough'
+  }[props.feedback.reasonCode] ?? props.feedback.reasonCode
+})
+
+const feedbackCopy = computed(() => ({
+  title: props.preferChinese ? '结果反馈' : 'Recommendation Feedback',
+  status: props.preferChinese ? '当前状态' : 'Current status',
+  hint: props.preferChinese
+    ? '这一步是数据飞轮的第一层：告诉系统这次推荐有没有真正帮到你。'
+    : 'This is the first layer of the data flywheel: tell the system whether this recommendation actually helped.',
+  accept: props.preferChinese ? '直接采用' : 'Use As-Is',
+  partial: props.preferChinese ? '部分采用' : 'Use with Edits',
+  reject: props.preferChinese ? '暂不采用' : 'Reject'
+}))
+
 const knowledgeSelections = computed(() => props.travelPlan?.knowledgeRetrieval?.selections ?? [])
 
 const visibleKnowledgeSelections = computed(() => knowledgeSelections.value.filter(item => !isLowQualityKnowledge(item)))
@@ -392,6 +448,29 @@ const copy = computed(() => ({
             <strong>{{ travelPlan.hotelArea }}</strong>
           </div>
         </div>
+      </div>
+
+      <div class="plan-section">
+        <div class="plan-section__title">{{ feedbackCopy.title }}</div>
+        <article class="plan-insight-card plan-feedback-card">
+          <div class="plan-insight-card__header">
+            <strong>{{ feedbackCopy.status }}</strong>
+            <span class="plan-insight-card__badge">{{ feedbackLabel }}</span>
+          </div>
+          <p class="plan-amap__note">{{ feedbackCopy.hint }}</p>
+          <p v-if="feedbackReason" class="plan-amap__note">{{ feedbackReason }}</p>
+          <div class="plan-feedback-actions">
+            <button class="plan-feedback-button" :disabled="feedbackSaving" @click="submitFeedback('ACCEPTED')">
+              {{ feedbackSaving ? '...' : feedbackCopy.accept }}
+            </button>
+            <button class="plan-feedback-button" :disabled="feedbackSaving" @click="submitFeedback('PARTIAL')">
+              {{ feedbackSaving ? '...' : feedbackCopy.partial }}
+            </button>
+            <button class="plan-feedback-button plan-feedback-button--muted" :disabled="feedbackSaving" @click="submitFeedback('REJECTED')">
+              {{ feedbackSaving ? '...' : feedbackCopy.reject }}
+            </button>
+          </div>
+        </article>
       </div>
 
       <PlanMap
@@ -703,3 +782,44 @@ const copy = computed(() => ({
     </template>
   </section>
 </template>
+
+<style scoped>
+.plan-feedback-card {
+  gap: 0.9rem;
+}
+
+.plan-feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.plan-feedback-button {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.plan-feedback-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(15, 118, 110, 0.55);
+  background: rgba(15, 118, 110, 0.06);
+}
+
+.plan-feedback-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.plan-feedback-button--muted:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.8);
+  background: rgba(148, 163, 184, 0.12);
+}
+</style>

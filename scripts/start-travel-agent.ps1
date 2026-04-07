@@ -14,7 +14,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
-$runtimeDir = Join-Path $repoRoot "data\runtime"
+$runtimeDir = Join-Path $repoRoot "logs\runtime"
 $bundledJava = Join-Path $repoRoot ".tooling\jdk-21\jdk-21.0.10+7\bin\java.exe"
 $java = if (Test-Path $bundledJava) { $bundledJava } else { "java" }
 $backendJar = Join-Path $repoRoot "travel-agent-app\target\travel-agent-app.jar"

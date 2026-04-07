@@ -1,0 +1,57 @@
+package com.travalagent.amap.gateway;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.travalagent.amap.config.AmapProperties;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
+
+import java.lang.reflect.Method;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class AmapHttpGatewayTest {
+
+    @Test
+    void returnsMockWeatherWhenKeyIsMissingAndFallbackIsEnabled() {
+        AmapProperties properties = new AmapProperties();
+        properties.setApiKey("");
+        properties.setMockWhenMissingKey(true);
+        properties.setMockOnError(true);
+
+        AmapHttpGateway gateway = new AmapHttpGateway(RestClient.builder(), new ObjectMapper(), properties);
+
+        assertEquals("Hangzhou", gateway.weather("Hangzhou").city());
+    }
+
+    @Test
+    void throwsWhenKeyIsMissingAndFallbackIsDisabled() {
+        AmapProperties properties = new AmapProperties();
+        properties.setApiKey("");
+        properties.setMockWhenMissingKey(false);
+        properties.setMockOnError(false);
+
+        AmapHttpGateway gateway = new AmapHttpGateway(RestClient.builder(), new ObjectMapper(), properties);
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> gateway.weather("Hangzhou"));
+        assertEquals("TRAVEL_AGENT_AMAP_API_KEY is required", exception.getMessage());
+    }
+
+    @Test
+    void enforcesConfiguredQpsFloor() throws Exception {
+        AmapProperties properties = new AmapProperties();
+        properties.setRequestsPerSecond(3.0);
+
+        AmapHttpGateway gateway = new AmapHttpGateway(RestClient.builder(), new ObjectMapper(), properties);
+        Method throttle = AmapHttpGateway.class.getDeclaredMethod("throttleBeforeCall");
+        throttle.setAccessible(true);
+
+        long startedAt = System.nanoTime();
+        throttle.invoke(gateway);
+        throttle.invoke(gateway);
+        long elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000;
+
+        assertTrue(elapsedMillis >= 300, "Expected at least ~3 QPS throttling between consecutive calls");
+    }
+}

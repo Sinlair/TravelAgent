@@ -24,6 +24,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend -RunPreflight -ToolProvider LOCAL
 ```
 
+Script roles and local output directories are documented in [`docs/operations.md`](docs/operations.md).
+
 ## Development Expectations
 
 - Preserve the existing module boundaries.

@@ -25,7 +25,6 @@ web/.env.*
 !web/.env.example
 .env.travel-agent
 web/.env.local
-data/runtime/
+data/exports/
 data/milvus/
-release-smoke.backend.stdout.log
-release-smoke.backend.stderr.log
+logs/

@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
-$runtimeDir = Join-Path $repoRoot "data\runtime"
+$runtimeDir = Join-Path $repoRoot "logs\runtime"
 $pidFiles = @(
     @{ Name = "frontend"; Path = (Join-Path $runtimeDir "frontend.pid") },
     @{ Name = "backend"; Path = (Join-Path $runtimeDir "backend.pid") },

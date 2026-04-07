@@ -57,6 +57,59 @@
 - 将对话、任务记忆、时间线和旅行计划持久化到 SQLite
 - 提供 Vue 3 前端用于聊天、查看结构化行程、时间线和检索来源
 
+## 推荐质量现状
+
+当前项目还没有对外发布一个严格的离线准确率指标，比如 itinerary accuracy、precision、recall 或人工评测分数。
+
+目前更偏向“工程约束驱动”的质量控制，而不是“已经有标准化评分榜单”的状态：
+
+- 会先做 agent 路由，再执行对应 specialist
+- 行程输出是结构化 `travelPlan`，而不是只有一段自然语言
+- planner 会经过 validate / repair / revalidate 流程
+- 知识检索在向量检索和本地 fallback 上共用一套 retrieval plan
+- 高德 / Amap 数据在可用时会参与 POI、天气和路线增强
+
+所以更准确的说法是：项目已经具备可审查、可修复、可约束的推荐机制，但还不等于已经有正式公布的“准确率百分比”。
+
+## Multi-Agent 设计
+
+这里的 multi-agent 是真实运行链路，不是单个 prompt 换几个名字。
+
+运行时流程：
+
+- `ConversationWorkflow` 负责组装上下文、记忆、摘要和长期记忆
+- `AgentRouter` 选择最合适的 specialist
+- 对应的 `SpecialistAgent` 接管执行
+- 最终结果会和 timeline、memory 一起持久化
+
+当前包含的 specialist：
+
+- `WEATHER`
+- `GEO`
+- `TRAVEL_PLANNER`
+- `GENERAL`
+
+路由层采用 LLM 优先、启发式兜底的方式，因此即使模型层不稳定，系统也不会完全失去路由能力。
+
+## 记忆机制
+
+当前记忆机制是分层设计，不是简单地把整段聊天历史原样塞回模型。
+
+- 短期记忆
+  - 从对话历史里读取最近一段消息窗口
+  - 默认窗口大小是 `12`
+- 任务记忆
+  - 结构化保存 `origin`、`destination`、`days`、`budget`、`preferences`、`pendingQuestion`
+  - 每轮对话后通过 heuristic + 可选 LLM 抽取进行更新
+- 会话摘要
+  - 当消息数达到阈值后，会生成压缩摘要
+  - 默认阈值是 `6`
+- 长期记忆
+  - 会把摘要存成可检索的长期记忆
+  - 存储后端可以在 SQLite 和 Milvus 之间切换
+
+这种分层方式的好处是：planner 不需要每次都重放整段原始对话，也能保留相对稳定的任务状态。
+
 ## 为什么做这个项目
 
 很多旅行助手只能返回一段自然语言答案，这个项目更关注“可执行的旅行规划流程”：
@@ -390,8 +443,8 @@ Tracing 相关配置：
 
 - 不要提交 `.env.travel-agent`
 - 不要提交真实 OpenAI / 高德 / 其他平台密钥
-- 不要提交 `data/runtime` 下的本地日志
-- 不要提交生成的 smoke 日志
+- 不要提交 `logs/` 下的本地运行日志
+- 不要提交 `logs/release-smoke` 下生成的 smoke 日志
 - 一旦密钥曾经暴露在聊天、截图或终端历史里，最好轮换
 
 Git ignore 目前已经覆盖：
@@ -399,6 +452,52 @@ Git ignore 目前已经覆盖：
 - 本地 env 文件
 - 常见密钥 / 证书文件
 - 运行期日志和本地产物
+
+## 数据飞轮
+
+这个项目现在已经具备“第一层可用的数据飞轮”：
+
+- 每次推荐都可以记录显式用户反馈
+- 反馈标签支持 `ACCEPTED`、`PARTIAL`、`REJECTED`
+- 反馈会和目的地、天数、预算、agent 类型、校验结果、是否返回结构化 plan 等上下文一起保存
+- 反馈数据可以通过 API 或脚本导出成数据集
+
+导出方式：
+
+- API：`GET /api/conversations/feedback/export?limit=200`
+- 汇总 API：`GET /api/conversations/feedback/summary?limit=200`
+- 脚本：[`scripts/export-feedback-dataset.ps1`](scripts/export-feedback-dataset.ps1)
+- 分析脚本：[`scripts/analyze-feedback-loop.ps1`](scripts/analyze-feedback-loop.ps1)
+- 默认本地导出目录：`data/exports/`
+
+这批数据立刻可以用于：
+
+- 离线评测
+- planner 失败分析
+- 检索 / 路由 / 修复策略优化
+- 偏好排序或 reranker 实验
+
+但它还不是一条完整的 RL 训练流水线，而且现阶段也不建议直接跳到强化学习。对这个项目更现实、也更高价值的顺序通常是：
+
+1. 先收集显式反馈
+2. 再分析失败模式
+3. 优化路由、检索、校验、修复逻辑
+4. 最后在样本量和标签质量足够时，再考虑偏好优化或 RL 风格训练
+
+仓库里现在也补上了这条链路中间最关键的一层：
+
+- 汇总最近一批反馈的 accept / partial / reject 比例
+- 按 reason code、destination、agent type 做拆分
+- 自动找出无结构化 plan、校验失败、warning 偏多、约束被放宽等高风险模式
+- 导出可直接周会复盘的 markdown 报告
+
+### TODO：偏好学习路线
+
+- [ ] 把反馈从 `ACCEPTED` / `PARTIAL` / `REJECTED` 扩展到“用户改了什么、最终是否采用、简短分析备注”
+- [ ] 建一套稳定的离线评测集，同时检查方案可用性和预算、营业时间、交通负担等硬约束
+- [ ] 先做多候选方案生成，再加 reward model 或 reranker，而不是直接做端到端策略优化
+- [ ] 先用反馈报告去优化路由、检索、校验、修复逻辑
+- [ ] 只有在高质量标签和可信离线 benchmark 足够之后，再重新评估偏好优化或 RL
 
 ## 贡献方式
 
@@ -416,6 +515,9 @@ Git ignore 目前已经覆盖：
 
 - [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - [`SECURITY.md`](SECURITY.md)
+- [`docs/operations.md`](docs/operations.md)
+- [`docs/multimodal-roadmap.md`](docs/multimodal-roadmap.md)
+- [`docs/multimodal-roadmap.zh-CN.md`](docs/multimodal-roadmap.zh-CN.md)
 
 ## 许可证
 
