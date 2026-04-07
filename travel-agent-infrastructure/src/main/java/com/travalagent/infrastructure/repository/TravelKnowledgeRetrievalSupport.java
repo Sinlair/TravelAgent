@@ -296,8 +296,9 @@ final class TravelKnowledgeRetrievalSupport {
     }
 
     static boolean matchesDestination(String snippetCity, String normalizedDestination) {
-        String city = normalize(snippetCity);
-        return normalizedDestination.isBlank() || city.equals(normalizedDestination) || city.contains(normalizedDestination) || normalizedDestination.contains(city);
+        String city = cityComparable(snippetCity);
+        String destination = cityComparable(normalizedDestination);
+        return destination.isBlank() || city.equals(destination);
     }
 
     static boolean matchesTopics(String snippetTopic, List<String> inferredTopics) {
@@ -310,6 +311,18 @@ final class TravelKnowledgeRetrievalSupport {
 
     static String normalize(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    static String cityComparable(String value) {
+        String normalized = normalize(value);
+        if (normalized.isBlank()) {
+            return normalized;
+        }
+        return normalized
+                .replace("市", "")
+                .replace(" city", "")
+                .replace("shi", "")
+                .trim();
     }
 
     static String dedupeKey(TravelKnowledgeSnippet snippet) {

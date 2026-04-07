@@ -70,22 +70,25 @@ public class LocalTravelKnowledgeRepository implements TravelKnowledgeRepository
     private int score(TravelKnowledgeSnippet snippet, TravelKnowledgeRetrievalSupport.RetrievalPlan plan) {
         TravelKnowledgeSnippet enriched = TravelKnowledgeRetrievalSupport.enrichSnippet(snippet);
         int score = 0;
-        String city = normalize(enriched.city());
+        String city = TravelKnowledgeRetrievalSupport.cityComparable(enriched.city());
         String topic = normalize(enriched.topic());
         String title = normalize(enriched.title());
         String content = normalize(enriched.content());
         String tags = enriched.tags().stream().map(this::normalize).collect(Collectors.joining(" "));
-        String aliases = enriched.cityAliases().stream().map(this::normalize).collect(Collectors.joining(" "));
+        String aliases = enriched.cityAliases().stream()
+                .map(TravelKnowledgeRetrievalSupport::cityComparable)
+                .collect(Collectors.joining(" "));
         String tripStyles = enriched.tripStyleTags().stream().map(this::normalize).collect(Collectors.joining(" "));
         Set<String> terms = new HashSet<>();
         addTerms(terms, plan.combinedQuery());
 
-        if (!plan.normalizedDestination().isBlank()) {
-            if (city.equals(plan.normalizedDestination())) {
+        String destination = TravelKnowledgeRetrievalSupport.cityComparable(plan.normalizedDestination());
+        if (!destination.isBlank()) {
+            if (city.equals(destination)) {
                 score += 120;
             }
-            else if (city.contains(plan.normalizedDestination()) || plan.normalizedDestination().contains(city) || aliases.contains(plan.normalizedDestination())) {
-                score += 40;
+            else if (aliases.contains(destination)) {
+                score += 60;
             }
         }
 

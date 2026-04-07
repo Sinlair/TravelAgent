@@ -153,11 +153,7 @@ public class OpenAiImageAttachmentInterpreter implements ImageAttachmentInterpre
     }
 
     private String normalizeText(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isBlank() ? null : trimmed;
+        return LlmExtractionSanitizer.sanitizeStructuredText(value);
     }
 
     private record InterpreterOutput(

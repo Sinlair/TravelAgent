@@ -586,17 +586,129 @@ public class AmapTravelPlanEnricher {
     }
 
     private TravelHotelRecommendation fallbackHotelBase(TravelPlan plan, GeoLocation hotelAreaGeo, int hotelMin, int hotelMax, boolean preferChinese) {
+        if (plan != null) {
+            FallbackHotelExample example = fallbackHotelExample(plan.hotelArea(), preferChinese);
+            String hotelName = example == null ? fallbackHotelName(plan.hotelArea(), preferChinese) : example.name();
+            String address = example == null ? hotelAreaGeo.address() : example.address();
+            String longitude = example == null || blank(example.longitude()) ? hotelAreaGeo.longitude() : example.longitude();
+            String latitude = example == null || blank(example.latitude()) ? hotelAreaGeo.latitude() : example.latitude();
+            String rationale = preferChinese
+                    ? "当前没有拿到稳定的高德酒店候选，先给你一个推荐片区内更明确的参考住宿点，后续可以再替换成你自己想订的酒店。"
+                    : "A stable Amap hotel candidate was not available, so this keeps a clearer reference stay inside the recommended district until you swap in your final booking.";
+            return new TravelHotelRecommendation(
+                    hotelName,
+                    plan.hotelArea(),
+                    address,
+                    hotelMin,
+                    hotelMax,
+                    rationale,
+                    longitude,
+                    latitude,
+                    "RULE.fallback"
+            );
+        }
+        String hotelName = preferChinese
+                ? switch (plan.hotelArea()) {
+                    case "西湖湖滨" -> "西湖湖滨精选酒店";
+                    case "灵隐片区" -> "灵隐片区安静酒店";
+                    case "吴山河坊街" -> "河坊街步行友好酒店";
+                    case "龙井茶村" -> "龙井茶村慢节奏民宿";
+                    case "市中心" -> "市中心通勤便利酒店";
+                    default -> plan.hotelArea() + " 精选酒店";
+                }
+                : switch (plan.hotelArea()) {
+                    case "West Lake Waterfront" -> "West Lake Selected Hotel";
+                    case "Historic Core" -> "Historic Core Quiet Hotel";
+                    case "Old Town" -> "Old Town Walkable Hotel";
+                    case "Longjing" -> "Longjing Slow-Paced Stay";
+                    case "City Center" -> "City Center Transit Hotel";
+                    default -> plan.hotelArea() + " selected hotel";
+                };
+        String rationale = preferChinese
+                ? "高德酒店候选不够稳定时，先保留一个位于推荐住宿区内、便于继续执行路线的酒店落脚点。"
+                : "When Amap hotel candidates are unstable, keep a dependable base inside the recommended stay area so the itinerary remains executable.";
         return new TravelHotelRecommendation(
-                plan.hotelArea() + (preferChinese ? "优先酒店位" : " hotel base"),
+                hotelName,
                 plan.hotelArea(),
                 hotelAreaGeo.address(),
                 hotelMin,
                 hotelMax,
-                preferChinese ? "高德酒店候选不够稳定时，先按推荐住宿区保留落脚点。" : "Fallback hotel base when Amap cannot return a close concrete hotel candidate.",
+                rationale,
                 hotelAreaGeo.longitude(),
                 hotelAreaGeo.latitude(),
                 "MCP.amap_geocode"
         );
+    }
+
+    private String fallbackHotelName(String hotelArea, boolean preferChinese) {
+        if (preferChinese) {
+            return switch (hotelArea) {
+                case "西湖湖滨" -> "西湖湖滨参考住宿点";
+                case "灵隐片区" -> "灵隐片区参考住宿点";
+                case "吴山河坊街" -> "河坊街参考住宿点";
+                case "龙井茶村" -> "龙井茶村参考住宿点";
+                case "市中心" -> "市中心参考住宿点";
+                default -> hotelArea + "参考住宿点";
+            };
+        }
+        return switch (hotelArea) {
+            case "West Lake Waterfront" -> "West Lake reference stay";
+            case "Historic Core" -> "Historic Core reference stay";
+            case "Old Town" -> "Old Town reference stay";
+            case "Longjing" -> "Longjing reference stay";
+            case "City Center" -> "City Center reference stay";
+            default -> hotelArea + " reference stay";
+        };
+    }
+
+    private FallbackHotelExample fallbackHotelExample(String hotelArea, boolean preferChinese) {
+        String normalizedArea = normalize(hotelArea);
+        if (normalizedArea.contains("westlake") || normalizedArea.contains("西湖")) {
+            return preferChinese
+                    ? new FallbackHotelExample(
+                    "浣纱路参考住宿点",
+                    "杭州市上城区浣纱路17号",
+                    "120.164930",
+                    "30.255220"
+            )
+                    : new FallbackHotelExample(
+                    "Hangzhou Sunny Huansha Hotel",
+                    "17 Huansha Road, Shangcheng District, Hangzhou",
+                    "120.164930",
+                    "30.255220"
+            );
+        }
+        if (normalizedArea.contains("oldtown") || normalizedArea.contains("hefang") || normalizedArea.contains("河坊")) {
+            return preferChinese
+                    ? new FallbackHotelExample(
+                    "建国南路参考住宿点",
+                    "杭州市上城区建国南路280号",
+                    "120.177420",
+                    "30.242960"
+            )
+                    : new FallbackHotelExample(
+                    "Redstar Culture Hotel",
+                    "280 South Jianguo Road, Shangcheng District, Hangzhou",
+                    "120.177420",
+                    "30.242960"
+            );
+        }
+        if (normalizedArea.contains("citycenter") || normalizedArea.contains("wulin") || normalizedArea.contains("市中心") || normalizedArea.contains("武林")) {
+            return preferChinese
+                    ? new FallbackHotelExample(
+                    "庆春路参考住宿点",
+                    "杭州市上城区庆春路65号",
+                    "120.177860",
+                    "30.261740"
+            )
+                    : new FallbackHotelExample(
+                    "Enjoyor Hotel",
+                    "65 Qingchun Road, Hangzhou",
+                    "120.177860",
+                    "30.261740"
+            );
+        }
+        return null;
     }
 
     private double scoreHotelCandidate(String hotelAreaKeyword, String city, GeoLocation hotelAreaGeo, PlaceSuggestion suggestion) {
@@ -774,9 +886,9 @@ public class AmapTravelPlanEnricher {
     private String routeSummary(TransitRoutePlan route, boolean preferChinese) {
         String lineText = route.lineNames().isEmpty() ? route.mode() : String.join(" / ", route.lineNames());
         if (preferChinese) {
-            return lineText + "，约 " + safe(route.durationMinutes()) + " 分钟，步行 " + safe(route.walkingMinutes()) + " 分钟，约 " + safe(route.cost()) + " 元";
+            return lineText + "，全程约 " + safe(route.durationMinutes()) + " 分钟，步行 " + safe(route.walkingMinutes()) + " 分钟，预计 " + safe(route.cost()) + " 元";
         }
-        return lineText + ", about " + safe(route.durationMinutes()) + " min, walk " + safe(route.walkingMinutes()) + " min, around " + safe(route.cost()) + " CNY";
+        return lineText + ", around " + safe(route.durationMinutes()) + " min total, " + safe(route.walkingMinutes()) + " min walking, about " + safe(route.cost()) + " CNY";
     }
 
     private int safe(Integer value) {
@@ -802,5 +914,8 @@ public class AmapTravelPlanEnricher {
     }
 
     private record ScoredHotelCandidate(PlaceSuggestion suggestion, double score, int distanceMeters) {
+    }
+
+    private record FallbackHotelExample(String name, String address, String longitude, String latitude) {
     }
 }

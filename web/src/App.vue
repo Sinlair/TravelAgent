@@ -6,7 +6,7 @@ import ConversationSidebar from './components/ConversationSidebar.vue'
 import ChatPanel from './components/ChatPanel.vue'
 import TimelinePanel from './components/TimelinePanel.vue'
 import PlanPanel from './components/PlanPanel.vue'
-import FeedbackLoopPanel from './components/FeedbackLoopPanel.vue'
+import PlanActionsPanel from './components/PlanActionsPanel.vue'
 
 const store = useChatStore()
 const {
@@ -14,14 +14,8 @@ const {
   currentConversationId,
   detail,
   sending,
-  feedbackSaving,
-  feedbackLoopSummary,
-  feedbackLoopLoading,
-  feedbackLoopStale,
-  feedbackLoopLimit,
   loading,
-  errorMessage,
-  feedbackLoopError
+  errorMessage
 } = storeToRefs(store)
 
 const preferChinese = computed(() => {
@@ -29,8 +23,24 @@ const preferChinese = computed(() => {
   return latestUser ? /[\u4e00-\u9fff]/.test(latestUser.content) : true
 })
 
-onMounted(() => {
-  void store.loadConversations()
+const heroCopy = computed(() => (preferChinese.value
+  ? {
+      eyebrow: '旅行助理',
+      title: '一句话说清目的地、天数、预算和偏好，我会把它整理成更容易执行的行程。',
+      subtitle: '例如：三天杭州，预算 3000，节奏轻松'
+    }
+  : {
+      eyebrow: 'Travel Agent',
+      title: 'Tell me the destination, timing, budget, and preferences, and I will turn them into a more executable trip plan.',
+      subtitle: 'A single sentence is enough to start.'
+    }))
+
+onMounted(async () => {
+  await store.loadConversations()
+  const targetConversationId = currentConversationId.value || conversations.value[0]?.conversationId
+  if (targetConversationId) {
+    await store.openConversation(targetConversationId)
+  }
 })
 </script>
 
@@ -40,6 +50,7 @@ onMounted(() => {
       :conversations="conversations"
       :current-conversation-id="currentConversationId"
       :loading="loading"
+      :prefer-chinese="preferChinese"
       @select="store.openConversation"
       @create="store.newConversation"
       @remove="store.deleteConversation"
@@ -47,30 +58,28 @@ onMounted(() => {
 
     <section class="workspace">
       <header class="hero">
-        <p>旅行小助手</p>
-        <h1>把目的地、天数、预算和偏好告诉我，我会整理成一份更容易执行的出行方案。</h1>
-        <span>你可以先从一句简单的话开始，比如“帮我规划三天杭州行程，预算 3000，想轻松一点”。</span>
+        <p>{{ heroCopy.eyebrow }}</p>
+        <h1>{{ heroCopy.title }}</h1>
+        <span>{{ heroCopy.subtitle }}</span>
       </header>
 
-      <FeedbackLoopPanel
-        :summary="feedbackLoopSummary"
-        :loading="feedbackLoopLoading"
-        :stale="feedbackLoopStale"
-        :error-message="feedbackLoopError"
-        :prefer-chinese="preferChinese"
-        :initial-limit="feedbackLoopLimit"
-        @refresh="store.loadFeedbackLoopSummary"
-      />
-
       <div class="workspace__grid">
-        <ChatPanel :detail="detail" :sending="sending" :error-message="errorMessage" @send="store.sendMessage" />
+        <ChatPanel
+          :detail="detail"
+          :sending="sending"
+          :error-message="errorMessage"
+          :prefer-chinese="preferChinese"
+          @send="store.sendMessage"
+        />
+
         <div class="workspace__side">
+          <PlanActionsPanel
+            :travel-plan="detail?.travelPlan || null"
+            :prefer-chinese="preferChinese"
+          />
           <PlanPanel
             :travel-plan="detail?.travelPlan || null"
-            :feedback="detail?.feedback || null"
-            :feedback-saving="feedbackSaving"
             :prefer-chinese="preferChinese"
-            @feedback="store.submitFeedback"
           />
           <TimelinePanel :timeline="detail?.timeline || []" :prefer-chinese="preferChinese" />
         </div>

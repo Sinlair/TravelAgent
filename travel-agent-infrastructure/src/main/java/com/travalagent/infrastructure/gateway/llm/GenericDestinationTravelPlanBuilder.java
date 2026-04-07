@@ -10,7 +10,6 @@ import com.travalagent.domain.model.entity.TravelPlanSlot;
 import com.travalagent.domain.model.entity.TravelPlanStop;
 import com.travalagent.domain.model.valobj.AgentExecutionContext;
 import com.travalagent.domain.service.TravelPlanBuilder;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -22,7 +21,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Primary
 @Component
 public class GenericDestinationTravelPlanBuilder implements TravelPlanBuilder {
 

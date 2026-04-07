@@ -436,12 +436,25 @@ public class AmapHttpGateway implements AmapGateway {
     }
 
     private WeatherSnapshot mockWeather(String city) {
-        return new WeatherSnapshot(city, city, Instant.now().toString(), "Sunny", "25", "SE", "3");
+        boolean chinese = containsChinese(city);
+        return new WeatherSnapshot(
+                city,
+                city,
+                Instant.now().toString(),
+                chinese ? "晴" : "Sunny",
+                "25",
+                chinese ? "东南风" : "SE",
+                "3"
+        );
     }
 
     private String text(JsonNode node, String field, String fallback) {
         JsonNode child = node.path(field);
         return child.isMissingNode() || child.isNull() || child.asText().isBlank() ? fallback : child.asText();
+    }
+
+    private boolean containsChinese(String value) {
+        return value != null && value.codePoints().anyMatch(codePoint -> codePoint >= 0x4E00 && codePoint <= 0x9FFF);
     }
 
     private void throttleBeforeCall() {

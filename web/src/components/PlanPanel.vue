@@ -1,40 +1,156 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PlanMap from './PlanMap.vue'
-import type {
-  ConversationFeedback,
-  ConversationFeedbackRequest,
-  TravelKnowledgeSelection,
-  TravelPlan,
-  TravelPlanStop,
-  TravelTransitLeg,
-  TravelTransitStep
-} from '../types/api'
-import { downloadTravelScrapbook } from '../utils/travelScrapbook'
+import type { TravelConstraintCheck, TravelPlan, TravelPlanStop, TravelTransitLeg } from '../types/api'
 import { hotelPointId, stopPointId } from '../utils/travelPlan'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   travelPlan: TravelPlan | null
-  feedback: ConversationFeedback | null
-  feedbackSaving: boolean
-  preferChinese: boolean
-}>()
-
-const emit = defineEmits<{
-  feedback: [payload: ConversationFeedbackRequest]
-}>()
+  preferChinese?: boolean
+}>(), {
+  preferChinese: true
+})
 
 const activePointId = ref('')
 
-function checkClass(status: string) {
-  return `plan-check--${status.toLowerCase()}`
-}
+const copy = computed(() => (props.preferChinese
+  ? {
+      eyebrow: '方案',
+      title: '这次出行建议',
+      emptyTitle: '还没有生成结构化行程',
+      emptyBody: '告诉我目的地、天数、预算和偏好后，我会把路线、住宿、花费和地图整理成一份可执行的安排。',
+      overview: '行程总览',
+      atGlance: '快速预览',
+      hotels: '住宿建议',
+      checks: '重点提醒',
+      budget: '预算拆分',
+      itinerary: '每日安排',
+      totalCost: '预计总花费',
+      hotelArea: '建议住宿区域',
+      tripLength: '行程天数',
+      currentWeather: '当前天气',
+      locationCheck: '定位校验',
+      matched: '匹配地点',
+      district: '所在区域',
+      coordinates: '坐标',
+      amapAddress: '高德地址',
+      otherCandidates: '其他候选',
+      locationDetails: '查看定位细节',
+      routeDetails: '查看详细路线',
+      locationVerified: '位置已确认',
+      fallbackHint: '当前为估算结果，建议出发前再次确认',
+      arrivalRoute: '上一站前往',
+      returnLabel: '返程',
+      timeWindow: (start: string, end: string) => `${start} - ${end}`,
+      day: (value: number) => `第 ${value} 天`,
+      dayCount: (value: number) => `${value} 天`,
+      stopCount: (value: number) => `${value} 个安排`,
+      activityMinutes: (value: number) => `游玩 ${value} 分钟`,
+      transitMinutes: (value: number) => `通勤 ${value} 分钟`,
+      stopDuration: (value: number) => `停留 ${value} 分钟`,
+      transferMinutes: (value: number) => `上段通勤 ${value} 分钟`,
+      costValue: (value: number) => `约 ${value} 元`,
+      nightly: (min: number, max: number) => `${min}-${max} 元/晚`,
+      amount: (min: number, max: number) => `${min}-${max} 元`,
+      ticket: (value: number) => `门票 ${value} 元`,
+      food: (value: number) => `餐饮 ${value} 元`,
+      localTransit: (value: number) => `市内交通 ${value} 元`,
+      other: (value: number) => `其他 ${value} 元`,
+      openWindow: (open: string, close: string) => `开放时间 ${open} - ${close}`,
+      routeMeta: (route: TravelTransitLeg) => `全程约 ${route.durationMinutes} 分钟，步行 ${route.walkingMinutes} 分钟，预计 ${route.estimatedCost} 元`,
+      budgetCap: (value: number) => `预算上限 ${value} 元`
+    }
+  : {
+      eyebrow: 'Plan',
+      title: 'Suggested Plan',
+      emptyTitle: 'No structured itinerary yet',
+      emptyBody: 'Share the destination, trip length, budget, and preferences and I will turn them into routes, stays, costs, and a map.',
+      overview: 'Overview',
+      atGlance: 'At A Glance',
+      hotels: 'Stays',
+      checks: 'Key Checks',
+      budget: 'Budget',
+      itinerary: 'Daily Itinerary',
+      totalCost: 'Estimated Total',
+      hotelArea: 'Recommended Stay Area',
+      tripLength: 'Trip Length',
+      currentWeather: 'Current Weather',
+      locationCheck: 'Location Check',
+      matched: 'Matched',
+      district: 'District',
+      coordinates: 'Coordinates',
+      amapAddress: 'Amap Address',
+      otherCandidates: 'Other candidates',
+      locationDetails: 'View location details',
+      routeDetails: 'View route details',
+      locationVerified: 'Location verified',
+      fallbackHint: 'Estimated result, please verify before departure',
+      arrivalRoute: 'Route from previous stop',
+      returnLabel: 'Return',
+      timeWindow: (start: string, end: string) => `${start} - ${end}`,
+      day: (value: number) => `Day ${value}`,
+      dayCount: (value: number) => `${value} days`,
+      stopCount: (value: number) => `${value} stops`,
+      activityMinutes: (value: number) => `Activity ${value} min`,
+      transitMinutes: (value: number) => `Transit ${value} min`,
+      stopDuration: (value: number) => `Stay ${value} min`,
+      transferMinutes: (value: number) => `Transfer ${value} min`,
+      costValue: (value: number) => `About ${value} CNY`,
+      nightly: (min: number, max: number) => `${min}-${max} CNY/night`,
+      amount: (min: number, max: number) => `${min}-${max} CNY`,
+      ticket: (value: number) => `Ticket ${value} CNY`,
+      food: (value: number) => `Food ${value} CNY`,
+      localTransit: (value: number) => `Transit ${value} CNY`,
+      other: (value: number) => `Other ${value} CNY`,
+      openWindow: (open: string, close: string) => `Open ${open} - ${close}`,
+      routeMeta: (route: TravelTransitLeg) => `Around ${route.durationMinutes} min total, ${route.walkingMinutes} min walking, about ${route.estimatedCost} CNY`,
+      budgetCap: (value: number) => `Budget cap ${value} CNY`
+    }))
 
-function statusLabel(status: string) {
-  return props.preferChinese
-    ? ({ PASS: '通过', WARN: '提醒', FAIL: '冲突' }[status] ?? status)
-    : status
-}
+const visibleHotels = computed(() => props.travelPlan?.hotels.slice(0, 3) ?? [])
+const visibleChecks = computed(() => props.travelPlan?.checks ?? [])
+const visibleBudget = computed(() => props.travelPlan?.budget ?? [])
+const visibleDays = computed(() => props.travelPlan?.days ?? [])
+
+const overviewStats = computed(() => {
+  if (!props.travelPlan) {
+    return []
+  }
+
+  const trip = props.travelPlan
+  const stats = [
+    {
+      label: copy.value.totalCost,
+      value: copy.value.amount(trip.estimatedTotalMin, trip.estimatedTotalMax),
+      hint: trip.totalBudget ? copy.value.budgetCap(trip.totalBudget) : ''
+    },
+    {
+      label: copy.value.hotelArea,
+      value: trip.hotelArea,
+      hint: trip.hotels[0]?.name || trip.hotelAreaReason
+    },
+    {
+      label: copy.value.tripLength,
+      value: copy.value.dayCount(trip.days.length),
+      hint: trip.days.map(day => day.theme).join(' / ')
+    }
+  ]
+
+  const weatherParts = [
+    trip.weatherSnapshot?.description,
+    trip.weatherSnapshot?.temperature ? `${trip.weatherSnapshot.temperature} C` : ''
+  ].filter(Boolean)
+
+  if (weatherParts.length) {
+    stats.push({
+      label: copy.value.currentWeather,
+      value: weatherParts.join(' · '),
+      hint: trip.weatherSnapshot?.city || trip.weatherSnapshot?.reportTime || ''
+    })
+  }
+
+  return stats
+})
 
 function slotLabel(slot: string) {
   if (!props.preferChinese) {
@@ -52,7 +168,7 @@ function categoryLabel(category: string) {
     'Intercity transport': '跨城交通',
     'Local transit': '本地通勤',
     Food: '餐饮',
-    'Attractions and buffer': '景点与机动预算'
+    'Attractions and buffer': '景点与缓冲'
   }[category] ?? category
 }
 
@@ -76,21 +192,46 @@ function routeLine(route?: TravelTransitLeg | null) {
   return route.lineNames.length ? route.lineNames.join(' / ') : modeLabel(route.mode)
 }
 
-function routeMeta(route?: TravelTransitLeg | null) {
-  if (!route) {
-    return ''
-  }
+function stepMeta(step: TravelTransitLeg['steps'][number]) {
   if (props.preferChinese) {
-    return `${route.durationMinutes} 分钟 · 步行 ${route.walkingMinutes} 分钟 · ${route.estimatedCost} 元`
+    return `${modeLabel(step.mode)}，约 ${step.durationMinutes} 分钟${step.stopCount ? `，共 ${step.stopCount} 站` : ''}`
   }
-  return `${route.durationMinutes} min · walk ${route.walkingMinutes} min · ${route.estimatedCost} CNY`
+  return `${modeLabel(step.mode)}, about ${step.durationMinutes} min${step.stopCount ? `, ${step.stopCount} stops` : ''}`
 }
 
-function stepMeta(step: TravelTransitStep) {
-  if (props.preferChinese) {
-    return `${modeLabel(step.mode)} · ${step.durationMinutes} 分钟${step.stopCount ? ` · ${step.stopCount} 站` : ''}`
+function statusLabel(check: TravelConstraintCheck) {
+  if (!props.preferChinese) {
+    return {
+      PASS: 'Good',
+      WARN: 'Heads up',
+      FAIL: 'Conflict'
+    }[check.status] ?? check.status
   }
-  return `${modeLabel(step.mode)} · ${step.durationMinutes} min${step.stopCount ? ` · ${step.stopCount} stops` : ''}`
+  return {
+    PASS: '通过',
+    WARN: '提醒',
+    FAIL: '冲突'
+  }[check.status] ?? check.status
+}
+
+function locationStatus(source?: string) {
+  if (!source) {
+    return copy.value.locationVerified
+  }
+  if (!props.preferChinese) {
+    return {
+      'MCP.amap_input_tips': 'Verified with Amap suggestions',
+      'MCP.amap_geocode': 'Confirmed with Amap geocode',
+      'MCP.amap_transit_route': 'Route verified with Amap',
+      'RULE.fallback': copy.value.fallbackHint
+    }[source] ?? source
+  }
+  return {
+    'MCP.amap_input_tips': '已用高德候选结果确认地点',
+    'MCP.amap_geocode': '已用高德确认位置',
+    'MCP.amap_transit_route': '路线来自高德公交或地铁规划',
+    'RULE.fallback': copy.value.fallbackHint
+  }[source] ?? `已校验：${source}`
 }
 
 function coordinateText(longitude?: string, latitude?: string) {
@@ -100,173 +241,12 @@ function coordinateText(longitude?: string, latitude?: string) {
   return `${longitude}, ${latitude}`
 }
 
-function sourceLabel(source?: string) {
-  if (!source) {
-    return props.preferChinese ? '位置已确认' : 'Location verified'
+function stopTotalCost(stop: TravelPlanStop) {
+  const breakdown = stop.costBreakdown
+  if (!breakdown) {
+    return stop.estimatedCost
   }
-  if (!props.preferChinese) {
-    return {
-      'MCP.amap_input_tips': 'Place verified with Amap',
-      'MCP.amap_geocode': 'Location confirmed with Amap',
-      'MCP.amap_transit_route': 'Route planned with Amap',
-      'RULE.fallback': 'Estimated result, please verify before departure'
-    }[source] ?? source
-  }
-  return {
-    'MCP.amap_input_tips': '已用高德匹配并确认地点',
-    'MCP.amap_geocode': '已用高德确认位置',
-    'MCP.amap_transit_route': '路线来自高德公交/地铁规划',
-    'RULE.fallback': '当前为估算结果，建议出发前再确认'
-  }[source] ?? `已校验：${source}`
-}
-
-function locationStatus(source?: string) {
-  return sourceLabel(source)
-}
-
-function routeStatus(source?: string) {
-  if (!source) {
-    return props.preferChinese ? '路线已整理完成' : 'Route prepared'
-  }
-  return sourceLabel(source)
-}
-
-function knowledgeRouteLabel(source?: string) {
-  if (!source) {
-    return props.preferChinese ? '未记录' : 'Not recorded'
-  }
-  if (!props.preferChinese) {
-    return {
-      'vector-store': 'Vector store',
-      'local-fallback': 'Local fallback'
-    }[source] ?? source
-  }
-  return {
-    'vector-store': '向量检索',
-    'local-fallback': '本地回退'
-  }[source] ?? source
-}
-
-function topicLabel(topic?: string) {
-  if (!topic) {
-    return props.preferChinese ? '未标注' : 'Unlabeled'
-  }
-  if (!props.preferChinese) {
-    return {
-      scenic: 'Scenic',
-      food: 'Food',
-      hotel: 'Hotel',
-      transit: 'Transit',
-      activity: 'Activity',
-      nightlife: 'Nightlife'
-    }[topic] ?? topic
-  }
-  return {
-    scenic: '景点',
-    food: '餐饮',
-    hotel: '住宿',
-    transit: '交通',
-    activity: '活动',
-    nightlife: '夜生活'
-  }[topic] ?? topic
-}
-
-function tripStyleLabel(style?: string) {
-  if (!style) {
-    return props.preferChinese ? '未标注' : 'Unlabeled'
-  }
-  if (!props.preferChinese) {
-    return {
-      relaxed: 'Relaxed',
-      family: 'Family',
-      nightlife: 'Nightlife',
-      museum: 'Museum',
-      shopping: 'Shopping',
-      foodie: 'Foodie',
-      heritage: 'Heritage',
-      outdoors: 'Outdoors',
-      budget: 'Budget'
-    }[style] ?? style
-  }
-  return {
-    relaxed: '轻松',
-    family: '亲子',
-    nightlife: '夜生活',
-    museum: '博物馆',
-    shopping: '购物',
-    foodie: '吃货',
-    heritage: '人文古迹',
-    outdoors: '户外',
-    budget: '预算友好'
-  }[style] ?? style
-}
-
-function schemaSubtypeLabel(schemaSubtype?: string) {
-  if (!schemaSubtype) {
-    return props.preferChinese ? '通用知识' : 'General hint'
-  }
-  if (!props.preferChinese) {
-    return {
-      hotel_area: 'Stay area',
-      hotel_listing: 'Hotel example',
-      transit_arrival: 'Arrival advice',
-      transit_hub: 'Transfer hub',
-      transit_district: 'District movement'
-    }[schemaSubtype] ?? schemaSubtype
-  }
-  return {
-    hotel_area: '住宿片区建议',
-    hotel_listing: '酒店示例',
-    transit_arrival: '到达建议',
-    transit_hub: '换乘枢纽',
-    transit_district: '片区移动'
-  }[schemaSubtype] ?? schemaSubtype
-}
-
-function qualityLabel(score?: number) {
-  if (!score || score <= 0) {
-    return props.preferChinese ? '待评估' : 'Unrated'
-  }
-  if (props.preferChinese) {
-    if (score >= 40) return `高相关 ${score}`
-    if (score >= 26) return `较强 ${score}`
-    return `可用 ${score}`
-  }
-  if (score >= 40) return `High ${score}`
-  if (score >= 26) return `Strong ${score}`
-  return `Usable ${score}`
-}
-
-function qualityClass(score?: number) {
-  if (!score || score <= 0) {
-    return 'plan-pill--muted'
-  }
-  if (score >= 40) {
-    return 'plan-pill--high'
-  }
-  if (score >= 26) {
-    return 'plan-pill--medium'
-  }
-  return 'plan-pill--muted'
-}
-
-function isLowQualityKnowledge(item: TravelKnowledgeSelection) {
-  const title = (item.title || '').trim()
-  const content = (item.content || '').trim()
-  const score = item.qualityScore ?? 0
-  if (!title || !content) {
-    return true
-  }
-  if (score > 0 && score < 20) {
-    return true
-  }
-  if (/^(?:\.|#|@)/.test(title)) {
-    return true
-  }
-  if (/traceback|unicode(?:encode|decode)error|mw-parser-output|display\s*:\s*none/i.test(`${title} ${content}`)) {
-    return true
-  }
-  return false
+  return breakdown.ticketCost + breakdown.foodCost + breakdown.localTransitCost + breakdown.otherCost
 }
 
 function activateHotel(index: number) {
@@ -276,154 +256,15 @@ function activateHotel(index: number) {
 function activateStop(dayNumber: number, stop: TravelPlanStop) {
   activePointId.value = stopPointId(dayNumber, stop.slot, stop.name)
 }
-
-function activatePrimaryHotel() {
-  activePointId.value = hotelPointId(1)
-}
-
-async function exportScrapbook() {
-  if (!props.travelPlan) {
-    return
-  }
-  await downloadTravelScrapbook(props.travelPlan, props.preferChinese)
-}
-
-function submitFeedback(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED') {
-  const reasonCode = {
-    ACCEPTED: 'used_as_is',
-    PARTIAL: 'edited_before_use',
-    REJECTED: 'not_useful'
-  }[label]
-  emit('feedback', { label, reasonCode })
-}
-
-const feedbackLabel = computed(() => {
-  if (!props.feedback) {
-    return props.preferChinese ? '未记录' : 'Not recorded'
-  }
-  return {
-    ACCEPTED: props.preferChinese ? '已接受' : 'Accepted',
-    PARTIAL: props.preferChinese ? '部分接受' : 'Partially accepted',
-    REJECTED: props.preferChinese ? '已拒绝' : 'Rejected'
-  }[props.feedback.label]
-})
-
-const feedbackReason = computed(() => {
-  if (!props.feedback?.reasonCode) {
-    return ''
-  }
-  return {
-    used_as_is: props.preferChinese ? '基本无需修改' : 'Used as-is',
-    edited_before_use: props.preferChinese ? '使用前做了调整' : 'Edited before use',
-    not_useful: props.preferChinese ? '当前不打算采用' : 'Not useful enough'
-  }[props.feedback.reasonCode] ?? props.feedback.reasonCode
-})
-
-const feedbackCopy = computed(() => ({
-  title: props.preferChinese ? '结果反馈' : 'Recommendation Feedback',
-  status: props.preferChinese ? '当前状态' : 'Current status',
-  hint: props.preferChinese
-    ? '这一步是数据飞轮的第一层：告诉系统这次推荐有没有真正帮到你。'
-    : 'This is the first layer of the data flywheel: tell the system whether this recommendation actually helped.',
-  accept: props.preferChinese ? '直接采用' : 'Use As-Is',
-  partial: props.preferChinese ? '部分采用' : 'Use with Edits',
-  reject: props.preferChinese ? '暂不采用' : 'Reject'
-}))
-
-const knowledgeSelections = computed(() => props.travelPlan?.knowledgeRetrieval?.selections ?? [])
-
-const visibleKnowledgeSelections = computed(() => knowledgeSelections.value.filter(item => !isLowQualityKnowledge(item)))
-
-const suppressedKnowledgeSelections = computed(() => knowledgeSelections.value.filter(isLowQualityKnowledge))
-
-const knowledgeGroups = computed(() => {
-  const groups = new Map<string, TravelKnowledgeSelection[]>()
-  for (const item of visibleKnowledgeSelections.value) {
-    const topic = item.topic || 'other'
-    const list = groups.get(topic) ?? []
-    list.push(item)
-    groups.set(topic, list)
-  }
-
-  const preferredOrder = props.travelPlan?.knowledgeRetrieval?.inferredTopics ?? []
-  const orderedTopics = [
-    ...preferredOrder,
-    ...Array.from(groups.keys()).filter(topic => !preferredOrder.includes(topic))
-  ]
-
-  return orderedTopics
-    .filter(topic => groups.has(topic))
-    .map(topic => ({
-      topic,
-      items: [...(groups.get(topic) ?? [])].sort((left, right) => (right.qualityScore ?? 0) - (left.qualityScore ?? 0))
-    }))
-})
-
-const knowledgeSummary = computed(() => {
-  const selections = visibleKnowledgeSelections.value
-  const totalQuality = selections.reduce((sum, item) => sum + (item.qualityScore ?? 0), 0)
-  const averageQuality = selections.length ? Math.round(totalQuality / selections.length) : 0
-  const subtypes = new Set(selections.map(item => item.schemaSubtype).filter(Boolean))
-  return {
-    count: selections.length,
-    averageQuality,
-    topicCount: knowledgeGroups.value.length,
-    subtypeCount: subtypes.size,
-    suppressedCount: suppressedKnowledgeSelections.value.length
-  }
-})
-
-const copy = computed(() => ({
-  summary: props.preferChinese ? '方案概览' : 'Summary',
-  budget: props.preferChinese ? '预计总花费' : 'Estimated Total',
-  hotelArea: props.preferChinese ? '建议住宿区域' : 'Recommended Hotel Area',
-  adjustments: props.preferChinese ? '最近可行替代方案说明' : 'Closest Feasible Alternative',
-  adjustmentsBody: props.preferChinese
-    ? '系统为满足约束自动放宽了部分条件，下面是实际发生的调整。'
-    : 'The planner relaxed a few constraints to keep the itinerary feasible. These are the exact adjustments it made.',
-  weather: props.preferChinese ? '天气快照' : 'Weather Snapshot',
-  weatherValidity: props.preferChinese
-    ? '这是当前时点天气快照，不代表未来多日预报。'
-    : 'This weather hint is a point-in-time snapshot, not a multi-day forecast.',
-  weatherReportedAt: props.preferChinese ? '快照时间' : 'Snapshot time',
-  knowledge: props.preferChinese ? '引用的目的地知识' : 'Retrieved Knowledge',
-  knowledgeSummary: props.preferChinese ? '检索摘要' : 'Retrieval Summary',
-  knowledgeCount: props.preferChinese ? '命中片段' : 'Matched hints',
-  suppressedCount: props.preferChinese ? '已抑制低质量片段' : 'Suppressed noisy hints',
-  knowledgeTopicCount: props.preferChinese ? '覆盖主题' : 'Covered topics',
-  knowledgeSubtypeCount: props.preferChinese ? '知识类型' : 'Hint types',
-  averageQuality: props.preferChinese ? '平均质量' : 'Average quality',
-  knowledgeRoute: props.preferChinese ? '检索路径' : 'Retrieval path',
-  inferredTopics: props.preferChinese ? '推断主题' : 'Inferred topics',
-  inferredTripStyles: props.preferChinese ? '推断风格' : 'Inferred styles',
-  contentSource: props.preferChinese ? '内容来源' : 'Content source',
-  cityMatch: props.preferChinese ? '城市匹配' : 'City match',
-  topicMatch: props.preferChinese ? '主题匹配' : 'Topic match',
-  tripStyleMatch: props.preferChinese ? '风格匹配' : 'Style match',
-  schemaSubtype: props.preferChinese ? '知识类型' : 'Hint type',
-  noisyKnowledge: props.preferChinese ? '已弱化的低质量知识' : 'Suppressed Noisy Knowledge',
-  hotels: props.preferChinese ? '酒店建议' : 'Hotel Picks',
-  checks: props.preferChinese ? '重点提醒' : 'Constraint Checks',
-  breakdown: props.preferChinese ? '预算拆分' : 'Budget Breakdown',
-  days: props.preferChinese ? '每日路线' : 'Daily Route',
-  emptyTitle: props.preferChinese ? '还没有生成结构化方案' : 'No structured plan yet',
-  emptyBody: props.preferChinese
-    ? '给出目的地、天数和预算后，我会把酒店、路线、费用和地图一起整理出来。'
-    : 'Share the destination, trip length, and budget and I will structure the hotels, route, costs, and map together.',
-  export: props.preferChinese ? '生成旅行手账图' : 'Export Scrapbook',
-  locationDetails: props.preferChinese ? '查看定位细节' : 'View location details',
-  routeDetails: props.preferChinese ? '查看详细路线' : 'View route details'
-}))
 </script>
 
 <template>
   <section class="panel plan-panel">
     <div class="panel__header">
       <div>
-        <p class="panel__eyebrow">{{ preferChinese ? '方案' : 'Plan' }}</p>
-        <h2>{{ preferChinese ? '这次出行建议' : 'Suggested Plan' }}</h2>
+        <p class="panel__eyebrow">{{ copy.eyebrow }}</p>
+        <h2>{{ copy.title }}</h2>
       </div>
-      <button v-if="travelPlan" class="plan-export" @click="exportScrapbook">{{ copy.export }}</button>
     </div>
 
     <div v-if="!travelPlan" class="plan-empty">
@@ -432,45 +273,41 @@ const copy = computed(() => ({
     </div>
 
     <template v-else>
-      <div class="plan-summary">
-        <div>
-          <p class="plan-summary__label">{{ copy.summary }}</p>
+      <article class="overview-card">
+        <div class="overview-card__content">
+          <p class="overview-card__eyebrow">{{ copy.overview }}</p>
           <h3>{{ travelPlan.summary }}</h3>
-          <p class="plan-summary__body">{{ travelPlan.hotelAreaReason }}</p>
+          <p class="overview-card__body">{{ travelPlan.hotelAreaReason }}</p>
         </div>
-        <div class="plan-summary__stats">
-          <div>
-            <span>{{ copy.budget }}</span>
-            <strong>{{ travelPlan.estimatedTotalMin }}-{{ travelPlan.estimatedTotalMax }} {{ preferChinese ? '元' : 'CNY' }}</strong>
-          </div>
-          <div>
-            <span>{{ copy.hotelArea }}</span>
-            <strong>{{ travelPlan.hotelArea }}</strong>
-          </div>
-        </div>
-      </div>
 
-      <div class="plan-section">
-        <div class="plan-section__title">{{ feedbackCopy.title }}</div>
-        <article class="plan-insight-card plan-feedback-card">
-          <div class="plan-insight-card__header">
-            <strong>{{ feedbackCopy.status }}</strong>
-            <span class="plan-insight-card__badge">{{ feedbackLabel }}</span>
-          </div>
-          <p class="plan-amap__note">{{ feedbackCopy.hint }}</p>
-          <p v-if="feedbackReason" class="plan-amap__note">{{ feedbackReason }}</p>
-          <div class="plan-feedback-actions">
-            <button class="plan-feedback-button" :disabled="feedbackSaving" @click="submitFeedback('ACCEPTED')">
-              {{ feedbackSaving ? '...' : feedbackCopy.accept }}
-            </button>
-            <button class="plan-feedback-button" :disabled="feedbackSaving" @click="submitFeedback('PARTIAL')">
-              {{ feedbackSaving ? '...' : feedbackCopy.partial }}
-            </button>
-            <button class="plan-feedback-button plan-feedback-button--muted" :disabled="feedbackSaving" @click="submitFeedback('REJECTED')">
-              {{ feedbackSaving ? '...' : feedbackCopy.reject }}
-            </button>
-          </div>
-        </article>
+        <div class="overview-card__stats">
+          <article v-for="stat in overviewStats" :key="stat.label" class="overview-stat">
+            <span>{{ stat.label }}</span>
+            <strong>{{ stat.value }}</strong>
+            <p v-if="stat.hint">{{ stat.hint }}</p>
+          </article>
+        </div>
+
+        <div v-if="travelPlan.highlights.length" class="plan-highlights">
+          <span v-for="item in travelPlan.highlights" :key="item">{{ item }}</span>
+        </div>
+      </article>
+
+      <div v-if="visibleDays.length" class="plan-section">
+        <div class="plan-section__title">{{ copy.atGlance }}</div>
+        <div class="glance-grid">
+          <article v-for="day in visibleDays" :key="day.dayNumber" class="glance-card">
+            <span>{{ copy.day(day.dayNumber) }}</span>
+            <strong>{{ day.theme }}</strong>
+            <p>{{ copy.timeWindow(day.startTime, day.endTime) }}</p>
+            <div class="glance-card__meta">
+              <span>{{ copy.stopCount(day.stops.length) }}</span>
+              <span>{{ copy.activityMinutes(day.totalActivityMinutes) }}</span>
+              <span>{{ copy.transitMinutes(day.totalTransitMinutes) }}</span>
+              <span>{{ copy.costValue(day.estimatedCost) }}</span>
+            </div>
+          </article>
+        </div>
       </div>
 
       <PlanMap
@@ -480,299 +317,170 @@ const copy = computed(() => ({
         @select-point="activePointId = $event"
       />
 
-      <div class="plan-highlights">
-        <span v-for="item in travelPlan.highlights" :key="item">{{ item }}</span>
-      </div>
-
-      <div v-if="travelPlan.constraintRelaxed && travelPlan.adjustmentSuggestions?.length" class="plan-section">
-        <div class="plan-section__title">{{ copy.adjustments }}</div>
-        <article class="plan-insight-card plan-insight-card--warn">
-          <p class="plan-amap__note">{{ copy.adjustmentsBody }}</p>
-          <ul class="plan-adjustments">
-            <li v-for="item in travelPlan.adjustmentSuggestions" :key="item">{{ item }}</li>
-          </ul>
-        </article>
-      </div>
-
-      <div v-if="travelPlan.weatherSnapshot" class="plan-section">
-        <div class="plan-section__title">{{ copy.weather }}</div>
-        <article class="plan-insight-card">
-          <div class="plan-insight-card__header">
-            <strong>{{ travelPlan.weatherSnapshot.city || travelPlan.hotelArea }}</strong>
-            <span class="plan-insight-card__badge">{{ preferChinese ? '实时快照' : 'Point-in-time snapshot' }}</span>
-          </div>
-          <div class="plan-amap__grid">
-            <span v-if="travelPlan.weatherSnapshot.description" class="plan-amap__pill">
-              {{ preferChinese ? '天气' : 'Weather' }}: {{ travelPlan.weatherSnapshot.description }}
-            </span>
-            <span v-if="travelPlan.weatherSnapshot.temperature" class="plan-amap__pill">
-              {{ preferChinese ? '温度' : 'Temperature' }}: {{ travelPlan.weatherSnapshot.temperature }} C
-            </span>
-            <span v-if="travelPlan.weatherSnapshot.windDirection || travelPlan.weatherSnapshot.windPower" class="plan-amap__pill">
-              {{ preferChinese ? '风向/风力' : 'Wind' }}:
-              {{ travelPlan.weatherSnapshot.windDirection || '-' }} / {{ travelPlan.weatherSnapshot.windPower || '-' }}
-            </span>
-            <span v-if="travelPlan.weatherSnapshot.reportTime" class="plan-amap__pill">
-              {{ copy.weatherReportedAt }}: {{ travelPlan.weatherSnapshot.reportTime }}
-            </span>
-          </div>
-          <p class="plan-amap__note">{{ copy.weatherValidity }}</p>
-        </article>
-      </div>
-
-      <div v-if="travelPlan.knowledgeRetrieval?.selections?.length" class="plan-section">
-        <div class="plan-section__title">{{ copy.knowledge }}</div>
-        <div class="plan-knowledge-shell">
-          <article class="plan-insight-card">
-            <div class="plan-insight-card__header">
-              <strong>{{ copy.knowledgeSummary }}</strong>
-              <span class="plan-insight-card__badge">{{ knowledgeRouteLabel(travelPlan.knowledgeRetrieval.retrievalSource) }}</span>
-            </div>
-            <div class="plan-context-stats">
-              <div class="plan-context-stat">
-                <span>{{ copy.knowledgeCount }}</span>
-                <strong>{{ knowledgeSummary.count }}</strong>
-              </div>
-              <div class="plan-context-stat">
-                <span>{{ copy.knowledgeTopicCount }}</span>
-                <strong>{{ knowledgeSummary.topicCount }}</strong>
-              </div>
-              <div class="plan-context-stat">
-                <span>{{ copy.knowledgeSubtypeCount }}</span>
-                <strong>{{ knowledgeSummary.subtypeCount }}</strong>
-              </div>
-              <div class="plan-context-stat">
-                <span>{{ copy.averageQuality }}</span>
-                <strong>{{ knowledgeSummary.averageQuality }}</strong>
-              </div>
-              <div v-if="knowledgeSummary.suppressedCount" class="plan-context-stat">
-                <span>{{ copy.suppressedCount }}</span>
-                <strong>{{ knowledgeSummary.suppressedCount }}</strong>
-              </div>
-            </div>
-            <div class="plan-amap__grid">
-              <span
-                v-for="topic in travelPlan.knowledgeRetrieval.inferredTopics"
-                :key="topic"
-                class="plan-amap__pill"
-              >
-                {{ copy.inferredTopics }}: {{ topicLabel(topic) }}
-              </span>
-              <span
-                v-for="style in travelPlan.knowledgeRetrieval.inferredTripStyles || []"
-                :key="style"
-                class="plan-amap__pill"
-              >
-                {{ copy.inferredTripStyles }}: {{ tripStyleLabel(style) }}
-              </span>
-            </div>
-          </article>
-          <div class="plan-knowledge-groups">
-            <section
-              v-for="group in knowledgeGroups"
-              :key="group.topic"
-              class="plan-knowledge-group"
+      <div class="dashboard-grid">
+        <section v-if="visibleHotels.length" class="plan-section">
+          <div class="plan-section__title">{{ copy.hotels }}</div>
+          <div class="stay-grid">
+            <article
+              v-for="(hotel, index) in visibleHotels"
+              :key="hotel.name"
+              class="stay-card"
+              @mouseenter="activateHotel(index + 1)"
             >
-              <div class="plan-knowledge-group__header">
-                <strong>{{ topicLabel(group.topic) }}</strong>
-                <span>{{ group.items.length }}</span>
-              </div>
-              <div class="plan-knowledge-list">
-                <article
-                  v-for="item in group.items"
-                  :key="`${item.city}-${item.topic}-${item.title}`"
-                  class="plan-knowledge-card"
-                >
-                  <div class="plan-insight-card__header">
-                    <div class="plan-knowledge-card__headline">
-                      <strong>{{ item.title }}</strong>
-                      <p>{{ item.content }}</p>
-                    </div>
-                    <div class="plan-knowledge-card__badges">
-                      <span class="plan-insight-card__badge">{{ schemaSubtypeLabel(item.schemaSubtype) }}</span>
-                      <span class="plan-amap__pill" :class="qualityClass(item.qualityScore)">{{ qualityLabel(item.qualityScore) }}</span>
-                    </div>
-                  </div>
-                  <div class="plan-amap__grid">
-                    <span v-if="item.matchedCity" class="plan-amap__pill">{{ copy.cityMatch }}: {{ item.matchedCity }}</span>
-                    <span v-if="item.matchedTopic" class="plan-amap__pill">{{ copy.topicMatch }}: {{ topicLabel(item.matchedTopic) }}</span>
-                    <span v-for="style in item.matchedTripStyles || []" :key="`${item.title}-${style}`" class="plan-amap__pill">
-                      {{ copy.tripStyleMatch }}: {{ tripStyleLabel(style) }}
-                    </span>
-                    <span v-if="item.schemaSubtype" class="plan-amap__pill">{{ copy.schemaSubtype }}: {{ schemaSubtypeLabel(item.schemaSubtype) }}</span>
-                    <span v-if="item.source" class="plan-amap__pill">{{ copy.contentSource }}: {{ item.source }}</span>
-                  </div>
-                </article>
-              </div>
-            </section>
-          </div>
-          <details v-if="suppressedKnowledgeSelections.length" class="plan-noisy-knowledge">
-            <summary>{{ copy.noisyKnowledge }} ({{ suppressedKnowledgeSelections.length }})</summary>
-            <div class="plan-knowledge-list">
-              <article
-                v-for="item in suppressedKnowledgeSelections"
-                :key="`${item.city}-${item.topic}-${item.title}-suppressed`"
-                class="plan-knowledge-card plan-knowledge-card--muted"
-              >
-                <div class="plan-insight-card__header">
-                  <div class="plan-knowledge-card__headline">
-                    <strong>{{ item.title }}</strong>
-                    <p>{{ item.content }}</p>
-                  </div>
-                  <div class="plan-knowledge-card__badges">
-                    <span class="plan-amap__pill plan-pill--muted">{{ qualityLabel(item.qualityScore) }}</span>
-                  </div>
+              <div class="stay-card__head">
+                <div>
+                  <strong>{{ hotel.name }}</strong>
+                  <p>{{ hotel.area }}</p>
                 </div>
-              </article>
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <div v-if="travelPlan.hotels?.length" class="plan-section">
-        <div class="plan-section__title">{{ copy.hotels }}</div>
-        <div class="plan-hotel-list">
-          <article
-            v-for="(hotel, index) in travelPlan.hotels"
-            :key="hotel.name"
-            class="plan-hotel-card"
-            @mouseenter="activateHotel(index + 1)"
-          >
-            <div>
-              <strong>{{ hotel.name }}</strong>
-              <p>{{ hotel.area }} · {{ hotel.address }}</p>
+                <span class="stay-card__price">{{ copy.nightly(hotel.nightlyMin, hotel.nightlyMax) }}</span>
+              </div>
               <p>{{ hotel.rationale }}</p>
-              <p class="plan-amap__note">{{ locationStatus(hotel.source) }}</p>
-              <details v-if="hotel.longitude && hotel.latitude" class="plan-amap__details">
+              <p class="stay-card__status">{{ locationStatus(hotel.source) }}</p>
+              <details v-if="hotel.longitude && hotel.latitude" class="stay-card__details">
                 <summary>{{ copy.locationDetails }}</summary>
-                <div class="plan-amap">
-                  <div class="plan-amap__grid">
-                    <span class="plan-amap__pill">{{ coordinateText(hotel.longitude, hotel.latitude) }}</span>
-                  </div>
+                <div class="details-pills">
+                  <span>{{ coordinateText(hotel.longitude, hotel.latitude) }}</span>
+                  <span>{{ hotel.address }}</span>
                 </div>
               </details>
-            </div>
-            <span>{{ hotel.nightlyMin }}-{{ hotel.nightlyMax }} {{ preferChinese ? '元/晚' : 'CNY/night' }}</span>
-          </article>
-        </div>
-      </div>
+            </article>
+          </div>
+        </section>
 
-      <div class="plan-section">
-        <div class="plan-section__title">{{ copy.checks }}</div>
-        <div class="plan-checks">
-          <article v-for="check in travelPlan.checks" :key="check.code" class="plan-check" :class="checkClass(check.status)">
-            <strong>{{ statusLabel(check.status) }}</strong>
-            <p>{{ check.message }}</p>
-          </article>
-        </div>
-      </div>
-
-      <div class="plan-section">
-        <div class="plan-section__title">{{ copy.breakdown }}</div>
-        <div class="plan-budget-list">
-          <article v-for="item in travelPlan.budget" :key="item.category" class="plan-budget-item">
-            <div>
-              <strong>{{ categoryLabel(item.category) }}</strong>
-              <p>{{ item.rationale }}</p>
-            </div>
-            <span>{{ item.minAmount }}-{{ item.maxAmount }} {{ preferChinese ? '元' : 'CNY' }}</span>
-          </article>
-        </div>
-      </div>
-
-      <div class="plan-section">
-        <div class="plan-section__title">{{ copy.days }}</div>
-        <div class="plan-days">
-          <article v-for="day in travelPlan.days" :key="day.dayNumber" class="plan-day">
-            <div class="plan-day__header">
+        <section v-if="visibleBudget.length" class="plan-section">
+          <div class="plan-section__title">{{ copy.budget }}</div>
+          <div class="budget-grid">
+            <article v-for="item in visibleBudget" :key="item.category" class="budget-card">
               <div>
-                <p>{{ preferChinese ? `第 ${day.dayNumber} 天` : `Day ${day.dayNumber}` }}</p>
-                <h4>{{ day.theme }}</h4>
+                <strong>{{ categoryLabel(item.category) }}</strong>
+                <p>{{ item.rationale }}</p>
               </div>
-              <div class="plan-day__meta">
-                <span>{{ preferChinese ? `游玩 ${day.totalActivityMinutes} 分钟` : `Activity ${day.totalActivityMinutes} min` }}</span>
-                <span>{{ preferChinese ? `通勤 ${day.totalTransitMinutes} 分钟` : `Transit ${day.totalTransitMinutes} min` }}</span>
-                <span>{{ preferChinese ? `花费 ${day.estimatedCost} 元` : `Cost ${day.estimatedCost} CNY` }}</span>
+              <span>{{ copy.amount(item.minAmount, item.maxAmount) }}</span>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <div v-if="visibleChecks.length" class="plan-section">
+        <div class="plan-section__title">{{ copy.checks }}</div>
+        <div class="checks-grid">
+          <article
+            v-for="check in visibleChecks"
+            :key="check.code"
+            class="check-card"
+            :class="`check-card--${check.status.toLowerCase()}`"
+          >
+            <span>{{ statusLabel(check) }}</span>
+            <strong>{{ check.message }}</strong>
+          </article>
+        </div>
+      </div>
+
+      <div v-if="visibleDays.length" class="plan-section">
+        <div class="plan-section__title">{{ copy.itinerary }}</div>
+        <div class="itinerary-list">
+          <article v-for="day in visibleDays" :key="day.dayNumber" class="itinerary-day">
+            <div class="itinerary-day__header">
+              <div>
+                <p class="itinerary-day__eyebrow">{{ copy.day(day.dayNumber) }}</p>
+                <h4>{{ day.theme }}</h4>
+                <p class="itinerary-day__window">{{ copy.timeWindow(day.startTime, day.endTime) }}</p>
+              </div>
+              <div class="itinerary-day__meta">
+                <span>{{ copy.activityMinutes(day.totalActivityMinutes) }}</span>
+                <span>{{ copy.transitMinutes(day.totalTransitMinutes) }}</span>
+                <span>{{ copy.costValue(day.estimatedCost) }}</span>
               </div>
             </div>
 
-            <div class="plan-stops">
+            <div class="itinerary-stops">
               <article
                 v-for="stop in day.stops"
                 :key="`${day.dayNumber}-${stop.slot}-${stop.name}`"
-                class="plan-stop"
+                class="itinerary-stop"
                 @mouseenter="activateStop(day.dayNumber, stop)"
               >
-                <div class="plan-stop__slot">{{ slotLabel(stop.slot) }}</div>
-                <div class="plan-stop__body">
-                  <strong>{{ stop.startTime }}-{{ stop.endTime }} {{ stop.name }}</strong>
-                  <p>{{ stop.area }}<template v-if="stop.address"> · {{ stop.address }}</template></p>
+                <div class="itinerary-stop__time">
+                  <strong>{{ stop.startTime }}</strong>
+                  <span>{{ stop.endTime }}</span>
+                  <em>{{ slotLabel(stop.slot) }}</em>
+                </div>
+
+                <div class="itinerary-stop__content">
+                  <div class="itinerary-stop__head">
+                    <div>
+                      <strong>{{ stop.name }}</strong>
+                      <p>{{ stop.area }}</p>
+                    </div>
+                    <span class="itinerary-stop__price">{{ copy.costValue(stopTotalCost(stop)) }}</span>
+                  </div>
+
                   <p>{{ stop.rationale }}</p>
 
-                  <div v-if="stop.poiMatch || (stop.longitude && stop.latitude)" class="plan-amap">
-                    <div class="plan-amap__title">{{ preferChinese ? '地点确认' : 'Location Check' }}</div>
-                    <p class="plan-amap__note">{{ locationStatus(stop.poiMatch?.source) }}</p>
-                    <details class="plan-amap__details">
-                      <summary>{{ copy.locationDetails }}</summary>
-                      <div class="plan-amap__grid">
-                        <span v-if="stop.poiMatch?.matchedName" class="plan-amap__pill">
-                          {{ preferChinese ? '匹配地点' : 'Matched' }}: {{ stop.poiMatch.matchedName }}
-                        </span>
-                        <span v-if="stop.poiMatch?.district" class="plan-amap__pill">
-                          {{ preferChinese ? '所在区域' : 'District' }}: {{ stop.poiMatch.district }}
-                        </span>
-                        <span v-if="stop.longitude && stop.latitude" class="plan-amap__pill">
-                          {{ preferChinese ? '坐标' : 'Coordinates' }}: {{ coordinateText(stop.longitude, stop.latitude) }}
-                        </span>
-                      </div>
-                      <p v-if="stop.poiMatch?.address" class="plan-amap__note">
-                        {{ preferChinese ? '高德地址' : 'Amap Address' }}: {{ stop.poiMatch.address }}
-                      </p>
-                      <p v-if="(stop.poiMatch?.candidateNames?.length ?? 0) > 1" class="plan-amap__note">
-                        {{ preferChinese ? '其他候选地点' : 'Other candidates' }}: {{ stop.poiMatch?.candidateNames?.join(' / ') }}
-                      </p>
-                    </details>
+                  <div class="itinerary-stop__chips">
+                    <span>{{ copy.stopDuration(stop.durationMinutes) }}</span>
+                    <span v-if="stop.transitMinutesFromPrevious">{{ copy.transferMinutes(stop.transitMinutesFromPrevious) }}</span>
+                    <span>{{ copy.openWindow(stop.openTime, stop.closeTime) }}</span>
                   </div>
 
-                  <div v-if="stop.costBreakdown" class="plan-stop__costs">
-                    <span>{{ preferChinese ? `门票 ${stop.costBreakdown.ticketCost}` : `Ticket ${stop.costBreakdown.ticketCost}` }}</span>
-                    <span>{{ preferChinese ? `餐饮 ${stop.costBreakdown.foodCost}` : `Food ${stop.costBreakdown.foodCost}` }}</span>
-                    <span>{{ preferChinese ? `通勤 ${stop.costBreakdown.localTransitCost}` : `Transit ${stop.costBreakdown.localTransitCost}` }}</span>
-                    <span>{{ preferChinese ? `其他 ${stop.costBreakdown.otherCost}` : `Other ${stop.costBreakdown.otherCost}` }}</span>
+                  <div v-if="stop.costBreakdown" class="cost-pills">
+                    <span>{{ copy.ticket(stop.costBreakdown.ticketCost) }}</span>
+                    <span>{{ copy.food(stop.costBreakdown.foodCost) }}</span>
+                    <span>{{ copy.localTransit(stop.costBreakdown.localTransitCost) }}</span>
+                    <span>{{ copy.other(stop.costBreakdown.otherCost) }}</span>
                   </div>
 
-                  <div v-if="stop.routeFromPrevious" class="plan-route">
-                    <div class="plan-route__summary">
-                      <strong>{{ stop.routeFromPrevious.fromName }} → {{ stop.routeFromPrevious.toName }}</strong>
-                      <p>{{ routeLine(stop.routeFromPrevious) }} · {{ routeMeta(stop.routeFromPrevious) }}</p>
-                      <p class="plan-amap__note">{{ routeStatus(stop.routeFromPrevious.source) }}</p>
-                      <p>{{ stop.routeFromPrevious.summary }}</p>
-                    </div>
-                    <details class="plan-route__details">
+                  <div v-if="stop.routeFromPrevious" class="route-card">
+                    <span>{{ copy.arrivalRoute }}</span>
+                    <strong>{{ routeLine(stop.routeFromPrevious) || stop.routeFromPrevious.summary }}</strong>
+                    <p>{{ copy.routeMeta(stop.routeFromPrevious) }}</p>
+                    <details class="route-card__details">
                       <summary>{{ copy.routeDetails }}</summary>
-                      <div class="plan-route__steps">
-                        <article v-for="step in stop.routeFromPrevious.steps" :key="`${step.mode}-${step.lineName}-${step.fromName}-${step.toName}`" class="plan-route__step">
-                          <strong>{{ step.lineName || step.title }}</strong>
-                          <p>{{ step.fromName || step.instruction }}<template v-if="step.toName"> → {{ step.toName }}</template></p>
+                      <div class="route-steps">
+                        <article
+                          v-for="step in stop.routeFromPrevious.steps"
+                          :key="`${step.mode}-${step.lineName}-${step.fromName}-${step.toName}`"
+                          class="route-step"
+                        >
+                          <strong>{{ step.title || step.instruction }}</strong>
+                          <p>{{ step.instruction }}</p>
                           <span>{{ stepMeta(step) }}</span>
                         </article>
                       </div>
                     </details>
                   </div>
+
+                  <details v-if="stop.poiMatch || (stop.longitude && stop.latitude)" class="location-card">
+                    <summary>{{ copy.locationDetails }}</summary>
+                    <p class="location-card__status">{{ locationStatus(stop.poiMatch?.source) }}</p>
+                    <div class="details-pills">
+                      <span v-if="stop.poiMatch?.matchedName">{{ copy.matched }}: {{ stop.poiMatch.matchedName }}</span>
+                      <span v-if="stop.poiMatch?.district">{{ copy.district }}: {{ stop.poiMatch.district }}</span>
+                      <span v-if="stop.longitude && stop.latitude">{{ copy.coordinates }}: {{ coordinateText(stop.longitude, stop.latitude) }}</span>
+                    </div>
+                    <p v-if="stop.poiMatch?.address" class="location-card__note">{{ copy.amapAddress }}: {{ stop.poiMatch.address }}</p>
+                    <p v-if="(stop.poiMatch?.candidateNames?.length ?? 0) > 1" class="location-card__note">
+                      {{ copy.otherCandidates }}: {{ stop.poiMatch?.candidateNames?.join(' / ') }}
+                    </p>
+                  </details>
                 </div>
               </article>
 
-              <article
-                v-if="day.returnToHotel"
-                class="plan-stop plan-stop--return"
-                @mouseenter="activatePrimaryHotel()"
-              >
-                <div class="plan-stop__slot">{{ preferChinese ? '返程' : 'Return' }}</div>
-                <div class="plan-stop__body">
-                  <strong>{{ day.returnToHotel.fromName }} → {{ day.returnToHotel.toName }}</strong>
-                  <p>{{ routeLine(day.returnToHotel) }} · {{ routeMeta(day.returnToHotel) }}</p>
-                  <p class="plan-amap__note">{{ routeStatus(day.returnToHotel.source) }}</p>
-                  <p>{{ day.returnToHotel.summary }}</p>
+              <article v-if="day.returnToHotel" class="itinerary-stop itinerary-stop--return">
+                <div class="itinerary-stop__time">
+                  <strong>{{ copy.returnLabel }}</strong>
+                  <span>{{ day.endTime }}</span>
+                </div>
+                <div class="itinerary-stop__content">
+                  <div class="itinerary-stop__head">
+                    <div>
+                      <strong>{{ day.returnToHotel.toName }}</strong>
+                      <p>{{ routeLine(day.returnToHotel) || day.returnToHotel.summary }}</p>
+                    </div>
+                  </div>
+                  <div class="itinerary-stop__chips">
+                    <span>{{ copy.routeMeta(day.returnToHotel) }}</span>
+                  </div>
                 </div>
               </article>
             </div>
@@ -784,42 +492,346 @@ const copy = computed(() => ({
 </template>
 
 <style scoped>
-.plan-feedback-card {
-  gap: 0.9rem;
+.plan-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: auto;
 }
 
-.plan-feedback-actions {
+.overview-card,
+.glance-card,
+.stay-card,
+.budget-card,
+.check-card,
+.itinerary-day,
+.itinerary-stop,
+.route-step {
+  border-radius: 18px;
+  border: 1px solid rgba(24, 50, 74, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.overview-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 255, 0.88));
+}
+
+.overview-card__eyebrow,
+.itinerary-day__eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #165b97;
+}
+
+.overview-card__content h3,
+.itinerary-day h4 {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.overview-card__body,
+.glance-card p,
+.stay-card p,
+.budget-card p,
+.route-card p,
+.route-step p,
+.location-card__note,
+.itinerary-day__window,
+.itinerary-stop__head p,
+.itinerary-stop__content > p {
+  margin: 0;
+  color: #61798b;
+  line-height: 1.55;
+}
+
+.overview-card__stats,
+.glance-grid,
+.dashboard-grid,
+.checks-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.overview-card__stats {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.overview-stat {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.overview-stat span,
+.stay-card__status,
+.location-card__status {
+  display: block;
+  color: #61798b;
+  font-size: 0.82rem;
+}
+
+.overview-stat strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1rem;
+}
+
+.overview-stat p {
+  margin: 6px 0 0;
+  color: #61798b;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.glance-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.glance-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.glance-card > span {
+  color: #165b97;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.glance-card strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.glance-card__meta,
+.itinerary-day__meta,
+.itinerary-stop__chips,
+.cost-pills,
+.details-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.35rem;
+  gap: 6px;
 }
 
-.plan-feedback-button {
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  background: #fff;
-  color: #0f172a;
+.glance-card__meta span,
+.itinerary-day__meta span,
+.itinerary-stop__chips span,
+.cost-pills span,
+.details-pills span {
+  display: inline-flex;
+  padding: 6px 10px;
   border-radius: 999px;
-  padding: 0.65rem 1rem;
-  font: inherit;
-  font-weight: 600;
+  background: rgba(47, 134, 255, 0.08);
+  color: #165b97;
+  font-size: 0.78rem;
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.stay-grid,
+.budget-grid,
+.itinerary-list,
+.itinerary-stops,
+.route-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.stay-card,
+.budget-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.stay-card__head,
+.budget-card,
+.itinerary-day__header,
+.itinerary-stop__head {
+  display: grid;
+  gap: 12px;
+}
+
+.stay-card__head,
+.budget-card,
+.itinerary-day__header {
+  grid-template-columns: 1fr auto;
+}
+
+.stay-card__head strong,
+.budget-card strong,
+.check-card strong,
+.itinerary-stop__head strong,
+.route-card strong,
+.route-step strong {
+  display: block;
+}
+
+.stay-card__price,
+.budget-card > span,
+.itinerary-stop__price {
+  color: #165b97;
+  font-weight: 700;
+}
+
+.stay-card__details,
+.route-card__details,
+.location-card {
+  display: grid;
+  gap: 8px;
+}
+
+.stay-card__details summary,
+.route-card__details summary,
+.location-card summary {
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  color: #0b8c87;
+  font-size: 0.88rem;
 }
 
-.plan-feedback-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: rgba(15, 118, 110, 0.55);
-  background: rgba(15, 118, 110, 0.06);
+.checks-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-.plan-feedback-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.check-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
 }
 
-.plan-feedback-button--muted:hover:not(:disabled) {
-  border-color: rgba(148, 163, 184, 0.8);
-  background: rgba(148, 163, 184, 0.12);
+.check-card span {
+  color: #165b97;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.check-card--pass {
+  border-color: rgba(11, 140, 135, 0.24);
+}
+
+.check-card--warn {
+  border-color: rgba(255, 180, 84, 0.34);
+}
+
+.check-card--fail {
+  border-color: rgba(176, 52, 52, 0.3);
+}
+
+.itinerary-day {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.itinerary-day__window {
+  margin-top: 6px;
+}
+
+.itinerary-day__meta {
+  justify-content: flex-end;
+  align-content: start;
+}
+
+.itinerary-stop {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.itinerary-stop__time {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+}
+
+.itinerary-stop__time strong {
+  font-size: 1rem;
+  color: #18324a;
+}
+
+.itinerary-stop__time span,
+.itinerary-stop__time em {
+  color: #61798b;
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+.itinerary-stop__content,
+.route-card {
+  display: grid;
+  gap: 8px;
+}
+
+.itinerary-stop__head {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.route-card {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(11, 140, 135, 0.14);
+  background: rgba(11, 140, 135, 0.06);
+}
+
+.route-card > span {
+  color: #165b97;
+  font-size: 0.82rem;
+}
+
+.route-step {
+  padding: 10px 12px;
+}
+
+.route-step span {
+  display: block;
+  margin-top: 6px;
+  color: #165b97;
+  font-size: 0.82rem;
+}
+
+.location-card {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(47, 134, 255, 0.14);
+  background: rgba(47, 134, 255, 0.05);
+}
+
+.itinerary-stop--return {
+  border-style: dashed;
+  background: rgba(247, 251, 255, 0.9);
+}
+
+@media (max-width: 1180px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .stay-card__head,
+  .budget-card,
+  .itinerary-day__header,
+  .itinerary-stop__head,
+  .itinerary-stop {
+    grid-template-columns: 1fr;
+  }
+
+  .itinerary-day__meta {
+    justify-content: flex-start;
+  }
 }
 </style>

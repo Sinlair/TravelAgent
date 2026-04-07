@@ -3,11 +3,13 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { TravelPlan } from '../types/api'
 import { buildMapPoints, buildRoutePolylines, type MapPoint } from '../utils/travelPlan'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   travelPlan: TravelPlan | null
-  preferChinese: boolean
+  preferChinese?: boolean
   activePointId?: string
-}>()
+}>(), {
+  preferChinese: true
+})
 
 const emit = defineEmits<{
   selectPoint: [pointId: string]
@@ -27,12 +29,37 @@ const plottedPoints = computed(() =>
     return (left.dayNumber ?? 0) - (right.dayNumber ?? 0)
   })
 )
+
 const amapKey = import.meta.env.VITE_AMAP_WEB_KEY
 const securityJsCode = import.meta.env.VITE_AMAP_SECURITY_JS_CODE
 
 let mapInstance: any = null
 let loaderPromise: Promise<any> | null = null
 let markerOverlays: Array<{ pointId: string; marker: any }> = []
+
+const copy = computed(() => (props.preferChinese
+  ? {
+      eyebrow: '地图视图',
+      title: '路线与酒店位置',
+      nodes: (count: number) => `已标注 ${count} 个点位`,
+      emptyPlan: '生成行程后，这里会显示路线和酒店位置。',
+      emptyCoordinates: '当前行程还没有足够的坐标信息，暂时无法绘制地图。',
+      noKey: '路线数据已经准备好，但还需要配置高德 Web Key 才能渲染底图。',
+      plottedNodes: '当前点位',
+      hotel: (index?: number) => `住宿 ${index ?? ''}`.trim(),
+      day: (dayNumber?: number) => `第 ${dayNumber ?? ''} 天`.trim()
+    }
+  : {
+      eyebrow: 'Amap View',
+      title: 'Route And Hotel Map',
+      nodes: (count: number) => `${count} nodes plotted`,
+      emptyPlan: 'The route map will appear here after a plan is generated.',
+      emptyCoordinates: 'There are not enough coordinates in the current plan to draw the map yet.',
+      noKey: 'The route data is ready, but an Amap Web key is still required to render the basemap.',
+      plottedNodes: 'Plotted Nodes',
+      hotel: (index?: number) => `Hotel ${index ?? ''}`.trim(),
+      day: (dayNumber?: number) => `Day ${dayNumber ?? ''}`.trim()
+    }))
 
 watch([mapContainer, mapPoints, routePolylines], async () => {
   if (!mapContainer.value || !mapPoints.value.length || !amapKey) {
@@ -119,9 +146,9 @@ function markerHtml(label: string, kind: 'hotel' | 'stop', active = false) {
 
 function pointTitle(point: MapPoint) {
   if (point.kind === 'hotel') {
-    return props.preferChinese ? `住宿 ${point.hotelIndex}` : `Hotel ${point.hotelIndex}`
+    return copy.value.hotel(point.hotelIndex)
   }
-  return props.preferChinese ? `第 ${point.dayNumber} 天` : `Day ${point.dayNumber}`
+  return copy.value.day(point.dayNumber)
 }
 
 function coordinateText(point: MapPoint) {
@@ -158,27 +185,27 @@ async function loadAmap() {
   <section class="plan-map">
     <div class="plan-map__header">
       <div>
-        <p class="plan-map__eyebrow">{{ preferChinese ? '高德地图' : 'Amap View' }}</p>
-        <h3>{{ preferChinese ? '路线与住宿落点' : 'Route And Hotel Map' }}</h3>
+        <p class="plan-map__eyebrow">{{ copy.eyebrow }}</p>
+        <h3>{{ copy.title }}</h3>
       </div>
       <span v-if="travelPlan && mapPoints.length" class="plan-map__badge">
-        {{ preferChinese ? `已绘制 ${mapPoints.length} 个节点` : `${mapPoints.length} nodes plotted` }}
+        {{ copy.nodes(mapPoints.length) }}
       </span>
     </div>
 
     <div v-if="!travelPlan" class="plan-map__empty">
-      {{ preferChinese ? '生成行程后，这里会显示地图路线和住宿落点。' : 'The route map will appear here after a plan is generated.' }}
+      {{ copy.emptyPlan }}
     </div>
     <div v-else-if="!mapPoints.length" class="plan-map__empty">
-      {{ preferChinese ? '当前行程还没有足够的坐标点，暂时无法在地图上绘制。' : 'There are not enough coordinates in the current plan to draw the map yet.' }}
+      {{ copy.emptyCoordinates }}
     </div>
     <div v-else-if="!amapKey" class="plan-map__empty">
-      {{ preferChinese ? '还没有配置高德 Web Key，路线数据已经准备好，补上 Key 后就能显示底图。' : 'The route data is ready, but an Amap Web key is still required to render the basemap.' }}
+      {{ copy.noKey }}
     </div>
     <div v-else ref="mapContainer" class="plan-map__canvas" />
 
     <div v-if="plottedPoints.length" class="plan-map__nodes">
-      <div class="plan-section__title">{{ preferChinese ? '当前绘制节点' : 'Plotted Nodes' }}</div>
+      <div class="plan-section__title">{{ copy.plottedNodes }}</div>
       <div class="plan-map__node-list">
         <article
           v-for="point in plottedPoints"

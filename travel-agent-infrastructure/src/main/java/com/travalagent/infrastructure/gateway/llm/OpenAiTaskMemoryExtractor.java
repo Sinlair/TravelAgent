@@ -18,13 +18,15 @@ import java.util.regex.Pattern;
 public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
 
     private static final Pattern EN_FROM_TO = Pattern.compile("from\\s+([A-Za-z][A-Za-z\\s-]{1,40}?)\\s+to\\s+([A-Za-z][A-Za-z\\s-]{1,40})", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ZH_FROM_TO = Pattern.compile("从([\\u4E00-\\u9FFF]{2,20})到([\\u4E00-\\u9FFF]{2,20})");
+    private static final Pattern ZH_FROM_TO = Pattern.compile("从\\s*([\\p{IsHan}]{2,20})\\s*到\\s*([\\p{IsHan}]{2,20})");
     private static final Pattern EN_DAYS = Pattern.compile("(\\d{1,2})\\s*[- ]?day", Pattern.CASE_INSENSITIVE);
-    private static final Pattern EN_DESTINATION = Pattern.compile("(?:plan|arrange|build)?\\s*(?:a\\s+\\d{1,2}\\s*[- ]?day\\s+)?([A-Za-z][A-Za-z\\s-]{1,40})\\s+(?:trip|itinerary|travel)", Pattern.CASE_INSENSITIVE);
     private static final Pattern ZH_DAYS = Pattern.compile("(\\d{1,2}|[一二两三四五六七八九十]{1,3})\\s*天");
+    private static final Pattern EN_DESTINATION = Pattern.compile("(?:plan|arrange|build)?\\s*(?:a\\s+\\d{1,2}\\s*[- ]?day\\s+)?([A-Za-z][A-Za-z\\s-]{1,40})\\s+(?:trip|itinerary|travel)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EN_TO_ONLY = Pattern.compile("to\\s+([A-Za-z][A-Za-z\\s-]{1,40})", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ZH_DESTINATION = Pattern.compile("(?:帮我|请帮我|麻烦|我想|想要|规划|计划|安排)?(?:[一二两三四五六七八九十0-9]{1,3}\\s*天)?\\s*([\\p{IsHan}]{2,20})(?:行程|旅行|旅游|攻略)");
+    private static final Pattern ZH_CITY_PREFIX = Pattern.compile("([\\p{IsHan}]{2,20})\\s*(?:三天|两天|一天|四天|五天|六天|七天)");
+    private static final Pattern ZH_DAYS_THEN_DESTINATION = Pattern.compile("(?:^|[，,\\s])(?:[一二两三四五六七八九十0-9]{1,3})\\s*天\\s*([\\p{IsHan}]{2,20})(?:[，,\\s]|$)");
     private static final Pattern BUDGET = Pattern.compile("(\\d{3,6})");
-    private static final Pattern ZH_DESTINATION = Pattern.compile("(?:帮我|请帮我|麻烦|我想|想要|规划|计划|安排)?(?:[一二两三四五六七八九十0-9]{1,3}\\s*天)?([\\u4E00-\\u9FFF]{2,20})(?:行程|旅行|旅游|攻略)");
-    private static final Pattern ZH_GO_TO = Pattern.compile("[去到]([\\u4E00-\\u9FFF]{2,20})");
 
     private final ChatClient.Builder chatClientBuilder;
     private final OpenAiAvailability openAiAvailability;
@@ -55,15 +57,16 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
                             .orElse(""))
                     .call()
                     .entity(MemoryOutput.class);
+
             TaskMemory llmCandidate = new TaskMemory(
                     existing.conversationId(),
-                    output == null ? null : output.origin(),
-                    output == null ? null : output.destination(),
+                    LlmExtractionSanitizer.sanitizeStructuredText(output == null ? null : output.origin()),
+                    LlmExtractionSanitizer.sanitizeStructuredText(output == null ? null : output.destination()),
                     output == null ? null : output.days(),
-                    output == null ? null : output.budget(),
+                    LlmExtractionSanitizer.sanitizeStructuredText(output == null ? null : output.budget()),
                     output == null || output.preferences() == null ? List.of() : output.preferences(),
-                    output == null ? null : output.pendingQuestion(),
-                    output == null ? null : output.summary(),
+                    LlmExtractionSanitizer.sanitizeStructuredText(output == null ? null : output.pendingQuestion()),
+                    LlmExtractionSanitizer.sanitizeStructuredText(output == null ? null : output.summary()),
                     Instant.now()
             );
             return heuristic.merge(llmCandidate);
@@ -78,15 +81,26 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
                 .map(ConversationMessage::content)
                 .reduce((left, right) -> left + "\n" + right)
                 .orElse("");
+
         boolean chinese = containsChinese(userText);
-        String origin = firstNonBlank(existing.origin(), extractOrigin(userText));
-        String destination = firstNonBlank(existing.destination(), extractDestination(userText));
+        String origin = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.origin()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractOrigin(userText))
+        );
+        String destination = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.destination()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractDestination(userText))
+        );
         Integer days = existing.days() != null ? existing.days() : extractDays(userText);
-        String budget = firstNonBlank(existing.budget(), extractBudgetText(userText, chinese));
+        String budget = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.budget()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractBudgetText(userText, chinese))
+        );
         List<String> preferences = mergePreferences(existing.preferences(), extractPreferences(userText));
         String pendingQuestion = hasText(destination) && days != null && hasText(budget)
                 ? null
                 : chinese ? "请确认目的地、天数和预算，我再继续细化行程。" : "Please confirm the destination, trip length, and budget so the planner can continue.";
+
         return new TaskMemory(
                 existing.conversationId(),
                 emptyToNull(origin),
@@ -118,21 +132,30 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
         if (matcher.find()) {
             return cleanLocation(matcher.group(2));
         }
+
+        Matcher zhDestination = ZH_DESTINATION.matcher(text);
+        if (zhDestination.find()) {
+            return cleanLocation(zhDestination.group(1));
+        }
+
+        Matcher zhDaysThenDestination = ZH_DAYS_THEN_DESTINATION.matcher(text);
+        if (zhDaysThenDestination.find()) {
+            return cleanLocation(zhDaysThenDestination.group(1));
+        }
+
+        Matcher zhCityPrefix = ZH_CITY_PREFIX.matcher(text);
+        if (zhCityPrefix.find()) {
+            return cleanLocation(zhCityPrefix.group(1));
+        }
+
         Matcher destinationOnly = EN_DESTINATION.matcher(text);
         if (destinationOnly.find()) {
             return cleanLocation(destinationOnly.group(1));
         }
-        Matcher toOnly = Pattern.compile("to\\s+([A-Za-z][A-Za-z\\s-]{1,40})", Pattern.CASE_INSENSITIVE).matcher(text);
+
+        Matcher toOnly = EN_TO_ONLY.matcher(text);
         if (toOnly.find()) {
             return cleanLocation(toOnly.group(1));
-        }
-        Matcher destination = ZH_DESTINATION.matcher(text);
-        if (destination.find()) {
-            return cleanLocation(destination.group(1));
-        }
-        Matcher goTo = ZH_GO_TO.matcher(text);
-        if (goTo.find()) {
-            return cleanLocation(goTo.group(1));
         }
         return null;
     }
@@ -163,7 +186,8 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
         if (lower.contains("food") || lower.contains("cuisine") || text.contains("美食") || text.contains("小吃")) {
             preferences.add("local food");
         }
-        if (lower.contains("relaxed") || lower.contains("slow pace") || text.contains("轻松") || text.contains("悠闲")) {
+        if (lower.contains("relaxed") || lower.contains("slow pace") || lower.contains("easy pace")
+                || text.contains("轻松") || text.contains("悠闲")) {
             preferences.add("relaxed pace");
         }
         return List.copyOf(preferences);
@@ -180,12 +204,15 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
         if (value == null) {
             return null;
         }
-        return value.replaceFirst("^(帮我|请帮我|麻烦|我想|想要|想去|规划|计划|安排)+", "")
+        return value
+                .replaceFirst("^(帮我|请帮我|麻烦|我想|想要|想去|规划|计划|安排)+", "")
                 .replaceFirst("^[一二两三四五六七八九十0-9]+\\s*天", "")
                 .replace("trip", "")
+                .replace("travel", "")
+                .replace("itinerary", "")
+                .replace("行程", "")
                 .replace("旅行", "")
                 .replace("旅游", "")
-                .replace("行程", "")
                 .trim();
     }
 
@@ -235,7 +262,7 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
     }
 
     private String emptyToNull(String value) {
-        return hasText(value) ? value : null;
+        return LlmExtractionSanitizer.sanitizeStructuredText(value);
     }
 
     private boolean containsChinese(String value) {

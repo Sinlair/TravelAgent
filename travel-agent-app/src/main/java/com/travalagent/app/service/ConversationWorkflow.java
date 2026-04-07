@@ -126,9 +126,11 @@ public class ConversationWorkflow {
             imageContextSummary = pendingImageContext.summary();
             confirmedFacts = pendingImageContext.facts();
             imageAttachments = List.of();
-        } else {
+        } else if (!imageAttachments.isEmpty()) {
             ImageAttachmentInterpretation interpretation = imageAttachmentInterpreter.interpretTravelContext(rawUserMessage, imageAttachments);
             imageContextSummary = interpretation == null ? null : interpretation.summary();
+        } else {
+            imageContextSummary = null;
         }
         String effectiveUserMessage = buildEffectiveUserMessage(rawUserMessage, imageAttachments, imageContextSummary);
 

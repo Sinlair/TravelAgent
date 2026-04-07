@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1120" viewBox="0 0 1680 1120" role="img" aria-labelledby="title desc">
+  <title id="title">TravelAgent Modular Layered Architecture v2</title>
+  <desc id="desc">Modular layered architecture for TravelAgent with explicit layer ownership and bounded integration dependencies.</desc>
+  <defs>
+    <style>
+      .title { font: 700 34px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 15px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .lane-title { font: 700 14px 'Segoe UI', Arial, sans-serif; fill: #ffffff; letter-spacing: 0.04em; }
+      .card-title { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .card-text { font: 13px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .small { font: 12px 'Segoe UI', Arial, sans-serif; fill: #64748b; }
+      .arrow { stroke: #475569; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 8 7; }
+      .panel-title { font: 700 13px 'Segoe UI', Arial, sans-serif; fill: #ffffff; letter-spacing: 0.05em; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect width="1680" height="1120" fill="#f8fafc"/>
+  <circle cx="165" cy="110" r="170" fill="#fb923c" opacity="0.09"/>
+  <circle cx="1540" cy="180" r="180" fill="#60a5fa" opacity="0.08"/>
+
+  <text x="70" y="74" class="title">TravelAgent System Architecture (Modular v2)</text>
+  <text x="70" y="104" class="subtitle">Layered modules: Access -> Application -> Domain -> Infrastructure -> External Services</text>
+
+  <rect x="260" y="150" width="980" height="920" rx="28" fill="#ffffff" stroke="#dbe4f0" stroke-width="2"/>
+  <rect x="1260" y="150" width="360" height="920" rx="28" fill="#ffffff" stroke="#dbe4f0" stroke-width="2"/>
+  <rect x="295" y="180" width="214" height="34" rx="17" fill="#0f172a"/>
+  <text x="402" y="202" text-anchor="middle" class="panel-title">REPOSITORY MODULES</text>
+  <rect x="1295" y="180" width="214" height="34" rx="17" fill="#1e293b"/>
+  <text x="1402" y="202" text-anchor="middle" class="panel-title">EXTERNAL SYSTEMS</text>
+
+  <rect x="70" y="330" width="150" height="140" rx="24" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="92" y="372" class="card-title">Traveler</text>
+  <text x="92" y="398" class="card-text">Trip intent</text>
+  <text x="92" y="420" class="card-text">Feedback</text>
+
+  <rect x="300" y="240" width="900" height="170" rx="28" fill="#fff8ee" stroke="#fdba74" stroke-width="2"/>
+  <rect x="300" y="440" width="900" height="170" rx="28" fill="#fff4ec" stroke="#fb923c" stroke-width="2"/>
+  <rect x="300" y="640" width="900" height="140" rx="28" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+  <rect x="300" y="810" width="900" height="220" rx="28" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+
+  <rect x="330" y="258" width="210" height="34" rx="17" fill="#ea580c"/>
+  <text x="435" y="280" text-anchor="middle" class="lane-title">01 Access / Delivery</text>
+  <rect x="330" y="458" width="300" height="34" rx="17" fill="#c2410c"/>
+  <text x="480" y="480" text-anchor="middle" class="lane-title">02 Application Layer</text>
+  <rect x="330" y="658" width="160" height="34" rx="17" fill="#2563eb"/>
+  <text x="410" y="680" text-anchor="middle" class="lane-title">03 Domain</text>
+  <rect x="330" y="828" width="318" height="34" rx="17" fill="#16a34a"/>
+  <text x="489" y="850" text-anchor="middle" class="lane-title">04 Infrastructure / Integration</text>
+
+  <rect x="340" y="295" width="390" height="98" rx="20" fill="#fffefb" stroke="#f59e0b" stroke-width="2"/>
+  <text x="364" y="332" class="card-title">web</text>
+  <text x="364" y="356" class="card-text">Vue 3 UI: chat, plan view, timeline, feedback</text>
+
+  <rect x="760" y="295" width="410" height="98" rx="20" fill="#fffdfd" stroke="#ec4899" stroke-width="2"/>
+  <text x="784" y="332" class="card-title">travel-agent-types</text>
+  <text x="784" y="356" class="card-text">Shared contracts: DTOs, API envelopes, error types</text>
+
+  <rect x="340" y="495" width="830" height="98" rx="20" fill="#fffdf9" stroke="#f97316" stroke-width="2"/>
+  <text x="364" y="532" class="card-title">travel-agent-app</text>
+  <text x="364" y="556" class="card-text">Application services, WebFlux API, SSE timeline, orchestration</text>
+
+  <rect x="340" y="690" width="830" height="72" rx="20" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="364" y="732" class="card-title">travel-agent-domain</text>
+  <text x="620" y="732" class="card-text">Domain model: entities, value objects, ports, service contracts</text>
+
+  <rect x="340" y="885" width="620" height="120" rx="20" fill="#ffffff" stroke="#22c55e" stroke-width="2"/>
+  <text x="364" y="922" class="card-title">travel-agent-infrastructure</text>
+  <text x="364" y="946" class="card-text">Adapters: LLM specialists, RAG, validation/repair, persistence</text>
+  <text x="364" y="968" class="card-text">Implements domain ports and integration workflows</text>
+
+  <rect x="980" y="885" width="190" height="120" rx="20" fill="#faf7ff" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="1004" y="922" class="card-title">travel-agent-amap</text>
+  <text x="1004" y="946" class="card-text">Amap gateway</text>
+
+  <rect x="1285" y="260" width="310" height="100" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="1310" y="298" class="card-title">LLM Provider</text>
+  <text x="1310" y="322" class="card-text">OpenAI-compatible model endpoints</text>
+  <rect x="1285" y="400" width="310" height="100" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="1310" y="438" class="card-title">Persistence</text>
+  <text x="1310" y="462" class="card-text">SQLite + optional Milvus vector store</text>
+  <rect x="1285" y="540" width="310" height="100" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="1310" y="578" class="card-title">Amap OpenAPI</text>
+  <text x="1310" y="602" class="card-text">Map/route/POI geospatial capabilities</text>
+  <rect x="1285" y="680" width="310" height="100" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="1310" y="718" class="card-title">travel-agent-amap-mcp-server</text>
+  <text x="1310" y="742" class="card-text">Optional MCP sidecar integration</text>
+
+  <path class="arrow" d="M220 400 L340 344"/>
+  <path class="arrow" d="M730 344 L760 344"/>
+  <path class="arrow" d="M755 393 L755 495"/>
+  <path class="arrow" d="M755 593 L755 690"/>
+  <path class="arrow" d="M755 762 L755 885"/>
+
+  <path class="arrow" d="M960 915 L1120 915 L1120 310 L1285 310"/>
+  <path class="arrow" d="M960 940 L1100 940 L1100 450 L1285 450"/>
+  <path class="arrow" d="M1170 945 L1215 945 L1215 590 L1285 590"/>
+  <path class="arrow dash" d="M960 980 L1090 980 L1090 730 L1285 730"/>
+
+  <text x="80" y="1060" class="small">Dependency direction: upper layers call lower layers through ports/adapters.</text>
+  <text x="80" y="1080" class="small">Dashed connector indicates optional MCP sidecar path.</text>
+</svg>
+

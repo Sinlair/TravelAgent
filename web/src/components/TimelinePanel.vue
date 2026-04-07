@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { ExecutionStage, TimelineEvent } from '../types/api'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   timeline: TimelineEvent[]
-  preferChinese: boolean
-}>()
+  preferChinese?: boolean
+}>(), {
+  preferChinese: true
+})
 
 const stageLabel = (stage: ExecutionStage) => {
   if (!props.preferChinese) {
@@ -31,15 +33,15 @@ function messageLabel(message: string) {
   return {
     'Analyze user intent and missing slots': '正在理解你的需求和缺失条件',
     'Recall short-term window, summary, and long-term memory': '正在整理这次规划需要的已知信息',
-    'Route request to the best agent': '已确定这次该如何处理',
+    'Route request to the best agent': '正在确定这次应该如何处理',
     'Execute specialist agent': '正在生成正式方案',
     'Resolve itinerary places with Amap': '正在核对行程中的地点信息',
-    'Validate generated plan against budget, opening hours, and load': '正在校验预算、开放时间和行程负载',
+    'Validate generated plan against budget, opening hours, and load': '正在校验预算、开放时间和行程强度',
     'Repair plan against validation findings': '发现问题，正在自动修正方案',
-    'Build closest feasible alternative by relaxing constraints': '原始约束过紧，正在生成最接近可行的替代方案',
-    'Retrieve destination knowledge from travel knowledge base': '正在检索目的地知识库',
+    'Build closest feasible alternative by relaxing constraints': '原始约束过紧，正在生成最接近的可行替代方案',
+    'Retrieve destination knowledge from travel knowledge base': '正在检索目的地知识',
     'Fetch destination weather snapshot': '正在获取目的地天气快照',
-    'Resolve POI candidates with Amap': '正在核对景点位置',
+    'Resolve POI candidates with Amap': '正在校对景点位置',
     'Resolve hotel district center with Amap': '正在确认住宿区域',
     'Recommend hotels with Amap': '正在筛选更合适的酒店',
     'Resolve transit route with Amap': '正在计算两地路线',
@@ -113,13 +115,13 @@ function detailEntries(details: TimelineEvent['details']) {
   <section class="panel timeline-panel">
     <div class="panel__header">
       <div>
-        <p class="panel__eyebrow">过程</p>
-        <h2>{{ preferChinese ? '这次规划是怎么生成的' : 'How This Plan Was Built' }}</h2>
+        <p class="panel__eyebrow">{{ preferChinese ? '过程' : 'Execution Trail' }}</p>
+        <h2>{{ preferChinese ? '这次方案是怎么生成的' : 'How This Plan Was Built' }}</h2>
       </div>
     </div>
 
     <div class="timeline-list">
-      <article v-for="event in props.timeline" :key="event.id" class="timeline-item">
+      <article v-for="event in timeline" :key="event.id" class="timeline-item">
         <div class="timeline-item__stage">{{ stageLabel(event.stage) }}</div>
         <div>
           <strong>{{ messageLabel(event.message) }}</strong>
@@ -132,11 +134,12 @@ function detailEntries(details: TimelineEvent['details']) {
               {{ detail.label }}: {{ detail.value }}
             </span>
           </div>
-          <p>{{ new Date(event.createdAt).toLocaleString() }}</p>
+          <p>{{ new Date(event.createdAt).toLocaleString(preferChinese ? 'zh-CN' : undefined) }}</p>
         </div>
       </article>
-      <div v-if="props.timeline.length === 0" class="timeline-empty">
-        {{ preferChinese ? '发送需求后，这里会展示规划生成过程。' : 'Execution details will appear here after you send a request.' }}
+
+      <div v-if="timeline.length === 0" class="timeline-empty">
+        {{ preferChinese ? '发送需求后，这里会展示方案生成过程。' : 'Execution details will appear here after you send a request.' }}
       </div>
     </div>
   </section>

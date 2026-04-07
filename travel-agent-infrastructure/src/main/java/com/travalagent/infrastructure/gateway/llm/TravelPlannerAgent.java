@@ -10,7 +10,7 @@ import com.travalagent.domain.model.valobj.AgentExecutionResult;
 import com.travalagent.domain.model.valobj.AgentType;
 import com.travalagent.domain.model.valobj.ExecutionStage;
 import com.travalagent.domain.model.valobj.TravelKnowledgeRetrievalResult;
-import com.travalagent.domain.model.valobj.TravelKnowledgeSnippet;
+import com.travalagent.domain.model.valobj.TravelKnowledgeSelection;
 import com.travalagent.domain.model.valobj.WeatherSnapshot;
 import com.travalagent.domain.repository.TravelKnowledgeRepository;
 import com.travalagent.domain.service.SpecialistAgent;
@@ -265,7 +265,7 @@ public class TravelPlannerAgent implements SpecialistAgent {
         }
 
         appendWeatherSection(builder, companion.weather(), chinese);
-        appendKnowledgeSection(builder, companion.knowledgeRetrieval().snippets(), chinese);
+        appendKnowledgeSection(builder, companion.knowledgeRetrieval(), chinese);
         builder.append(renderedPlan);
         return builder.toString().trim();
     }
@@ -294,15 +294,77 @@ public class TravelPlannerAgent implements SpecialistAgent {
         builder.append('\n');
     }
 
-    private void appendKnowledgeSection(StringBuilder builder, List<TravelKnowledgeSnippet> knowledge, boolean chinese) {
-        if (knowledge.isEmpty()) {
+    private void appendKnowledgeSection(StringBuilder builder, TravelKnowledgeRetrievalResult knowledgeRetrieval, boolean chinese) {
+        if (knowledgeRetrieval == null || knowledgeRetrieval.selections().isEmpty()) {
             return;
         }
-        builder.append(chinese ? "## 本地知识提示\n" : "## Local Knowledge Hints\n");
-        for (TravelKnowledgeSnippet snippet : knowledge) {
-            builder.append("- ").append(snippet.title()).append(": ").append(snippet.content()).append('\n');
+
+        if (chinese) {
+            List<String> hints = knowledgeRetrieval.selections().stream()
+                    .map(this::localizedKnowledgeHint)
+                    .filter(value -> value != null && !value.isBlank())
+                    .distinct()
+                    .limit(3)
+                    .toList();
+            if (hints.isEmpty()) {
+                return;
+            }
+            builder.append("## 本地经验提示\n");
+            for (String hint : hints) {
+                builder.append("- ").append(hint).append('\n');
+            }
+            builder.append('\n');
+            return;
+        }
+
+        builder.append("## Local Knowledge Hints\n");
+        for (TravelKnowledgeSelection selection : knowledgeRetrieval.selections()) {
+            builder.append("- ")
+                    .append(defaultText(selection.title(), "Local hint"))
+                    .append(": ")
+                    .append(defaultText(selection.content(), ""))
+                    .append('\n');
         }
         builder.append('\n');
+    }
+
+    private String localizedKnowledgeHint(TravelKnowledgeSelection selection) {
+        String title = cleanKnowledgeText(selection == null ? null : selection.title());
+        String content = cleanKnowledgeText(selection == null ? null : selection.content());
+        String combined = title.isBlank()
+                ? content
+                : content.isBlank() ? title : title + "： " + content;
+        if (!isMostlyChinese(combined)) {
+            return "";
+        }
+        return combined;
+    }
+
+    private String cleanKnowledgeText(String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return value
+                .replace("Planning hint:", "")
+                .replace("Visit planning hint:", "")
+                .replace("Food planning hint:", "")
+                .replace("Best used as a stay area because", "")
+                .replace("Representative stay option:", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private boolean isMostlyChinese(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        long chineseCount = value.codePoints()
+                .filter(codePoint -> codePoint >= 0x4E00 && codePoint <= 0x9FFF)
+                .count();
+        long latinCount = value.codePoints()
+                .filter(codePoint -> (codePoint >= 'A' && codePoint <= 'Z') || (codePoint >= 'a' && codePoint <= 'z'))
+                .count();
+        return chineseCount > 0 && chineseCount >= latinCount;
     }
 
     private Map<String, Object> metadata(

@@ -2,14 +2,16 @@
 import { computed, ref, watch } from 'vue'
 import type { FeedbackBreakdownItem, FeedbackLoopSummaryResponse } from '../types/api'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   summary: FeedbackLoopSummaryResponse | null
   loading: boolean
   stale: boolean
   errorMessage: string
-  preferChinese: boolean
+  preferChinese?: boolean
   initialLimit: number
-}>()
+}>(), {
+  preferChinese: true
+})
 
 const emit = defineEmits<{
   refresh: [limit: number]
@@ -17,33 +19,51 @@ const emit = defineEmits<{
 
 const selectedLimit = ref(props.initialLimit)
 
-watch(() => props.initialLimit, (value) => {
+watch(() => props.initialLimit, value => {
   selectedLimit.value = value
 })
 
-const copy = computed(() => ({
-  eyebrow: props.preferChinese ? '反馈闭环' : 'Feedback Loop',
-  title: props.preferChinese ? '按需分析最近反馈' : 'Analyze Recent Feedback On Demand',
-  hint: props.preferChinese
-    ? '这里只会在你手动刷新时拉取一次汇总，不会自动跑后台任务。'
-    : 'This view only refreshes when you ask for it. No scheduled background job is running.',
-  empty: props.preferChinese
-    ? '还没有加载反馈洞察。手动刷新后，这里会显示接受率、失败模式和建议动作。'
-    : 'No feedback analysis loaded yet. Refresh manually to see acceptance rates, failure patterns, and next actions.',
-  refresh: props.preferChinese ? '手动刷新' : 'Refresh',
-  loading: props.preferChinese ? '分析中...' : 'Loading...',
-  stale: props.preferChinese ? '已有新反馈，当前视图可能过时' : 'New feedback arrived. This view may be stale.',
-  generatedAt: props.preferChinese ? '生成时间' : 'Generated',
-  sample: props.preferChinese ? '样本数' : 'Samples',
-  accepted: props.preferChinese ? '直接接受' : 'Accepted',
-  usable: props.preferChinese ? '可用率' : 'Usable',
-  coverage: props.preferChinese ? '结构化方案覆盖率' : 'Structured plan coverage',
-  reasons: props.preferChinese ? '主要原因码' : 'Top reason codes',
-  destinations: props.preferChinese ? '主要目的地' : 'Top destinations',
-  findings: props.preferChinese ? '关键发现' : 'Key findings',
-  noFindings: props.preferChinese ? '当前样本里还没有明显风险模式。' : 'No strong risk patterns surfaced in the current sample.',
-  sampleOfLimit: props.preferChinese ? '已分析样本' : 'Sampled'
-}))
+const copy = computed(() => (props.preferChinese
+  ? {
+      eyebrow: '汇总分析',
+      title: '最近反馈表现',
+      hint: '这里展示的是最近一批会话的汇总结果，不是当前聊天里的即时反馈。',
+      empty: '还没有拉取最近反馈汇总。点击刷新后，这里会显示接受率、失败模式和建议动作。',
+      refresh: '刷新',
+      loading: '分析中...',
+      stale: '已有新的反馈到达，当前视图可能已经过时。',
+      generatedAt: '生成时间',
+      sample: '样本数',
+      accepted: '直接接受',
+      usable: '可用率',
+      coverage: '结构化方案覆盖率',
+      reasons: '高频原因码',
+      destinations: '高频目的地',
+      findings: '关键洞察',
+      noFindings: '当前样本里还没有明显的风险模式。',
+      sampled: '采样范围',
+      sampleWord: '样本'
+    }
+  : {
+      eyebrow: 'Aggregate View',
+      title: 'Recent Feedback Performance',
+      hint: 'This panel shows an aggregate view of recent sessions, not the immediate feedback for the current chat.',
+      empty: 'No recent feedback summary loaded yet. Refresh to see adoption, failure patterns, and suggested next actions.',
+      refresh: 'Refresh',
+      loading: 'Loading...',
+      stale: 'New feedback arrived. This view may be stale.',
+      generatedAt: 'Generated',
+      sample: 'Samples',
+      accepted: 'Accepted',
+      usable: 'Usable',
+      coverage: 'Structured plan coverage',
+      reasons: 'Top reason codes',
+      destinations: 'Top destinations',
+      findings: 'Key findings',
+      noFindings: 'No strong risk patterns surfaced in the current sample.',
+      sampled: 'Sampled',
+      sampleWord: 'Sample'
+    }))
 
 function formatRate(value: number) {
   return `${value.toFixed(2)}%`
@@ -109,7 +129,7 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
 
       <div class="feedback-loop-panel__meta">
         <span>{{ copy.generatedAt }}: {{ new Date(summary.generatedAt).toLocaleString() }}</span>
-        <span>{{ copy.sampleOfLimit }}: {{ summary.sampleCount }} / {{ summary.limitApplied }}</span>
+        <span>{{ copy.sampled }}: {{ summary.sampleCount }} / {{ summary.limitApplied }}</span>
       </div>
 
       <div class="feedback-loop-panel__grid">
@@ -143,8 +163,8 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
               <span class="plan-insight-card__badge">{{ item.type }}</span>
             </div>
             <p>
-              {{ props.preferChinese ? '样本' : 'Sample' }} {{ item.totalCount }}
-              | {{ props.preferChinese ? '可用率' : 'Usable' }} {{ formatRate(item.usableRatePct) }}
+              {{ copy.sampleWord }} {{ item.totalCount }}
+              | {{ copy.usable }} {{ formatRate(item.usableRatePct) }}
             </p>
             <p>{{ item.recommendation }}</p>
           </article>

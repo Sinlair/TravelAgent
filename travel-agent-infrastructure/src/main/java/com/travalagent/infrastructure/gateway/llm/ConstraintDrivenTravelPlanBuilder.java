@@ -13,6 +13,7 @@ import com.travalagent.domain.model.entity.TravelTransitLeg;
 import com.travalagent.domain.model.entity.TravelTransitStep;
 import com.travalagent.domain.model.valobj.AgentExecutionContext;
 import com.travalagent.domain.service.TravelPlanBuilder;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -31,6 +32,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Primary
 @Component
 public class ConstraintDrivenTravelPlanBuilder implements TravelPlanBuilder {
 
@@ -650,19 +652,36 @@ public class ConstraintDrivenTravelPlanBuilder implements TravelPlanBuilder {
     }
 
     private String routeSummary(TravelTransitLeg route, boolean preferChinese) {
-        String lineText = route.lineNames().isEmpty() ? route.mode() : String.join(" / ", route.lineNames());
+        String lineText = route.lineNames().isEmpty() ? routeModeLabel(route.mode(), preferChinese) : String.join(" / ", route.lineNames());
         if (preferChinese) {
-            return lineText + "，约 " + safe(route.durationMinutes()) + " 分钟，步行 " + safe(route.walkingMinutes()) + " 分钟，约 " + safe(route.estimatedCost()) + " 元";
+            return lineText + "，全程约 " + safe(route.durationMinutes()) + " 分钟，步行 " + safe(route.walkingMinutes()) + " 分钟，预计 " + safe(route.estimatedCost()) + " 元";
         }
-        return lineText + ", about " + safe(route.durationMinutes()) + " min, walk " + safe(route.walkingMinutes()) + " min, around " + safe(route.estimatedCost()) + " CNY";
+        return lineText + ", around " + safe(route.durationMinutes()) + " min total, " + safe(route.walkingMinutes()) + " min walking, about " + safe(route.estimatedCost()) + " CNY";
     }
 
     private String stepLabel(TravelTransitStep step, boolean preferChinese) {
-        String base = step.lineName() != null && !step.lineName().isBlank() ? step.lineName() : step.title();
+        String base = step.lineName() != null && !step.lineName().isBlank() ? step.lineName() : routeModeLabel(step.mode(), preferChinese);
         if (step.fromName() != null && !step.fromName().isBlank() && step.toName() != null && !step.toName().isBlank()) {
-            base += preferChinese ? "，" + step.fromName() + " -> " + step.toName() : ", " + step.fromName() + " -> " + step.toName();
+            base += preferChinese ? "，从 " + step.fromName() + " 到 " + step.toName() : ", from " + step.fromName() + " to " + step.toName();
         }
-        return preferChinese ? base + "，约 " + safe(step.durationMinutes()) + " 分钟" : base + ", about " + safe(step.durationMinutes()) + " min";
+        if (preferChinese) {
+            return base + "，约 " + safe(step.durationMinutes()) + " 分钟" + (step.stopCount() > 0 ? "，共 " + safe(step.stopCount()) + " 站" : "");
+        }
+        return base + ", about " + safe(step.durationMinutes()) + " min" + (step.stopCount() > 0 ? ", " + safe(step.stopCount()) + " stops" : "");
+    }
+
+    private String routeModeLabel(String mode, boolean preferChinese) {
+        if (!preferChinese) {
+            return mode;
+        }
+        return switch (mode) {
+            case "SUBWAY" -> "地铁";
+            case "BUS" -> "公交";
+            case "WALK" -> "步行";
+            case "TAXI" -> "打车";
+            case "RAIL" -> "铁路";
+            default -> mode;
+        };
     }
 
     // parsing and helpers
