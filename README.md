@@ -1,5 +1,17 @@
 # Travel Agent
 
+<p align="center">
+  <a href="./README.md">English</a> |
+  <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <img alt="agent routing" src="https://img.shields.io/badge/Agent-Routing-111827?style=for-the-badge" />
+  <img alt="travel planning" src="https://img.shields.io/badge/Structured-Planning-0F766E?style=for-the-badge" />
+  <img alt="rag" src="https://img.shields.io/badge/RAG-Travel%20Knowledge-7C3AED?style=for-the-badge" />
+  <img alt="amap" src="https://img.shields.io/badge/Amap-Gaode-0284C7?style=for-the-badge" />
+</p>
+
 [![CI](https://github.com/Sinlair/TravelAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/Sinlair/TravelAgent/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
@@ -12,6 +24,14 @@
 An open-source multi-agent travel planning application built with Spring Boot, Spring AI, Vue 3, SQLite, optional Amap MCP integration, and a city-level travel knowledge RAG pipeline.
 
 The project is designed to do more than return free-form chat. It routes requests to specialized agents, builds structured itineraries, validates them against practical constraints, enriches them with weather and map context, and keeps a UI-friendly execution timeline.
+
+## At a Glance
+
+- 🤖 Multi-agent routing for weather, geo, planning, and general requests
+- 🧭 Structured itinerary generation with validation and repair
+- 🗺️ Amap / Gaode enrichment for POIs, weather, and transit
+- 🧠 Travel knowledge RAG with provenance and trip-style hints
+- 🖥️ Full-stack developer workflow with scripts, Docker, smoke tests, and CI
 
 ## Overview
 
