@@ -1,91 +1,100 @@
 <mxfile host="app.diagrams.net" modified="2026-04-07T00:00:00.000Z" agent="Codex" version="26.0.11" type="device" compressed="false">
-  <diagram id="travelagent-system-architecture" name="System Architecture">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <diagram id="travelagent-c4-architecture" name="System Architecture">
+    <mxGraphModel dx="1680" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="960" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" value="TravelAgent System Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1;fontColor=#1F2937;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="500" height="40" as="geometry" />
+        <mxCell id="title" value="TravelAgent Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1;fontColor=#0F172A;" vertex="1" parent="1">
+          <mxGeometry x="40" y="36" width="340" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="10" value="Runtime Modules" style="rounded=1;arcSize=16;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=18;fontStyle=1;align=left;verticalAlign=top;spacingLeft=16;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="250" y="100" width="720" height="760" as="geometry" />
+        <mxCell id="subtitle" value="C4-inspired container / module view for the current repository" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="40" y="72" width="520" height="24" as="geometry" />
         </mxCell>
-        <mxCell id="11" value="External Systems" style="rounded=1;arcSize=16;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;fontSize=18;fontStyle=1;align=left;verticalAlign=top;spacingLeft=16;spacingTop=14;" vertex="1" parent="1">
-          <mxGeometry x="995" y="100" width="365" height="760" as="geometry" />
+        <mxCell id="runtime-boundary" value="TravelAgent Repository / Runtime Boundary" style="rounded=1;arcSize=18;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=18;fontStyle=1;align=left;verticalAlign=top;spacingLeft=16;spacingTop=14;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="220" y="120" width="760" height="720" as="geometry" />
         </mxCell>
-        <mxCell id="20" value="&lt;b&gt;Traveler / Browser&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;Human entry point&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Chat input&lt;br&gt;Plan review&lt;br&gt;Feedback actions&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="40" y="300" width="180" height="100" as="geometry" />
+        <mxCell id="external-boundary" value="External Systems" style="rounded=1;arcSize=18;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=2;fontSize=18;fontStyle=1;align=left;verticalAlign=top;spacingLeft=16;spacingTop=14;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="120" width="350" height="720" as="geometry" />
         </mxCell>
-        <mxCell id="21" value="&lt;b&gt;Web Frontend&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: web&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Vue 3 / Vite&lt;br&gt;Chat + Plan panel&lt;br&gt;Timeline + Feedback&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFF7D6;strokeColor=#D4A72C;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="290" y="180" width="230" height="140" as="geometry" />
+        <mxCell id="legend" value="Legend&lt;div style=&quot;font-size:12px;line-height:1.5;margin-top:6px;&quot;&gt;Solid box: in-repo runtime module&lt;br&gt;Dashed box: optional path&lt;br&gt;Data stores: persisted state&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;fontSize=14;fontStyle=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="42" width="240" height="74" as="geometry" />
         </mxCell>
-        <mxCell id="22" value="&lt;b&gt;Shared API Types&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-types&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Response codes&lt;br&gt;Response envelope&lt;br&gt;Exception types&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#EC4899;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="290" y="380" width="230" height="100" as="geometry" />
+        <mxCell id="user" value="&lt;b&gt;Traveler&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;Browser / chat user&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Starts planning&lt;br&gt;Reviews itinerary&lt;br&gt;Sends feedback&lt;/div&gt;" style="rounded=1;arcSize=16;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="150" height="116" as="geometry" />
         </mxCell>
-        <mxCell id="23" value="&lt;b&gt;Application Orchestrator&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-app&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;REST API / SSE&lt;br&gt;ConversationWorkflow&lt;br&gt;AgentRouter&lt;br&gt;TimelinePublisher&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFE2C6;strokeColor=#E67E22;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="550" y="170" width="250" height="210" as="geometry" />
+        <mxCell id="web" value="&lt;b&gt;Web Frontend&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: web&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Vue 3 workspace&lt;br&gt;Chat + plan panel&lt;br&gt;Timeline + feedback UI&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="260" y="190" width="250" height="136" as="geometry" />
         </mxCell>
-        <mxCell id="24" value="&lt;b&gt;Domain Contracts&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-domain&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Entities + value objects&lt;br&gt;Repository ports&lt;br&gt;Service contracts&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#3B82F6;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="550" y="420" width="250" height="110" as="geometry" />
+        <mxCell id="types" value="&lt;b&gt;Shared Types&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-types&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Response envelope&lt;br&gt;Error codes&lt;br&gt;Transport contracts&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#DB2777;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="260" y="370" width="250" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="25" value="&lt;b&gt;Infra Adapters&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-infrastructure&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Specialist agents&lt;br&gt;Retrieval + enrichment&lt;br&gt;Validation + repair&lt;br&gt;SQLite / Milvus adapters&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#22C55E;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="550" y="560" width="250" height="180" as="geometry" />
+        <mxCell id="app" value="&lt;b&gt;Application Orchestrator&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-app&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;REST API + SSE&lt;br&gt;ConversationWorkflow&lt;br&gt;AgentRouter&lt;br&gt;TimelinePublisher&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#EA580C;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="540" y="182" width="230" height="168" as="geometry" />
         </mxCell>
-        <mxCell id="26" value="&lt;b&gt;Amap MCP Server&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-amap-mcp-server&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Optional MCP tools&lt;br&gt;for Amap-backed calls&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;strokeWidth=2;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="820" y="220" width="130" height="110" as="geometry" />
+        <mxCell id="domain" value="&lt;b&gt;Domain Contracts&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-domain&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Entities + value objects&lt;br&gt;Repository ports&lt;br&gt;Gateway/service contracts&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="540" y="390" width="230" height="122" as="geometry" />
         </mxCell>
-        <mxCell id="27" value="&lt;b&gt;Amap Gateway&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-amap&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;HTTP gateway&lt;br&gt;Map + weather&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;strokeWidth=2;fontSize=13;" vertex="1" parent="1">
-          <mxGeometry x="820" y="610" width="130" height="110" as="geometry" />
+        <mxCell id="infra" value="&lt;b&gt;Infrastructure Adapters&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-infrastructure&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Specialist agents&lt;br&gt;RAG + enrichment&lt;br&gt;Validation + repair&lt;br&gt;SQLite / Milvus implementations&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="540" y="560" width="230" height="180" as="geometry" />
         </mxCell>
-        <mxCell id="30" value="&lt;b&gt;OpenAI-Compatible LLM&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Chat model&lt;br&gt;Embeddings&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="1035" y="190" width="285" height="120" as="geometry" />
+        <mxCell id="amap" value="&lt;b&gt;Amap Gateway&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-amap&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;HTTP adapter&lt;br&gt;Map, weather, geo APIs&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#7C3AED;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="800" y="390" width="150" height="122" as="geometry" />
         </mxCell>
-        <mxCell id="31" value="&lt;b&gt;Amap / Gaode APIs&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Weather&lt;br&gt;POI / routing&lt;br&gt;Geocoding&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="1035" y="360" width="285" height="120" as="geometry" />
+        <mxCell id="mcp" value="&lt;b&gt;Optional MCP Sidecar&lt;/b&gt;&lt;div style=&quot;font-size:12px;color:#475569;&quot;&gt;module: travel-agent-amap-mcp-server&lt;/div&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Exposes Amap-backed tools&lt;br&gt;for MCP mode&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#F5F3FF;strokeColor=#7C3AED;strokeWidth=2;dashed=1;dashPattern=8 6;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="800" y="560" width="150" height="132" as="geometry" />
         </mxCell>
-        <mxCell id="32" value="&lt;b&gt;SQLite&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Conversations&lt;br&gt;Memory&lt;br&gt;Feedback&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="1035" y="560" width="130" height="110" as="geometry" />
+        <mxCell id="llm" value="&lt;b&gt;OpenAI-Compatible LLM&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Chat model&lt;br&gt;Embedding model&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="190" width="270" height="106" as="geometry" />
         </mxCell>
-        <mxCell id="33" value="&lt;b&gt;Milvus&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Optional&lt;br&gt;vector search&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
-          <mxGeometry x="1190" y="560" width="130" height="110" as="geometry" />
+        <mxCell id="gaode" value="&lt;b&gt;Amap / Gaode APIs&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Weather&lt;br&gt;POI / routing&lt;br&gt;Geocoding&lt;/div&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="360" width="270" height="122" as="geometry" />
         </mxCell>
-        <mxCell id="100" value="browser UI" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="20" target="21">
+        <mxCell id="sqlite" value="&lt;b&gt;SQLite&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Conversations&lt;br&gt;Memory&lt;br&gt;Feedback&lt;/div&gt;" style="shape=mxgraph.basic.cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="558" width="120" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="milvus" value="&lt;b&gt;Milvus&lt;/b&gt;&lt;div style=&quot;font-size:13px;line-height:1.5;margin-top:8px;&quot;&gt;Optional vector&lt;br&gt;search store&lt;/div&gt;" style="shape=mxgraph.basic.cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#FFFFFF;strokeColor=#94A3B8;strokeWidth=2;dashed=1;dashPattern=8 6;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="558" width="120" height="112" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-user-web" value="chat UI" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="user" target="web">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="101" value="REST / uploads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="21" target="23">
+        <mxCell id="edge-web-app" value="HTTP + uploads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="web" target="app">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="102" value="SSE timeline + plan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="23" target="21">
+        <mxCell id="edge-app-web" value="SSE + plan responses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="app" target="web">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="103" value="shared responses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="23" target="22">
+        <mxCell id="edge-app-types" value="response envelope" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="app" target="types">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="104" value="use cases + orchestration" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="23" target="24">
+        <mxCell id="edge-app-domain" value="use cases + routing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="app" target="domain">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="105" value="implements ports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="25" target="24">
+        <mxCell id="edge-app-infra" value="invoke adapters" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="app" target="infra">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="106" value="optional MCP tool calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;dashPattern=8 6;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="23" target="26">
+        <mxCell id="edge-infra-domain" value="implements ports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="infra" target="domain">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="107" value="AmapGateway" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="25" target="27">
+        <mxCell id="edge-infra-amap" value="map adapter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="infra" target="amap">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="108" value="LLM + embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="25" target="30">
+        <mxCell id="edge-app-mcp" value="optional MCP mode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;dashPattern=8 6;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="app" target="mcp">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="109" value="HTTP integration" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="27" target="31">
+        <mxCell id="edge-infra-llm" value="chat + embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="infra" target="llm">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="110" value="tool execution" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;dashPattern=8 6;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="26" target="31">
+        <mxCell id="edge-amap-gaode" value="HTTP calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="amap" target="gaode">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="111" value="conversation store" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="25" target="32">
+        <mxCell id="edge-mcp-gaode" value="tool execution" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;dashPattern=8 6;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="mcp" target="gaode">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="112" value="vector search" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="25" target="33">
+        <mxCell id="edge-infra-sqlite" value="persist state" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="infra" target="sqlite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-infra-milvus" value="optional vector search" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;dashed=1;dashPattern=8 6;strokeColor=#475569;fontSize=11;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="infra" target="milvus">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>

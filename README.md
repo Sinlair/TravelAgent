@@ -275,7 +275,7 @@ Natural extension points already visible in the design:
   <img src="./docs/assets/system-architecture.svg" alt="TravelAgent system architecture diagram" width="100%" />
 </p>
 
-> Editable source: [`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio)
+> Editable source: [`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio). Open it in [app.diagrams.net](https://app.diagrams.net/) or draw.io Desktop on macOS, Windows, or Linux.
 
 | Module | Responsibility |
 | --- | --- |

@@ -275,7 +275,7 @@
   <img src="./docs/assets/system-architecture.svg" alt="TravelAgent 系统架构图" width="100%" />
 </p>
 
-> 可编辑源文件：[`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio)
+> 可编辑源文件：[`docs/assets/system-architecture.drawio`](./docs/assets/system-architecture.drawio)。可直接在 [app.diagrams.net](https://app.diagrams.net/) 或 draw.io Desktop 的 macOS / Windows / Linux 环境中打开编辑。
 
 | 模块 | 职责 |
 | --- | --- |
