@@ -7,17 +7,24 @@
 
 <p align="center">
   <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Sinlair/TravelAgent/ci.yml?branch=main&label=ci&style=flat-square" />
+  <img alt="GitHub Stars" src="https://img.shields.io/github/stars/Sinlair/TravelAgent?style=flat-square" />
+  <img alt="GitHub Forks" src="https://img.shields.io/github/forks/Sinlair/TravelAgent?style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/license-MIT-F7C948?style=flat-square" />
   <img alt="Java 21" src="https://img.shields.io/badge/java-21-ED8B00?logo=openjdk&logoColor=white&style=flat-square" />
   <img alt="Spring Boot 4" src="https://img.shields.io/badge/spring%20boot-4-6DB33F?logo=springboot&logoColor=white&style=flat-square" />
   <img alt="Spring AI" src="https://img.shields.io/badge/spring%20ai-2.0-0F766E?style=flat-square" />
   <img alt="WebFlux" src="https://img.shields.io/badge/webflux-reactive-0EA5E9?style=flat-square" />
+  <img alt="Actuator" src="https://img.shields.io/badge/actuator-health%20checks-16A34A?style=flat-square" />
+  <img alt="SSE Timeline" src="https://img.shields.io/badge/sse-timeline%20streaming-2563EB?style=flat-square" />
   <img alt="Vue 3" src="https://img.shields.io/badge/vue-3-4FC08D?logo=vuedotjs&logoColor=white&style=flat-square" />
   <img alt="TypeScript" src="https://img.shields.io/badge/typescript-5-3178C6?logo=typescript&logoColor=white&style=flat-square" />
   <img alt="Vite" src="https://img.shields.io/badge/vite-6-646CFF?logo=vite&logoColor=white&style=flat-square" />
+  <img alt="Pinia" src="https://img.shields.io/badge/pinia-store-F7B93E?style=flat-square" />
   <img alt="Vitest" src="https://img.shields.io/badge/vitest-3-6E9F18?logo=vitest&logoColor=white&style=flat-square" />
   <img alt="SQLite" src="https://img.shields.io/badge/sqlite-3-003B57?logo=sqlite&logoColor=white&style=flat-square" />
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white&style=flat-square" />
+  <img alt="Nginx" src="https://img.shields.io/badge/nginx-frontend%20proxy-009639?logo=nginx&logoColor=white&style=flat-square" />
+  <img alt="PowerShell" src="https://img.shields.io/badge/powershell-automation-5391FE?logo=powershell&logoColor=white&style=flat-square" />
 </p>
 
 <p align="center">
@@ -30,6 +37,9 @@
   <img alt="MCP Tools" src="https://img.shields.io/badge/mcp-tools-4F46E5?style=flat-square" />
   <img alt="OpenAI Compatible" src="https://img.shields.io/badge/openai-compatible-10A37F?logo=openai&logoColor=white&style=flat-square" />
   <img alt="Milvus Optional" src="https://img.shields.io/badge/milvus-optional-00A1EA?style=flat-square" />
+  <img alt="Constraint Validation" src="https://img.shields.io/badge/constraint-validation-DC2626?style=flat-square" />
+  <img alt="Planner Repair Loop" src="https://img.shields.io/badge/repair-loop-F59E0B?style=flat-square" />
+  <img alt="Health Endpoints" src="https://img.shields.io/badge/health-endpoints-059669?style=flat-square" />
 </p>
 
 <p align="center">
@@ -45,7 +55,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/homepage.png" alt="Travel Agent 首页截图" />
+  <img src="./docs/assets/homepage-zh-CN.png" alt="Travel Agent 首页截图" />
 </p>
 
 ## 为什么是 Travel Agent
