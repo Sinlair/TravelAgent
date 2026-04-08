@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { ChatImageAttachmentRequest, ChatRequest, ConversationDetailResponse, ConversationMessage } from '../types/api'
+import type {
+  ChatImageAttachmentRequest,
+  ChatRequest,
+  ConversationDetailResponse,
+  ConversationFeedback,
+  ConversationFeedbackRequest,
+  ConversationMessage
+} from '../types/api'
+import { normalizeDisplayText } from '../utils/text'
 
 const props = withDefaults(defineProps<{
   detail: ConversationDetailResponse | null
   sending: boolean
+  feedback: ConversationFeedback | null
+  feedbackSaving: boolean
   errorMessage: string
   preferChinese?: boolean
 }>(), {
@@ -13,6 +23,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   send: [payload: ChatRequest]
+  feedback: [payload: ConversationFeedbackRequest]
 }>()
 
 const input = ref('')
@@ -24,19 +35,23 @@ const isDragging = ref(false)
 const MAX_ATTACHMENTS = 4
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+
 const pendingImageContext = computed(() => props.detail?.imageContextCandidate ?? null)
+const latestAssistantMessageId = computed(() =>
+  [...(props.detail?.messages ?? [])].reverse().find(message => message.role === 'ASSISTANT')?.id ?? ''
+)
 
 const factLabels = computed<Record<string, string>>(() => props.preferChinese
   ? {
-      origin: '出发地',
-      destination: '目的地',
-      startDate: '开始日期',
-      endDate: '结束日期',
-      days: '天数',
-      budget: '预算',
-      hotelName: '酒店',
-      hotelArea: '酒店区域',
-      activities: '活动偏好'
+      origin: '\u51fa\u53d1\u5730',
+      destination: '\u76ee\u7684\u5730',
+      startDate: '\u5f00\u59cb\u65e5\u671f',
+      endDate: '\u7ed3\u675f\u65e5\u671f',
+      days: '\u5929\u6570',
+      budget: '\u9884\u7b97',
+      hotelName: '\u9152\u5e97',
+      hotelArea: '\u9152\u5e97\u533a\u57df',
+      activities: '\u504f\u597d'
     }
   : {
       origin: 'Origin',
@@ -52,40 +67,46 @@ const factLabels = computed<Record<string, string>>(() => props.preferChinese
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: '对话面板',
-      title: props.detail?.conversation.title || '新的旅行规划会话',
-      emptyTitle: '先把目的地、天数和预算说清楚',
-      emptyBody: '你可以直接描述旅行需求，也可以粘贴或拖拽截图，让系统从图片里补充旅行信息。',
-      user: '用户',
-      assistant: '助手',
+      title: normalizeDisplayText(props.detail?.conversation.title) || '\u65b0\u7684\u65c5\u884c\u89c4\u5212\u4f1a\u8bdd',
+      emptyTitle: '\u5148\u628a\u76ee\u7684\u5730\u3001\u5929\u6570\u548c\u9884\u7b97\u8bf4\u6e05\u695a',
+      emptyBody: '\u4f60\u53ef\u4ee5\u76f4\u63a5\u63cf\u8ff0\u65c5\u884c\u9700\u6c42\uff0c\u4e5f\u53ef\u4ee5\u7c98\u8d34\u6216\u62d6\u62fd\u622a\u56fe\uff0c\u8ba9\u7cfb\u7edf\u4ece\u56fe\u7247\u91cc\u8865\u5145\u65c5\u884c\u4fe1\u606f\u3002',
+      user: '\u7528\u6237',
+      assistant: '\u52a9\u624b',
+      feedbackSaving: '\u63d0\u4ea4\u4e2d...',
+      feedbackAccepted: '\u63a5\u53d7',
+      feedbackPartial: '\u90e8\u5206\u63a5\u53d7',
+      feedbackRejected: '\u62d2\u7edd',
       memoryLabels: {
-        origin: '出发地',
-        destination: '目的地',
-        days: '天数',
-        budget: '预算',
-        preference: '偏好'
+        origin: '\u51fa\u53d1\u5730',
+        destination: '\u76ee\u7684\u5730',
+        days: '\u5929\u6570',
+        budget: '\u9884\u7b97',
+        preference: '\u504f\u597d'
       },
-      imageContextTitle: '图片信息待确认',
-      imageCount: (count: number) => `${count} 张图片`,
-      needsInput: '还需要补充',
-      useFacts: '使用这些信息',
-      ignoreFacts: '忽略',
-      remove: '移除',
-      uploadHint: '支持粘贴截图、拖拽图片，或',
-      uploadAction: '点击这里上传',
-      placeholder: '输入目的地、天数、预算、偏好，或继续补充这次行程想法...',
-      submit: props.sending ? '生成中...' : '生成方案',
-      submitHint: props.sending ? '请稍候' : 'Ctrl + Enter',
-      limitError: `每轮最多上传 ${MAX_ATTACHMENTS} 张图片。`,
-      fileError: '仅支持 PNG、JPEG、WEBP、GIF，且单张图片不能超过 5 MB。'
+      imageContextTitle: '\u56fe\u7247\u4fe1\u606f\u5f85\u786e\u8ba4',
+      imageCount: (count: number) => `${count} \u5f20\u56fe\u7247`,
+      needsInput: '\u8fd8\u9700\u8981\u8865\u5145',
+      useFacts: '\u4f7f\u7528\u8fd9\u4e9b\u4fe1\u606f',
+      ignoreFacts: '\u5ffd\u7565',
+      remove: '\u79fb\u9664',
+      uploadHint: '\u652f\u6301\u7c98\u8d34\u622a\u56fe\u3001\u62d6\u62fd\u56fe\u7247\uff0c\u6216',
+      uploadAction: '\u70b9\u51fb\u4e0a\u4f20',
+      placeholder: '\u8f93\u5165\u76ee\u7684\u5730\u3001\u5929\u6570\u3001\u9884\u7b97\u3001\u504f\u597d\uff0c\u6216\u8005\u7ee7\u7eed\u8865\u5145\u8fd9\u6b21\u884c\u7a0b\u60f3\u6cd5...',
+      submit: props.sending ? '\u751f\u6210\u4e2d...' : '\u751f\u6210\u65b9\u6848',
+      submitHint: props.sending ? '\u8bf7\u7a0d\u5019' : 'Ctrl + Enter',
+      limitError: `\u6bcf\u8f6e\u6700\u591a\u4e0a\u4f20 ${MAX_ATTACHMENTS} \u5f20\u56fe\u7247\u3002`,
+      fileError: '\u4ec5\u652f\u6301 PNG\u3001JPEG\u3001WEBP\u3001GIF\uff0c\u4e14\u5355\u5f20\u56fe\u7247\u4e0d\u80fd\u8d85\u8fc7 5 MB\u3002'
     }
   : {
-      eyebrow: 'Conversation',
-      title: props.detail?.conversation.title || 'New Trip Planning Session',
+      title: normalizeDisplayText(props.detail?.conversation.title) || 'New Trip Planning Session',
       emptyTitle: 'Start with the trip basics.',
       emptyBody: 'Describe the trip directly, or paste and drag travel screenshots so the system can pull useful facts from them.',
       user: 'User',
       assistant: 'Assistant',
+      feedbackSaving: 'Saving...',
+      feedbackAccepted: 'Accept',
+      feedbackPartial: 'Partially Accept',
+      feedbackRejected: 'Reject',
       memoryLabels: {
         origin: 'Origin',
         destination: 'Destination',
@@ -115,10 +136,10 @@ const memoryTags = computed(() => {
   const memory = props.detail.taskMemory
   return [
     memory.origin ? `${copy.value.memoryLabels.origin}: ${memory.origin}` : '',
-    memory.destination ? `${copy.value.memoryLabels.destination}: ${memory.destination}` : '',
+    memory.destination ? `${copy.value.memoryLabels.destination}: ${normalizeDisplayText(memory.destination)}` : '',
     memory.days ? `${copy.value.memoryLabels.days}: ${memory.days}` : '',
-    memory.budget ? `${copy.value.memoryLabels.budget}: ${memory.budget}` : '',
-    ...memory.preferences.map(item => `${copy.value.memoryLabels.preference}: ${item}`)
+    memory.budget ? `${copy.value.memoryLabels.budget}: ${normalizeDisplayText(memory.budget)}` : '',
+    ...memory.preferences.map(item => `${copy.value.memoryLabels.preference}: ${localizePreference(item)}`)
   ].filter(Boolean)
 })
 
@@ -244,6 +265,75 @@ function removeAttachment(index: number) {
   attachments.value = attachments.value.filter((_, itemIndex) => itemIndex !== index)
 }
 
+function canRenderFeedback(message: ConversationMessage) {
+  return Boolean(props.detail?.travelPlan) && message.role === 'ASSISTANT' && message.id === latestAssistantMessageId.value
+}
+
+function feedbackChoiceClass(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED') {
+  return {
+    'message__feedback-choice--active': props.feedback?.label === label
+  }
+}
+
+function localizePreference(value: string) {
+  const trimmed = value.trim()
+  if (!props.preferChinese || !trimmed || /[\u4e00-\u9fff]/.test(trimmed)) {
+    return trimmed
+  }
+
+  const lower = trimmed.toLowerCase()
+  const directMap: Record<string, string> = {
+    'relaxed pace': '\u8f7b\u677e\u8282\u594f',
+    'local food': '\u672c\u5730\u7f8e\u98df',
+    'signature sights': '\u6838\u5fc3\u666f\u70b9',
+    'family-friendly': '\u4eb2\u5b50\u53cb\u597d',
+    family: '\u4eb2\u5b50\u51fa\u884c',
+    nightlife: '\u591c\u751f\u6d3b',
+    shopping: '\u901b\u8857\u8d2d\u7269',
+    museum: '\u535a\u7269\u9986',
+    photography: '\u62cd\u7167\u51fa\u7247',
+    tea: '\u559d\u8336\u4f53\u9a8c',
+    'tea culture': '\u8336\u6587\u5316'
+  }
+
+  if (directMap[lower]) {
+    return directMap[lower]
+  }
+
+  if (lower.startsWith('hotel area:')) {
+    return `\u9152\u5e97\u533a\u57df\uff1a${trimmed.slice(trimmed.indexOf(':') + 1).trim()}`
+  }
+
+  if (lower.startsWith('hotel:')) {
+    return `\u9152\u5e97\uff1a${trimmed.slice(trimmed.indexOf(':') + 1).trim()}`
+  }
+
+  if (lower.includes('relaxed')) {
+    return '\u8f7b\u677e\u8282\u594f'
+  }
+
+  if (lower.includes('food')) {
+    return '\u672c\u5730\u7f8e\u98df'
+  }
+
+  if (lower.includes('night')) {
+    return '\u591c\u751f\u6d3b'
+  }
+
+  if (lower.includes('shop')) {
+    return '\u901b\u8857\u8d2d\u7269'
+  }
+
+  return trimmed
+}
+
+function submitFeedback(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED', reasonCode?: string) {
+  if (props.feedbackSaving) {
+    return
+  }
+  emit('feedback', { label, reasonCode })
+}
+
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
@@ -292,17 +382,17 @@ function markdownToHtml(markdown: string) {
     }
     if (line.startsWith('### ')) {
       closeList()
-      html += `<h3>${renderInline(line.slice(4))}</h3>`
+      html += `<h3>${renderInline(normalizeDisplayText(line.slice(4)))}</h3>`
       continue
     }
     if (line.startsWith('## ')) {
       closeList()
-      html += `<h2>${renderInline(line.slice(3))}</h2>`
+      html += `<h2>${renderInline(normalizeDisplayText(line.slice(3)))}</h2>`
       continue
     }
     if (line.startsWith('# ')) {
       closeList()
-      html += `<h1>${renderInline(line.slice(2))}</h1>`
+      html += `<h1>${renderInline(normalizeDisplayText(line.slice(2)))}</h1>`
       continue
     }
     if (line.startsWith('- ')) {
@@ -310,11 +400,11 @@ function markdownToHtml(markdown: string) {
         html += '<ul>'
         inList = true
       }
-      html += `<li>${renderInline(line.slice(2))}</li>`
+      html += `<li>${renderInline(normalizeDisplayText(line.slice(2)))}</li>`
       continue
     }
     closeList()
-    html += `<p>${renderInline(line)}</p>`
+    html += `<p>${renderInline(normalizeDisplayText(line))}</p>`
   }
 
   closeList()
@@ -326,7 +416,6 @@ function markdownToHtml(markdown: string) {
   <section class="panel chat-panel">
     <div class="panel__header">
       <div>
-        <p class="panel__eyebrow">{{ copy.eyebrow }}</p>
         <h2>{{ copy.title }}</h2>
       </div>
       <div class="memory-tags">
@@ -348,7 +437,7 @@ function markdownToHtml(markdown: string) {
       >
         <span class="message__role">{{ message.role === 'USER' ? copy.user : copy.assistant }}</span>
         <div v-if="message.role === 'ASSISTANT'" class="message__markdown" v-html="markdownToHtml(message.content)" />
-        <p v-else>{{ message.content }}</p>
+        <p v-else>{{ normalizeDisplayText(message.content) }}</p>
         <div v-if="imageAttachments(message).length" class="message__attachments">
           <span
             v-for="attachment in imageAttachments(message)"
@@ -357,6 +446,35 @@ function markdownToHtml(markdown: string) {
           >
             {{ attachment.name }}
           </span>
+        </div>
+        <div v-if="canRenderFeedback(message)" class="message__actions">
+          <button
+            type="button"
+            class="message__feedback-choice"
+            :class="feedbackChoiceClass('ACCEPTED')"
+            :disabled="feedbackSaving"
+            @click="submitFeedback('ACCEPTED', 'used_as_is')"
+          >
+            {{ feedbackSaving && feedback?.label === 'ACCEPTED' ? copy.feedbackSaving : copy.feedbackAccepted }}
+          </button>
+          <button
+            type="button"
+            class="message__feedback-choice"
+            :class="feedbackChoiceClass('PARTIAL')"
+            :disabled="feedbackSaving"
+            @click="submitFeedback('PARTIAL', 'edited_before_use')"
+          >
+            {{ feedbackSaving && feedback?.label === 'PARTIAL' ? copy.feedbackSaving : copy.feedbackPartial }}
+          </button>
+          <button
+            type="button"
+            class="message__feedback-choice"
+            :class="feedbackChoiceClass('REJECTED')"
+            :disabled="feedbackSaving"
+            @click="submitFeedback('REJECTED', 'not_useful')"
+          >
+            {{ feedbackSaving && feedback?.label === 'REJECTED' ? copy.feedbackSaving : copy.feedbackRejected }}
+          </button>
         </div>
       </article>
     </div>
@@ -370,7 +488,7 @@ function markdownToHtml(markdown: string) {
           <strong>{{ copy.imageContextTitle }}</strong>
           <span>{{ copy.imageCount(pendingImageContext.attachments.length) }}</span>
         </div>
-        <p>{{ pendingImageContext.summary }}</p>
+        <p>{{ normalizeDisplayText(pendingImageContext.summary) }}</p>
         <div v-if="recognizedImageFacts.length" class="composer__image-fact-list">
           <article
             v-for="fact in recognizedImageFacts"

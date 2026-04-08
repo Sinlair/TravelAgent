@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import PlanMap from './PlanMap.vue'
 import type { TravelConstraintCheck, TravelPlan, TravelPlanStop, TravelTransitLeg } from '../types/api'
 import { hotelPointId, stopPointId } from '../utils/travelPlan'
+import { normalizeDisplayText } from '../utils/text'
 
 const props = withDefaults(defineProps<{
   travelPlan: TravelPlan | null
@@ -15,50 +16,49 @@ const activePointId = ref('')
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: '方案',
-      title: '这次出行建议',
-      emptyTitle: '还没有生成结构化行程',
-      emptyBody: '告诉我目的地、天数、预算和偏好后，我会把路线、住宿、花费和地图整理成一份可执行的安排。',
-      overview: '行程总览',
-      atGlance: '快速预览',
-      hotels: '住宿建议',
-      checks: '重点提醒',
-      budget: '预算拆分',
-      itinerary: '每日安排',
-      totalCost: '预计总花费',
-      hotelArea: '建议住宿区域',
-      tripLength: '行程天数',
-      currentWeather: '当前天气',
-      locationCheck: '定位校验',
-      matched: '匹配地点',
-      district: '所在区域',
-      coordinates: '坐标',
-      amapAddress: '高德地址',
-      otherCandidates: '其他候选',
-      locationDetails: '查看定位细节',
-      routeDetails: '查看详细路线',
-      locationVerified: '位置已确认',
-      fallbackHint: '当前为估算结果，建议出发前再次确认',
-      arrivalRoute: '上一站前往',
-      returnLabel: '返程',
+      eyebrow: '\u65b9\u6848',
+      title: '\u8fd9\u6b21\u51fa\u884c\u5efa\u8bae',
+      emptyTitle: '\u8fd8\u6ca1\u6709\u751f\u6210\u7ed3\u6784\u5316\u884c\u7a0b',
+      emptyBody: '\u544a\u8bc9\u6211\u76ee\u7684\u5730\u3001\u5929\u6570\u3001\u9884\u7b97\u548c\u504f\u597d\u540e\uff0c\u6211\u4f1a\u628a\u8def\u7ebf\u3001\u4f4f\u5bbf\u3001\u82b1\u8d39\u548c\u5730\u56fe\u6574\u7406\u6210\u4e00\u4efd\u53ef\u6267\u884c\u7684\u5b89\u6392\u3002',
+      overview: '\u884c\u7a0b\u603b\u89c8',
+      atGlance: '\u5feb\u901f\u9884\u89c8',
+      hotels: '\u4f4f\u5bbf\u5efa\u8bae',
+      checks: '\u91cd\u70b9\u63d0\u9192',
+      budget: '\u9884\u7b97\u62c6\u5206',
+      itinerary: '\u6bcf\u65e5\u5b89\u6392',
+      totalCost: '\u9884\u8ba1\u603b\u82b1\u8d39',
+      hotelArea: '\u5efa\u8bae\u4f4f\u5bbf\u533a\u57df',
+      tripLength: '\u884c\u7a0b\u5929\u6570',
+      currentWeather: '\u5f53\u524d\u5929\u6c14',
+      matched: '\u5339\u914d\u5730\u70b9',
+      district: '\u6240\u5728\u533a\u57df',
+      coordinates: '\u5750\u6807',
+      amapAddress: '\u9ad8\u5fb7\u5730\u5740',
+      otherCandidates: '\u5176\u4ed6\u5019\u9009',
+      locationDetails: '\u67e5\u770b\u5b9a\u4f4d\u7ec6\u8282',
+      routeDetails: '\u67e5\u770b\u8be6\u7ec6\u8def\u7ebf',
+      locationVerified: '\u4f4d\u7f6e\u5df2\u786e\u8ba4',
+      fallbackHint: '\u5f53\u524d\u4e3a\u4f30\u7b97\u7ed3\u679c\uff0c\u5efa\u8bae\u51fa\u53d1\u524d\u518d\u6b21\u786e\u8ba4',
+      arrivalRoute: '\u4e0a\u4e00\u7ad9\u524d\u5f80',
+      returnLabel: '\u8fd4\u7a0b',
       timeWindow: (start: string, end: string) => `${start} - ${end}`,
-      day: (value: number) => `第 ${value} 天`,
-      dayCount: (value: number) => `${value} 天`,
-      stopCount: (value: number) => `${value} 个安排`,
-      activityMinutes: (value: number) => `游玩 ${value} 分钟`,
-      transitMinutes: (value: number) => `通勤 ${value} 分钟`,
-      stopDuration: (value: number) => `停留 ${value} 分钟`,
-      transferMinutes: (value: number) => `上段通勤 ${value} 分钟`,
-      costValue: (value: number) => `约 ${value} 元`,
-      nightly: (min: number, max: number) => `${min}-${max} 元/晚`,
-      amount: (min: number, max: number) => `${min}-${max} 元`,
-      ticket: (value: number) => `门票 ${value} 元`,
-      food: (value: number) => `餐饮 ${value} 元`,
-      localTransit: (value: number) => `市内交通 ${value} 元`,
-      other: (value: number) => `其他 ${value} 元`,
-      openWindow: (open: string, close: string) => `开放时间 ${open} - ${close}`,
-      routeMeta: (route: TravelTransitLeg) => `全程约 ${route.durationMinutes} 分钟，步行 ${route.walkingMinutes} 分钟，预计 ${route.estimatedCost} 元`,
-      budgetCap: (value: number) => `预算上限 ${value} 元`
+      day: (value: number) => `\u7b2c ${value} \u5929`,
+      dayCount: (value: number) => `${value} \u5929`,
+      stopCount: (value: number) => `${value} \u4e2a\u5b89\u6392`,
+      activityMinutes: (value: number) => `\u6e38\u73a9 ${value} \u5206\u949f`,
+      transitMinutes: (value: number) => `\u901a\u52e4 ${value} \u5206\u949f`,
+      stopDuration: (value: number) => `\u505c\u7559 ${value} \u5206\u949f`,
+      transferMinutes: (value: number) => `\u4e0a\u6bb5\u901a\u52e4 ${value} \u5206\u949f`,
+      costValue: (value: number) => `\u7ea6 ${value} \u5143`,
+      nightly: (min: number, max: number) => `${min}-${max} \u5143/\u665a`,
+      amount: (min: number, max: number) => `${min}-${max} \u5143`,
+      ticket: (value: number) => `\u95e8\u7968 ${value} \u5143`,
+      food: (value: number) => `\u9910\u996e ${value} \u5143`,
+      localTransit: (value: number) => `\u5e02\u5185\u4ea4\u901a ${value} \u5143`,
+      other: (value: number) => `\u5176\u4ed6 ${value} \u5143`,
+      openWindow: (open: string, close: string) => `\u5f00\u653e\u65f6\u95f4 ${open} - ${close}`,
+      routeMeta: (route: TravelTransitLeg) => `\u5168\u7a0b\u7ea6 ${route.durationMinutes} \u5206\u949f\uff0c\u6b65\u884c ${route.walkingMinutes} \u5206\u949f\uff0c\u9884\u8ba1 ${route.estimatedCost} \u5143`,
+      budgetCap: (value: number) => `\u9884\u7b97\u4e0a\u9650 ${value} \u5143`
     }
   : {
       eyebrow: 'Plan',
@@ -75,7 +75,6 @@ const copy = computed(() => (props.preferChinese
       hotelArea: 'Recommended Stay Area',
       tripLength: 'Trip Length',
       currentWeather: 'Current Weather',
-      locationCheck: 'Location Check',
       matched: 'Matched',
       district: 'District',
       coordinates: 'Coordinates',
@@ -144,7 +143,7 @@ const overviewStats = computed(() => {
   if (weatherParts.length) {
     stats.push({
       label: copy.value.currentWeather,
-      value: weatherParts.join(' · '),
+      value: weatherParts.join(' / '),
       hint: trip.weatherSnapshot?.city || trip.weatherSnapshot?.reportTime || ''
     })
   }
@@ -156,7 +155,11 @@ function slotLabel(slot: string) {
   if (!props.preferChinese) {
     return { MORNING: 'Morning', AFTERNOON: 'Afternoon', EVENING: 'Evening' }[slot] ?? slot
   }
-  return { MORNING: '上午', AFTERNOON: '下午', EVENING: '晚上' }[slot] ?? slot
+  return {
+    MORNING: '\u4e0a\u5348',
+    AFTERNOON: '\u4e0b\u5348',
+    EVENING: '\u665a\u4e0a'
+  }[slot] ?? slot
 }
 
 function categoryLabel(category: string) {
@@ -164,11 +167,11 @@ function categoryLabel(category: string) {
     return category
   }
   return {
-    Hotel: '住宿',
-    'Intercity transport': '跨城交通',
-    'Local transit': '本地通勤',
-    Food: '餐饮',
-    'Attractions and buffer': '景点与缓冲'
+    Hotel: '\u4f4f\u5bbf',
+    'Intercity transport': '\u8de8\u57ce\u4ea4\u901a',
+    'Local transit': '\u672c\u5730\u901a\u52e4',
+    Food: '\u9910\u996e',
+    'Attractions and buffer': '\u666f\u70b9\u4e0e\u673a\u52a8\u9884\u7b97'
   }[category] ?? category
 }
 
@@ -177,11 +180,11 @@ function modeLabel(mode: string) {
     return mode
   }
   return {
-    SUBWAY: '地铁',
-    BUS: '公交',
-    WALK: '步行',
-    TAXI: '打车',
-    RAIL: '铁路'
+    SUBWAY: '\u5730\u94c1',
+    BUS: '\u516c\u4ea4',
+    WALK: '\u6b65\u884c',
+    TAXI: '\u6253\u8f66',
+    RAIL: '\u94c1\u8def'
   }[mode] ?? mode
 }
 
@@ -194,7 +197,7 @@ function routeLine(route?: TravelTransitLeg | null) {
 
 function stepMeta(step: TravelTransitLeg['steps'][number]) {
   if (props.preferChinese) {
-    return `${modeLabel(step.mode)}，约 ${step.durationMinutes} 分钟${step.stopCount ? `，共 ${step.stopCount} 站` : ''}`
+    return `${modeLabel(step.mode)}\uff0c\u7ea6 ${step.durationMinutes} \u5206\u949f${step.stopCount ? `\uff0c\u5171 ${step.stopCount} \u7ad9` : ''}`
   }
   return `${modeLabel(step.mode)}, about ${step.durationMinutes} min${step.stopCount ? `, ${step.stopCount} stops` : ''}`
 }
@@ -208,9 +211,9 @@ function statusLabel(check: TravelConstraintCheck) {
     }[check.status] ?? check.status
   }
   return {
-    PASS: '通过',
-    WARN: '提醒',
-    FAIL: '冲突'
+    PASS: '\u901a\u8fc7',
+    WARN: '\u63d0\u9192',
+    FAIL: '\u51b2\u7a81'
   }[check.status] ?? check.status
 }
 
@@ -227,11 +230,11 @@ function locationStatus(source?: string) {
     }[source] ?? source
   }
   return {
-    'MCP.amap_input_tips': '已用高德候选结果确认地点',
-    'MCP.amap_geocode': '已用高德确认位置',
-    'MCP.amap_transit_route': '路线来自高德公交或地铁规划',
+    'MCP.amap_input_tips': '\u5df2\u7528\u9ad8\u5fb7\u5019\u9009\u7ed3\u679c\u786e\u8ba4\u5730\u70b9',
+    'MCP.amap_geocode': '\u5df2\u7528\u9ad8\u5fb7\u786e\u8ba4\u4f4d\u7f6e',
+    'MCP.amap_transit_route': '\u8def\u7ebf\u6765\u81ea\u9ad8\u5fb7\u516c\u4ea4\u6216\u5730\u94c1\u89c4\u5212',
     'RULE.fallback': copy.value.fallbackHint
-  }[source] ?? `已校验：${source}`
+  }[source] ?? `\u5df2\u6821\u9a8c\uff1a${source}`
 }
 
 function coordinateText(longitude?: string, latitude?: string) {
@@ -276,8 +279,8 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
       <article class="overview-card">
         <div class="overview-card__content">
           <p class="overview-card__eyebrow">{{ copy.overview }}</p>
-          <h3>{{ travelPlan.summary }}</h3>
-          <p class="overview-card__body">{{ travelPlan.hotelAreaReason }}</p>
+          <h3>{{ normalizeDisplayText(travelPlan.summary) }}</h3>
+          <p class="overview-card__body">{{ normalizeDisplayText(travelPlan.hotelAreaReason) }}</p>
         </div>
 
         <div class="overview-card__stats">
@@ -298,7 +301,7 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
         <div class="glance-grid">
           <article v-for="day in visibleDays" :key="day.dayNumber" class="glance-card">
             <span>{{ copy.day(day.dayNumber) }}</span>
-            <strong>{{ day.theme }}</strong>
+            <strong>{{ normalizeDisplayText(day.theme) }}</strong>
             <p>{{ copy.timeWindow(day.startTime, day.endTime) }}</p>
             <div class="glance-card__meta">
               <span>{{ copy.stopCount(day.stops.length) }}</span>
@@ -329,12 +332,12 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
             >
               <div class="stay-card__head">
                 <div>
-                  <strong>{{ hotel.name }}</strong>
-                  <p>{{ hotel.area }}</p>
+                  <strong>{{ normalizeDisplayText(hotel.name) }}</strong>
+                  <p>{{ normalizeDisplayText(hotel.area) }}</p>
                 </div>
                 <span class="stay-card__price">{{ copy.nightly(hotel.nightlyMin, hotel.nightlyMax) }}</span>
               </div>
-              <p>{{ hotel.rationale }}</p>
+              <p>{{ normalizeDisplayText(hotel.rationale) }}</p>
               <p class="stay-card__status">{{ locationStatus(hotel.source) }}</p>
               <details v-if="hotel.longitude && hotel.latitude" class="stay-card__details">
                 <summary>{{ copy.locationDetails }}</summary>
@@ -353,7 +356,7 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
             <article v-for="item in visibleBudget" :key="item.category" class="budget-card">
               <div>
                 <strong>{{ categoryLabel(item.category) }}</strong>
-                <p>{{ item.rationale }}</p>
+                <p>{{ normalizeDisplayText(item.rationale) }}</p>
               </div>
               <span>{{ copy.amount(item.minAmount, item.maxAmount) }}</span>
             </article>
@@ -371,7 +374,7 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
             :class="`check-card--${check.status.toLowerCase()}`"
           >
             <span>{{ statusLabel(check) }}</span>
-            <strong>{{ check.message }}</strong>
+            <strong>{{ normalizeDisplayText(check.message) }}</strong>
           </article>
         </div>
       </div>
@@ -383,7 +386,7 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
             <div class="itinerary-day__header">
               <div>
                 <p class="itinerary-day__eyebrow">{{ copy.day(day.dayNumber) }}</p>
-                <h4>{{ day.theme }}</h4>
+                <h4>{{ normalizeDisplayText(day.theme) }}</h4>
                 <p class="itinerary-day__window">{{ copy.timeWindow(day.startTime, day.endTime) }}</p>
               </div>
               <div class="itinerary-day__meta">
@@ -409,13 +412,13 @@ function activateStop(dayNumber: number, stop: TravelPlanStop) {
                 <div class="itinerary-stop__content">
                   <div class="itinerary-stop__head">
                     <div>
-                      <strong>{{ stop.name }}</strong>
-                      <p>{{ stop.area }}</p>
+                      <strong>{{ normalizeDisplayText(stop.name) }}</strong>
+                      <p>{{ normalizeDisplayText(stop.area) }}</p>
                     </div>
                     <span class="itinerary-stop__price">{{ copy.costValue(stopTotalCost(stop)) }}</span>
                   </div>
 
-                  <p>{{ stop.rationale }}</p>
+                  <p>{{ normalizeDisplayText(stop.rationale) }}</p>
 
                   <div class="itinerary-stop__chips">
                     <span>{{ copy.stopDuration(stop.durationMinutes) }}</span>

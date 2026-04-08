@@ -3,154 +3,543 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Travel Agent Homepage Screenshot EN</title>
-    <link rel="stylesheet" href="../../web/src/style.css" />
+    <title>Travel Agent README Screenshot EN</title>
     <style>
+      :root {
+        --bg: #eef8ff;
+        --panel: rgba(255, 255, 255, 0.9);
+        --line: rgba(24, 50, 74, 0.1);
+        --ink: #18324a;
+        --muted: #61798b;
+        --accent: #2f86ff;
+        --accent-deep: #165b97;
+        --teal: #0b8c87;
+        --sun: #ffb454;
+        --shadow: 0 20px 56px rgba(43, 101, 145, 0.12);
+        font-family: "Segoe UI", "Inter", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
+        margin: 0;
         min-width: 1520px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(47, 134, 255, 0.18), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(11, 140, 135, 0.16), transparent 24%),
+          radial-gradient(circle at 80% 18%, rgba(255, 180, 84, 0.12), transparent 20%),
+          linear-gradient(145deg, #eef8ff 0%, #f7fbff 48%, #f4fbf7 100%);
       }
 
       .shell {
-        min-height: auto;
-        height: 1260px;
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 14px;
+        height: 1080px;
+        padding: 14px;
+      }
+
+      .sidebar,
+      .panel,
+      .hero {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .sidebar h1,
+      .panel h2,
+      .hero h1,
+      .overview-card h3,
+      .day-card h4 {
+        margin: 0;
+      }
+
+      .sidebar__new,
+      .submit,
+      .scrapbook-button {
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+      }
+
+      .sidebar__new {
+        width: 100%;
+        padding: 11px 14px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), #65b0ff);
+      }
+
+      .sidebar__list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .sidebar__item {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .sidebar__item--active {
+        border-color: rgba(47, 134, 255, 0.32);
+        background: rgba(237, 245, 255, 0.96);
+      }
+
+      .sidebar__item p,
+      .muted,
+      .message p,
+      .overview-card p,
+      .glance-card p,
+      .budget-card p,
+      .timeline-item p,
+      .scrapbook-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .hero {
+        padding: 16px 18px;
+        background:
+          radial-gradient(circle at top right, rgba(47, 134, 255, 0.16), transparent 30%),
+          radial-gradient(circle at bottom left, rgba(11, 140, 135, 0.1), transparent 25%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 255, 0.86));
+      }
+
+      .hero__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+      }
+
+      .hero__eyebrow,
+      .section-label {
+        margin: 0 0 8px;
+        color: var(--accent-deep);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+        line-height: 1.25;
+        max-width: 860px;
+      }
+
+      .hero span {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.1);
+        color: var(--accent-deep);
+        font-size: 12px;
+      }
+
+      .language-toggle {
+        display: inline-flex;
+        gap: 8px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(24, 50, 74, 0.06);
+      }
+
+      .language-toggle span {
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+        background: transparent;
+      }
+
+      .language-toggle .active {
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--accent-deep);
+        box-shadow: 0 8px 18px rgba(43, 101, 145, 0.12);
+      }
+
+      .workspace__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+        gap: 14px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .chat-panel {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 12px;
+      }
+
+      .panel__header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .memory-tags,
+      .highlight-tags,
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .memory-tags span,
+      .highlight-tags span,
+      .chip-row span {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.08);
+        color: var(--accent-deep);
+        font-size: 12px;
       }
 
       .chat-list,
-      .timeline-list,
-      .plan-panel,
-      .timeline-panel {
-        overflow: hidden;
+      .timeline-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      .workspace__side {
-        min-height: auto;
+      .message {
+        max-width: 86%;
+        padding: 14px;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(43, 34, 22, 0.08);
+      }
+
+      .message--user {
+        align-self: flex-end;
+        color: #fff;
+        background: linear-gradient(135deg, rgba(47, 134, 255, 0.95), rgba(24, 97, 173, 0.95));
+      }
+
+      .message--assistant {
+        background: rgba(255, 255, 255, 0.84);
+      }
+
+      .message__role {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .message--user .message__role {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .message ul {
+        margin: 10px 0 0;
+        padding-left: 18px;
+      }
+
+      .message li {
+        margin-bottom: 6px;
+        line-height: 1.55;
+      }
+
+      .message__actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .feedback-choice {
+        border: 1px solid rgba(24, 50, 74, 0.1);
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        font-size: 12px;
+      }
+
+      .feedback-choice--active {
+        border-color: rgba(47, 134, 255, 0.28);
+        background: rgba(47, 134, 255, 0.12);
+        color: var(--accent-deep);
+        font-weight: 700;
       }
 
       .composer {
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 120px;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.74);
+      }
+
+      .composer__hint {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
       }
 
       .composer textarea {
-        min-height: 116px;
+        min-height: 110px;
+        border: none;
+        resize: none;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: var(--ink);
+      }
+
+      .submit {
+        color: #fff;
+        background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+      }
+
+      .submit small {
+        display: block;
+        margin-top: 2px;
+        opacity: 0.82;
+        font-size: 11px;
+      }
+
+      .workspace__side {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) 220px;
+        gap: 14px;
+      }
+
+      .scrapbook-card,
+      .overview-card,
+      .glance-card,
+      .budget-card,
+      .check-card,
+      .timeline-item,
+      .map-card {
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .scrapbook-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(255, 180, 84, 0.16), rgba(47, 134, 255, 0.1));
+      }
+
+      .scrapbook-button {
+        justify-self: start;
+        padding: 10px 14px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      }
+
+      .plan-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .overview-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 250, 255, 0.88));
+      }
+
+      .stats-grid,
+      .glance-grid,
+      .budget-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stat-card {
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .stat-card span,
+      .label-small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 6px;
+      }
+
+      .glance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .glance-card,
+      .budget-card,
+      .check-card,
+      .timeline-item {
+        padding: 14px;
+      }
+
+      .map-card {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .map-visual {
+        height: 200px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(47, 134, 255, 0.12), transparent 20%),
+          radial-gradient(circle at 72% 58%, rgba(11, 140, 135, 0.14), transparent 18%),
+          linear-gradient(180deg, rgba(255,255,255,0.88), rgba(244,250,255,0.92));
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .map-visual::before,
+      .map-visual::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.18);
+      }
+
+      .map-visual::before {
+        width: 280px;
+        height: 6px;
+        left: 80px;
+        top: 70px;
+        transform: rotate(10deg);
+      }
+
+      .map-visual::after {
+        width: 220px;
+        height: 6px;
+        left: 230px;
+        top: 118px;
+        transform: rotate(-8deg);
+      }
+
+      .node-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .node-row span {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        font-size: 12px;
+      }
+
+      .checks-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .check-card--pass {
+        border-color: rgba(11, 140, 135, 0.24);
+      }
+
+      .check-card--warn {
+        border-color: rgba(255, 180, 84, 0.34);
+      }
+
+      .timeline-list {
+        gap: 8px;
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <aside class="sidebar">
-        <div class="sidebar__header">
-          <p class="sidebar__eyebrow">History</p>
+        <div>
           <h1>My Trips</h1>
-          <button class="sidebar__new">Start A New Plan</button>
         </div>
+        <button class="sidebar__new">New Plan</button>
 
         <div class="sidebar__list">
           <article class="sidebar__item sidebar__item--active">
-            <div>
-              <strong>Hangzhou 3-day city break</strong>
-              <p>West Lake pacing, tea village stop, rainy-day fallback, and hotel shortlist.</p>
-            </div>
-            <button class="sidebar__delete">Delete</button>
+            <strong>Hangzhou 3-day light pace</strong>
+            <p>West Lake, tea village, compact nights, and direct plan feedback.</p>
+            <p class="label-small">2026-04-08 10:21</p>
           </article>
-
           <article class="sidebar__item">
-            <div>
-              <strong>Shanghai food weekend</strong>
-              <p>Late-night dining route, metro-friendly hotel area, and budget split.</p>
-            </div>
-            <button class="sidebar__delete">Delete</button>
+            <strong>Shanghai food weekend</strong>
+            <p>Late-night route, metro-friendly stay area, and flexible brunch blocks.</p>
+            <p class="label-small">2026-04-06 18:42</p>
           </article>
-
           <article class="sidebar__item">
-            <div>
-              <strong>Suzhou gardens day trip</strong>
-              <p>Fast train arrival, walking-heavy route, and flexible lunch options.</p>
-            </div>
-            <button class="sidebar__delete">Delete</button>
+            <strong>Suzhou gardens day trip</strong>
+            <p>Fast train arrival, walking-heavy route, and museum backup options.</p>
+            <p class="label-small">2026-04-05 12:09</p>
           </article>
         </div>
       </aside>
 
       <section class="workspace">
         <header class="hero">
-          <p>Travel Agent</p>
-          <h1>Turn destination, timing, budget, and preferences into a grounded itinerary that is easier to execute.</h1>
-          <span>Upload bookings, tickets, or travel screenshots, extract useful facts, and feed them into the same planning workflow.</span>
-        </header>
-
-        <section class="panel feedback-loop-panel">
-          <div class="panel__header feedback-loop-panel__header">
+          <div class="hero__top">
             <div>
-              <p class="panel__eyebrow">Feedback Loop</p>
-              <h2>Analyze Recent Feedback On Demand</h2>
-              <p class="feedback-loop-panel__hint">Recommendation outcomes, failure patterns, and suggested next actions stay visible in the same workspace.</p>
+              <p class="hero__eyebrow">Travel Agent</p>
+              <h1>Tell me the destination, timing, budget, and preferences, and I will turn them into a more executable trip plan.</h1>
+              <span>Paste bookings, tickets, or screenshots into the same planning flow.</span>
             </div>
-            <div class="feedback-loop-panel__controls">
-              <select class="feedback-loop-panel__select">
-                <option>200</option>
-              </select>
-              <button class="feedback-loop-panel__action">Refresh</button>
+            <div class="language-toggle">
+              <span>中文</span>
+              <span class="active">EN</span>
             </div>
           </div>
-
-          <div class="feedback-loop-panel__body">
-            <div class="feedback-loop-panel__stats">
-              <article class="feedback-loop-panel__stat">
-                <span>Accepted</span>
-                <strong>41.67%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>Usable</span>
-                <strong>75.00%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>Structured plan coverage</span>
-                <strong>83.33%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>Samples</span>
-                <strong>48</strong>
-              </article>
-            </div>
-
-            <div class="feedback-loop-panel__grid">
-              <section class="feedback-loop-panel__section">
-                <div class="feedback-loop-panel__section-title">Top reason codes</div>
-                <div class="feedback-loop-panel__list">
-                  <article class="feedback-loop-panel__list-item">
-                    <strong>edited_before_use</strong>
-                    <p>14 total / 100.00% usable</p>
-                  </article>
-                  <article class="feedback-loop-panel__list-item">
-                    <strong>not_useful</strong>
-                    <p>9 total / 0.00% usable</p>
-                  </article>
-                </div>
-              </section>
-
-              <section class="feedback-loop-panel__section">
-                <div class="feedback-loop-panel__section-title">Key findings</div>
-                <div class="feedback-loop-panel__finding-list">
-                  <article class="feedback-loop-panel__finding">
-                    <div class="feedback-loop-panel__finding-header">
-                      <strong>validationFailCount&gt;0</strong>
-                      <span class="plan-insight-card__badge">VALIDATION_FAIL</span>
-                    </div>
-                    <p>Sample 11 | Usable 36.36%</p>
-                    <p>Review failing constraint checks before tuning prompts globally.</p>
-                  </article>
-                </div>
-              </section>
-            </div>
-          </div>
-        </section>
+        </header>
 
         <div class="workspace__grid">
           <section class="panel chat-panel">
             <div class="panel__header">
               <div>
-                <p class="panel__eyebrow">Conversation</p>
-                <h2>Hangzhou 3-day city break</h2>
+                <h2>Hangzhou 3-day light pace</h2>
               </div>
               <div class="memory-tags">
                 <span>Destination: Hangzhou</span>
@@ -163,191 +552,152 @@
             <div class="chat-list">
               <article class="message message--user">
                 <span class="message__role">User</span>
-                <p>Help me plan a relaxed three-day Hangzhou trip. Budget around 3000 CNY. I want West Lake, tea culture, and not too much cross-city transit.</p>
+                <p>Plan three relaxed days in Hangzhou with a 3000 CNY budget. I want West Lake, tea culture, and as little backtracking as possible.</p>
               </article>
 
               <article class="message message--assistant">
                 <span class="message__role">Assistant</span>
-                <div class="message__markdown">
-                  <h3>Suggested direction</h3>
-                  <p>I routed this to the structured planner and built a low-friction Hangzhou itinerary.</p>
-                  <ul>
-                    <li>Hotel area centered on West Lake east side for easier morning starts</li>
-                    <li>One tea-culture afternoon in Longjing village</li>
-                    <li>Rain-friendly museum fallback and explicit pacing checks</li>
-                  </ul>
+                <p>I turned this into a structured plan with a lakeside stay area, a Longjing tea afternoon, visible budget checks, and a compact final day.</p>
+                <ul>
+                  <li>Hotel area anchored around West Lake east side</li>
+                  <li>One tea-culture block in Longjing village</li>
+                  <li>Direct feedback loop below the latest result</li>
+                </ul>
+                <div class="message__actions">
+                  <span class="feedback-choice feedback-choice--active">Accept</span>
+                  <span class="feedback-choice">Partially Accept</span>
+                  <span class="feedback-choice">Reject</span>
                 </div>
               </article>
             </div>
 
             <div class="composer">
-              <div class="composer__toolbar">
-                <button class="composer__attach">Add Images</button>
-              </div>
-              <textarea placeholder="Type the destination, trip length, budget, preferences, or explain how the uploaded images should be used..."></textarea>
-              <button class="composer__submit">
-                <span class="composer__submit-main">Plan Trip</span>
-                <span class="composer__submit-sub">Ctrl + Enter</span>
-              </button>
+              <p class="composer__hint">Paste screenshots, drag images here, or click to upload</p>
+              <textarea>Type the destination, trip length, budget, preferences, or continue refining the trip...</textarea>
+              <button class="submit">Plan Trip<small>Ctrl + Enter</small></button>
             </div>
           </section>
 
           <div class="workspace__side">
+            <section class="panel">
+              <h2>Travel Scrapbook</h2>
+              <article class="scrapbook-card">
+                <strong>Export this itinerary as a shareable scrapbook image.</strong>
+                <p>Save the plan as a long-form visual card for trip sharing and final review.</p>
+                <button class="scrapbook-button">Export Scrapbook</button>
+              </article>
+            </section>
+
             <section class="panel plan-panel">
               <div class="panel__header">
                 <div>
-                  <p class="panel__eyebrow">Plan</p>
+                  <p class="section-label">Plan</p>
                   <h2>Suggested Plan</h2>
                 </div>
-                <button class="plan-export">Export Scrapbook</button>
               </div>
 
-              <article class="plan-summary">
+              <article class="overview-card">
                 <div>
-                  <p class="plan-summary__label">Summary</p>
+                  <p class="section-label">Overview</p>
                   <h3>Three calm days around West Lake, tea hills, and compact evening food stops.</h3>
+                  <p>Stay near the lakefront to reduce backtracking and keep the route easy to execute.</p>
                 </div>
-                <div class="plan-highlights">
-                  <span>West Lake sunrise walk</span>
-                  <span>Longjing tea village</span>
-                  <span>Rain backup included</span>
-                </div>
-                <div class="plan-summary__stats">
-                  <div>
+                <div class="stats-grid">
+                  <div class="stat-card">
                     <span>Estimated Total</span>
-                    <strong>2600-3200 CNY</strong>
+                    <strong>1600-2460 CNY</strong>
                   </div>
-                  <div>
-                    <span>Recommended Hotel Area</span>
+                  <div class="stat-card">
+                    <span>Stay Area</span>
                     <strong>West Lake East</strong>
                   </div>
+                  <div class="stat-card">
+                    <span>Trip Length</span>
+                    <strong>3 days</strong>
+                  </div>
+                </div>
+                <div class="highlight-tags">
+                  <span>West Lake</span>
+                  <span>Longjing village</span>
+                  <span>Night market</span>
                 </div>
               </article>
 
-              <section class="plan-section">
-                <div class="plan-section__title">Constraint Checks</div>
-                <article class="plan-check plan-check--pass">
-                  <strong>Budget within range</strong>
-                  <p>Total estimate remains inside the requested ceiling with room for weather-driven taxi use.</p>
+              <div class="glance-grid">
+                <article class="glance-card">
+                  <span class="section-label">Day 1</span>
+                  <strong>Lake arrival</strong>
+                  <p>2 stops · 300 min activity · 162 CNY</p>
                 </article>
-                <article class="plan-check plan-check--warn">
-                  <strong>Saturday afternoon crowd risk</strong>
-                  <p>Shift Longjing tea village departure earlier to avoid peak ride-hailing congestion.</p>
+                <article class="glance-card">
+                  <span class="section-label">Day 2</span>
+                  <strong>Temple and tea</strong>
+                  <p>3 stops · 390 min activity · 336 CNY</p>
                 </article>
-              </section>
-
-              <section class="plan-section">
-                <div class="plan-section__title">Budget Breakdown</div>
-                <div class="plan-budget-list">
-                  <article class="plan-budget-item">
-                    <div>
-                      <strong>Hotel</strong>
-                      <p>Mid-range hotel close to lakeside entrances and metro access.</p>
-                    </div>
-                    <strong>1200-1600</strong>
-                  </article>
-                  <article class="plan-budget-item">
-                    <div>
-                      <strong>Food</strong>
-                      <p>Tea house, local noodle stop, and one nicer dinner.</p>
-                    </div>
-                    <strong>550-780</strong>
-                  </article>
-                </div>
-              </section>
-
-              <section class="plan-section">
-                <div class="plan-section__title">Daily Route</div>
-                <article class="plan-day">
-                  <div class="plan-day__header">
-                    <div>
-                      <p>Day 1</p>
-                      <h4>West Lake arrival and slow scenic loop</h4>
-                    </div>
-                    <div class="plan-day__meta">
-                      <span>Activity 280 min</span>
-                      <span>Transit 54 min</span>
-                      <span>Cost 820 CNY</span>
-                    </div>
-                  </div>
-
-                  <div class="plan-stops">
-                    <article class="plan-stop">
-                      <div class="plan-stop__slot">MORNING</div>
-                      <div class="plan-stop__body">
-                        <strong>Broken Bridge to Bai Causeway walk</strong>
-                        <p>Warm-up route with low transit load and easy lake views before crowds build.</p>
-                        <div class="plan-stop__costs">
-                          <span>Ticket 0</span>
-                          <span>Food 35</span>
-                          <span>Transit 12</span>
-                        </div>
-                      </div>
-                    </article>
-
-                    <article class="plan-stop">
-                      <div class="plan-stop__slot">AFTERNOON</div>
-                      <div class="plan-stop__body">
-                        <strong>China National Tea Museum</strong>
-                        <p>Rain-friendly fallback preserved in the same district to keep the day compact.</p>
-                        <div class="plan-stop__costs">
-                          <span>Ticket 0</span>
-                          <span>Food 58</span>
-                          <span>Transit 18</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
+                <article class="glance-card">
+                  <span class="section-label">Day 3</span>
+                  <strong>Easy finish</strong>
+                  <p>2 stops · 180 min activity · 82 CNY</p>
                 </article>
-              </section>
-            </section>
-
-            <section class="panel timeline-panel">
-              <div class="panel__header">
-                <div>
-                  <p class="panel__eyebrow">Execution</p>
-                  <h2>How This Plan Was Built</h2>
-                </div>
               </div>
 
+              <article class="map-card">
+                <div class="panel__header">
+                  <div>
+                    <h2>Route and locations</h2>
+                  </div>
+                  <span class="feedback-choice">7 nodes</span>
+                </div>
+                <div class="map-visual"></div>
+                <div class="node-row">
+                  <span>Hotel · Hubin</span>
+                  <span>West Lake</span>
+                  <span>Lingyin Temple</span>
+                  <span>Longjing Village</span>
+                </div>
+              </article>
+
+              <div class="checks-grid">
+                <article class="check-card check-card--pass">
+                  <strong>Budget within range</strong>
+                  <p>Total estimate remains inside the requested ceiling.</p>
+                </article>
+                <article class="check-card check-card--warn">
+                  <strong>Saturday crowd risk</strong>
+                  <p>Move Longjing departure earlier to reduce congestion.</p>
+                </article>
+              </div>
+
+              <div class="budget-grid">
+                <article class="budget-card">
+                  <strong>Hotel</strong>
+                  <p>1020-1440 CNY for a central stay with easy access to the lakefront.</p>
+                </article>
+                <article class="budget-card">
+                  <strong>Food</strong>
+                  <p>340-520 CNY across tea stops, local meals, and one night market block.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel__header">
+                <div>
+                  <h2>Build details</h2>
+                </div>
+              </div>
               <div class="timeline-list">
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">ANALYZE_QUERY</div>
-                  <div>
-                    <strong>Understand the trip request</strong>
-                    <p>Destination, days, budget, and relaxed pacing preference were detected from the latest turn.</p>
-                  </div>
+                  <strong>ANALYZE_QUERY</strong>
+                  <p>Detected destination, day count, budget, and relaxed pacing preference.</p>
                 </article>
-
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">RECALL_MEMORY</div>
-                  <div>
-                    <strong>Recall recent context</strong>
-                    <p>Short-term memory and long-term snippets were merged before routing.</p>
-                    <div class="timeline-item__details">
-                      <span class="timeline-item__pill">longTermCount: 3</span>
-                    </div>
-                  </div>
+                  <strong>CALL_TOOL</strong>
+                  <p>Resolved weather, POIs, stay area, and transit context with Amap.</p>
                 </article>
-
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">CALL_TOOL</div>
-                  <div>
-                    <strong>Resolve map and weather context</strong>
-                    <p>Amap-backed weather, POI, and transit checks were used to ground the itinerary.</p>
-                    <div class="timeline-item__details">
-                      <span class="timeline-item__pill">source: Amap</span>
-                      <span class="timeline-item__pill">destination: Hangzhou</span>
-                    </div>
-                  </div>
-                </article>
-
-                <article class="timeline-item">
-                  <div class="timeline-item__stage">VALIDATE_PLAN</div>
-                  <div>
-                    <strong>Validate feasibility</strong>
-                    <p>Budget and pacing passed; a crowd warning remained visible instead of being silently hidden.</p>
-                  </div>
+                  <strong>VALIDATE_PLAN</strong>
+                  <p>Budget passed; one crowd warning remains visible to the user.</p>
                 </article>
               </div>
             </section>

@@ -69,6 +69,8 @@ describe('ChatPanel', () => {
       props: {
         detail,
         sending: false,
+        feedback: null,
+        feedbackSaving: false,
         errorMessage: ''
       }
     })
@@ -96,6 +98,8 @@ describe('ChatPanel', () => {
       props: {
         detail,
         sending: false,
+        feedback: null,
+        feedbackSaving: false,
         errorMessage: 'Request failed'
       }
     })
@@ -108,6 +112,8 @@ describe('ChatPanel', () => {
       props: {
         detail,
         sending: false,
+        feedback: null,
+        feedbackSaving: false,
         errorMessage: ''
       }
     })

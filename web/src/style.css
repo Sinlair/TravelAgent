@@ -213,6 +213,38 @@ textarea {
   padding: 16px 18px;
 }
 
+.hero__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.hero__language {
+  display: inline-flex;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(24, 50, 74, 0.06);
+}
+
+.hero__language-button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.hero__language-button--active {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent-deep);
+  box-shadow: 0 8px 18px rgba(43, 101, 145, 0.12);
+}
+
 .hero span {
   display: inline-block;
   margin-top: 8px;
@@ -340,6 +372,46 @@ textarea {
   color: var(--teal);
   font-size: 0.76rem;
   line-height: 1.2;
+}
+
+.message__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.message__feedback-choice {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.message__feedback-choice:hover:not(:disabled) {
+  background: rgba(237, 245, 255, 0.96);
+  border-color: rgba(47, 134, 255, 0.22);
+}
+
+.message__feedback-choice {
+  border: 1px solid rgba(24, 50, 74, 0.1);
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
+}
+
+.message__feedback-choice--active {
+  border-color: rgba(47, 134, 255, 0.28);
+  background: rgba(47, 134, 255, 0.12);
+  color: var(--accent-deep);
+  font-weight: 700;
+}
+
+.message__feedback-choice:disabled {
+  opacity: 0.72;
+  cursor: default;
 }
 
 .message--user {
@@ -1296,7 +1368,8 @@ textarea {
   .plan-insight-card__header,
   .plan-knowledge-group__header,
   .plan-day__header,
-  .ops-summary__head {
+  .ops-summary__head,
+  .hero__top {
     flex-direction: column;
   }
 

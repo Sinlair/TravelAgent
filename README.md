@@ -20,37 +20,40 @@
 </p>
 
 <p align="center">
-  Travel Agent is a full-stack travel planning workspace that turns free-form chat and travel screenshots into grounded itineraries with structured plans, map enrichment, budget checks, an execution timeline, and scrapbook export.
+  Travel Agent is a full-stack travel planning workspace that turns free-form chat and travel screenshots into grounded itineraries with structured plans, Amap-backed enrichment, inline recommendation feedback, and scrapbook export.
 </p>
 
 <p align="center">
-  <a href="#why-this-project">Why This Project</a> •
-  <a href="#ui-snapshot">UI Snapshot</a> •
-  <a href="#core-capabilities">Core Capabilities</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#project-structure">Project Structure</a> •
+  <a href="#why-this-project">Why This Project</a> |
+  <a href="#ui-snapshot">UI Snapshot</a> |
+  <a href="#core-capabilities">Core Capabilities</a> |
+  <a href="#architecture">Architecture</a> |
+  <a href="#quick-start">Quick Start</a> |
+  <a href="#project-structure">Project Structure</a> |
   <a href="#docs">Docs</a>
 </p>
 
 ## Why This Project
 
-Most travel assistants stop at a single response. This repository is built as a product workflow instead:
+Most travel assistants stop at a single answer. This repository is built as a product workflow instead:
 
-- Route each turn to a specialist agent instead of forcing all requests through one generic completion.
-- Produce a structured plan with daily stops, budget ranges, hotel guidance, and visible feasibility checks.
-- Ground the plan with Amap weather, POI matching, geocoding, and route enrichment.
-- Show the execution trail in the UI so users can see how the plan was produced.
-- Support screenshot-assisted intake and scrapbook export instead of chat-only output.
+- Route each turn to a specialist agent instead of forcing every request through one generic completion.
+- Produce a structured travel plan with daily stops, hotel guidance, budget ranges, and visible feasibility checks.
+- Ground the itinerary with Amap weather, POI matching, geocoding, hotel-area hints, and transit enrichment.
+- Accept travel screenshots as input and merge confirmed image facts back into planning.
+- Keep the UI product-focused: one screen, clear primary actions, and direct recommendation feedback closure.
+- Export the final itinerary as a scrapbook-style long image that is easier to save and share.
 
 ## UI Snapshot
 
-Current frontend layout:
+Current frontend workspace highlights:
 
-- Left: conversation history
-- Center: chat intake with paste / drag / upload image support
-- Right: structured itinerary, map, execution trail, and scrapbook export
-- Main page: compressed into a one-screen workspace instead of a long scrolling dashboard
+- Manual `中文 / EN` language toggle in the hero bar.
+- Left rail for conversation history and quick session switching.
+- Center chat workspace with paste / drag / upload image intake.
+- Inline feedback closure directly below the latest generated answer with `Accept`, `Partially Accept`, and `Reject`.
+- Right side for scrapbook export, structured itinerary, map context, and build details.
+- Overall layout compressed into a one-screen workspace instead of a long scrolling dashboard.
 
 <p align="center">
   <img src="./docs/assets/homepage-en.png" alt="Travel Agent workspace screenshot" />
@@ -60,14 +63,15 @@ Current frontend layout:
 
 | Area | What it does |
 | --- | --- |
-| Multi-agent routing | Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists with shared context and timeline events |
+| Specialist routing | Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists with shared context and timeline events |
 | Structured planning | Builds itinerary summaries, daily routes, hotel recommendations, budget breakdowns, and constraint checks |
 | Amap grounding | Resolves weather, POIs, district centers, hotel area hints, and transit legs |
-| Travel knowledge retrieval | Retrieves destination guidance from local curated knowledge or optional Milvus-backed retrieval |
+| Knowledge retrieval | Retrieves destination guidance from local curated knowledge or optional Milvus-backed retrieval |
 | Image-assisted intake | Extracts travel facts from uploaded screenshots and merges confirmed facts back into planning |
+| Inline feedback capture | Records whether a generated plan was accepted, partially accepted, or rejected directly from the latest result card |
 | Scrapbook export | Exports the generated itinerary into a shareable long-form travel scrapbook image |
 | Execution visibility | Streams timeline events to the frontend so planning steps stay inspectable |
-| Feedback operations | Supports recommendation outcome export and offline analysis scripts for product tuning |
+| Product tuning tooling | Includes scripts for feedback export and offline feedback-loop analysis |
 
 ## Architecture
 

@@ -3,154 +3,543 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Travel Agent Homepage Screenshot ZH</title>
-    <link rel="stylesheet" href="../../web/src/style.css" />
+    <title>Travel Agent README Screenshot ZH</title>
     <style>
+      :root {
+        --bg: #eef8ff;
+        --panel: rgba(255, 255, 255, 0.9);
+        --line: rgba(24, 50, 74, 0.1);
+        --ink: #18324a;
+        --muted: #61798b;
+        --accent: #2f86ff;
+        --accent-deep: #165b97;
+        --teal: #0b8c87;
+        --sun: #ffb454;
+        --shadow: 0 20px 56px rgba(43, 101, 145, 0.12);
+        font-family: "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
+        margin: 0;
         min-width: 1520px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(47, 134, 255, 0.18), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(11, 140, 135, 0.16), transparent 24%),
+          radial-gradient(circle at 80% 18%, rgba(255, 180, 84, 0.12), transparent 20%),
+          linear-gradient(145deg, #eef8ff 0%, #f7fbff 48%, #f4fbf7 100%);
       }
 
       .shell {
-        min-height: auto;
-        height: 1260px;
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 14px;
+        height: 1080px;
+        padding: 14px;
+      }
+
+      .sidebar,
+      .panel,
+      .hero {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .sidebar h1,
+      .panel h2,
+      .hero h1,
+      .overview-card h3,
+      .day-card h4 {
+        margin: 0;
+      }
+
+      .sidebar__new,
+      .submit,
+      .scrapbook-button {
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+      }
+
+      .sidebar__new {
+        width: 100%;
+        padding: 11px 14px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), #65b0ff);
+      }
+
+      .sidebar__list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .sidebar__item {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .sidebar__item--active {
+        border-color: rgba(47, 134, 255, 0.32);
+        background: rgba(237, 245, 255, 0.96);
+      }
+
+      .sidebar__item p,
+      .muted,
+      .message p,
+      .overview-card p,
+      .glance-card p,
+      .budget-card p,
+      .timeline-item p,
+      .scrapbook-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .hero {
+        padding: 16px 18px;
+        background:
+          radial-gradient(circle at top right, rgba(47, 134, 255, 0.16), transparent 30%),
+          radial-gradient(circle at bottom left, rgba(11, 140, 135, 0.1), transparent 25%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 255, 0.86));
+      }
+
+      .hero__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-start;
+      }
+
+      .hero__eyebrow,
+      .section-label {
+        margin: 0 0 8px;
+        color: var(--accent-deep);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+        line-height: 1.25;
+        max-width: 860px;
+      }
+
+      .hero span {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.1);
+        color: var(--accent-deep);
+        font-size: 12px;
+      }
+
+      .language-toggle {
+        display: inline-flex;
+        gap: 8px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(24, 50, 74, 0.06);
+      }
+
+      .language-toggle span {
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+        background: transparent;
+      }
+
+      .language-toggle .active {
+        background: rgba(255, 255, 255, 0.96);
+        color: var(--accent-deep);
+        box-shadow: 0 8px 18px rgba(43, 101, 145, 0.12);
+      }
+
+      .workspace__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+        gap: 14px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .chat-panel {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 12px;
+      }
+
+      .panel__header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .memory-tags,
+      .highlight-tags,
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .memory-tags span,
+      .highlight-tags span,
+      .chip-row span {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.08);
+        color: var(--accent-deep);
+        font-size: 12px;
       }
 
       .chat-list,
-      .timeline-list,
-      .plan-panel,
-      .timeline-panel {
-        overflow: hidden;
+      .timeline-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      .workspace__side {
-        min-height: auto;
+      .message {
+        max-width: 86%;
+        padding: 14px;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(43, 34, 22, 0.08);
+      }
+
+      .message--user {
+        align-self: flex-end;
+        color: #fff;
+        background: linear-gradient(135deg, rgba(47, 134, 255, 0.95), rgba(24, 97, 173, 0.95));
+      }
+
+      .message--assistant {
+        background: rgba(255, 255, 255, 0.84);
+      }
+
+      .message__role {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .message--user .message__role {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .message ul {
+        margin: 10px 0 0;
+        padding-left: 18px;
+      }
+
+      .message li {
+        margin-bottom: 6px;
+        line-height: 1.55;
+      }
+
+      .message__actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .feedback-choice {
+        border: 1px solid rgba(24, 50, 74, 0.1);
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        font-size: 12px;
+      }
+
+      .feedback-choice--active {
+        border-color: rgba(47, 134, 255, 0.28);
+        background: rgba(47, 134, 255, 0.12);
+        color: var(--accent-deep);
+        font-weight: 700;
       }
 
       .composer {
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 120px;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.74);
+      }
+
+      .composer__hint {
+        grid-column: 1 / -1;
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
       }
 
       .composer textarea {
-        min-height: 116px;
+        min-height: 110px;
+        border: none;
+        resize: none;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: var(--ink);
+      }
+
+      .submit {
+        color: #fff;
+        background: linear-gradient(180deg, var(--accent) 0%, var(--accent-deep) 100%);
+      }
+
+      .submit small {
+        display: block;
+        margin-top: 2px;
+        opacity: 0.82;
+        font-size: 11px;
+      }
+
+      .workspace__side {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) 220px;
+        gap: 14px;
+      }
+
+      .scrapbook-card,
+      .overview-card,
+      .glance-card,
+      .budget-card,
+      .check-card,
+      .timeline-item,
+      .map-card {
+        border-radius: 18px;
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .scrapbook-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(255, 180, 84, 0.16), rgba(47, 134, 255, 0.1));
+      }
+
+      .scrapbook-button {
+        justify-self: start;
+        padding: 10px 14px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      }
+
+      .plan-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .overview-card {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 250, 255, 0.88));
+      }
+
+      .stats-grid,
+      .glance-grid,
+      .budget-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stat-card {
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .stat-card span,
+      .label-small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 6px;
+      }
+
+      .glance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .glance-card,
+      .budget-card,
+      .check-card,
+      .timeline-item {
+        padding: 14px;
+      }
+
+      .map-card {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .map-visual {
+        height: 200px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(47, 134, 255, 0.12), transparent 20%),
+          radial-gradient(circle at 72% 58%, rgba(11, 140, 135, 0.14), transparent 18%),
+          linear-gradient(180deg, rgba(255,255,255,0.88), rgba(244,250,255,0.92));
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .map-visual::before,
+      .map-visual::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(47, 134, 255, 0.18);
+      }
+
+      .map-visual::before {
+        width: 280px;
+        height: 6px;
+        left: 80px;
+        top: 70px;
+        transform: rotate(10deg);
+      }
+
+      .map-visual::after {
+        width: 220px;
+        height: 6px;
+        left: 230px;
+        top: 118px;
+        transform: rotate(-8deg);
+      }
+
+      .node-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .node-row span {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(24, 50, 74, 0.08);
+        font-size: 12px;
+      }
+
+      .checks-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .check-card--pass {
+        border-color: rgba(11, 140, 135, 0.24);
+      }
+
+      .check-card--warn {
+        border-color: rgba(255, 180, 84, 0.34);
+      }
+
+      .timeline-list {
+        gap: 8px;
       }
     </style>
   </head>
   <body>
     <main class="shell">
       <aside class="sidebar">
-        <div class="sidebar__header">
-          <p class="sidebar__eyebrow">历史记录</p>
+        <div>
           <h1>我的行程</h1>
-          <button class="sidebar__new">开始新的规划</button>
         </div>
+        <button class="sidebar__new">新建行程</button>
 
         <div class="sidebar__list">
           <article class="sidebar__item sidebar__item--active">
-            <div>
-              <strong>杭州三天慢节奏行程</strong>
-              <p>西湖节奏、龙井村半日、雨天备选方案和住宿片区建议。</p>
-            </div>
-            <button class="sidebar__delete">删除</button>
+            <strong>杭州三天轻松行程</strong>
+            <p>西湖、龙井村、夜间逛吃和直接方案反馈闭环。</p>
+            <p class="label-small">2026-04-08 10:21</p>
           </article>
-
           <article class="sidebar__item">
-            <div>
-              <strong>上海美食周末</strong>
-              <p>夜宵路线、地铁友好酒店区域和预算拆分。</p>
-            </div>
-            <button class="sidebar__delete">删除</button>
+            <strong>上海美食周末</strong>
+            <p>夜宵路线、地铁友好酒店片区和弹性早午餐安排。</p>
+            <p class="label-small">2026-04-06 18:42</p>
           </article>
-
           <article class="sidebar__item">
-            <div>
-              <strong>苏州园林一日游</strong>
-              <p>高铁往返、步行偏多路线和灵活午餐点位。</p>
-            </div>
-            <button class="sidebar__delete">删除</button>
+            <strong>苏州园林一日游</strong>
+            <p>高铁往返、步行偏多路线和博物馆备选方案。</p>
+            <p class="label-small">2026-04-05 12:09</p>
           </article>
         </div>
       </aside>
 
       <section class="workspace">
         <header class="hero">
-          <p>旅行小助手</p>
-          <h1>把目的地、天数、预算和偏好告诉我，我会整理成一份更容易执行的出行方案。</h1>
-          <span>也可以直接上传酒店、机票或行程截图，系统会先提取旅行信息，再接入同一条规划链路。</span>
-        </header>
-
-        <section class="panel feedback-loop-panel">
-          <div class="panel__header feedback-loop-panel__header">
+          <div class="hero__top">
             <div>
-              <p class="panel__eyebrow">反馈闭环</p>
-              <h2>按需分析最近反馈</h2>
-              <p class="feedback-loop-panel__hint">推荐结果、失败模式和建议动作会直接出现在同一个工作台里。</p>
+              <p class="hero__eyebrow">旅行助手</p>
+              <h1>一句话说清目的地、天数、预算和偏好，我会把它整理成更容易执行的行程。</h1>
+              <span>支持把订房、机票或旅行截图直接放进同一条规划链路。</span>
             </div>
-            <div class="feedback-loop-panel__controls">
-              <select class="feedback-loop-panel__select">
-                <option>200</option>
-              </select>
-              <button class="feedback-loop-panel__action">刷新</button>
+            <div class="language-toggle">
+              <span class="active">中文</span>
+              <span>EN</span>
             </div>
           </div>
-
-          <div class="feedback-loop-panel__body">
-            <div class="feedback-loop-panel__stats">
-              <article class="feedback-loop-panel__stat">
-                <span>直接接受</span>
-                <strong>41.67%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>可用率</span>
-                <strong>75.00%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>结构化方案覆盖率</span>
-                <strong>83.33%</strong>
-              </article>
-              <article class="feedback-loop-panel__stat">
-                <span>样本数</span>
-                <strong>48</strong>
-              </article>
-            </div>
-
-            <div class="feedback-loop-panel__grid">
-              <section class="feedback-loop-panel__section">
-                <div class="feedback-loop-panel__section-title">主要原因码</div>
-                <div class="feedback-loop-panel__list">
-                  <article class="feedback-loop-panel__list-item">
-                    <strong>使用前做了调整</strong>
-                    <p>14 条 / 可用率 100.00%</p>
-                  </article>
-                  <article class="feedback-loop-panel__list-item">
-                    <strong>当前不够有用</strong>
-                    <p>9 条 / 可用率 0.00%</p>
-                  </article>
-                </div>
-              </section>
-
-              <section class="feedback-loop-panel__section">
-                <div class="feedback-loop-panel__section-title">关键发现</div>
-                <div class="feedback-loop-panel__finding-list">
-                  <article class="feedback-loop-panel__finding">
-                    <div class="feedback-loop-panel__finding-header">
-                      <strong>存在硬约束校验失败</strong>
-                      <span class="plan-insight-card__badge">校验失败</span>
-                    </div>
-                    <p>样本 11 | 可用率 36.36%</p>
-                    <p>建议优先检查硬约束失败项，再决定是否调整 prompt。</p>
-                  </article>
-                </div>
-              </section>
-            </div>
-          </div>
-        </section>
+        </header>
 
         <div class="workspace__grid">
           <section class="panel chat-panel">
             <div class="panel__header">
               <div>
-                <p class="panel__eyebrow">对话</p>
-                <h2>杭州三天慢节奏行程</h2>
+                <h2>杭州三天轻松行程</h2>
               </div>
               <div class="memory-tags">
                 <span>目的地：杭州</span>
@@ -163,191 +552,152 @@
             <div class="chat-list">
               <article class="message message--user">
                 <span class="message__role">用户</span>
-                <p>帮我规划一个轻松一点的杭州三天行程，预算 3000 左右，想去西湖和龙井相关的地方，也不想每天跨城折腾。</p>
+                <p>三天杭州，预算 3000，节奏轻松，想去西湖和龙井村，尽量少折返。</p>
               </article>
 
               <article class="message message--assistant">
                 <span class="message__role">助手</span>
-                <div class="message__markdown">
-                  <h3>规划方向</h3>
-                  <p>这次我把请求路由给了结构化 planner，重点做了低折腾、可落地的杭州方案。</p>
-                  <ul>
-                    <li>住宿片区放在西湖东侧，方便每天早出发</li>
-                    <li>留出半天给龙井村和茶文化线路</li>
-                    <li>保留雨天博物馆备选和节奏检查</li>
-                  </ul>
+                <p>我已经把这次需求整理成结构化方案，重点控制节奏、减少折返，并把茶文化和夜间逛吃一起纳入路线。</p>
+                <ul>
+                  <li>住宿片区优先放在西湖东侧</li>
+                  <li>留出半天给龙井村和茶文化体验</li>
+                  <li>结果下方直接完成接受 / 部分接受 / 拒绝反馈</li>
+                </ul>
+                <div class="message__actions">
+                  <span class="feedback-choice feedback-choice--active">接受</span>
+                  <span class="feedback-choice">部分接受</span>
+                  <span class="feedback-choice">拒绝</span>
                 </div>
               </article>
             </div>
 
             <div class="composer">
-              <div class="composer__toolbar">
-                <button class="composer__attach">添加图片</button>
-              </div>
-              <textarea placeholder="输入目的地、天数、预算、偏好，或者说明上传图片应该如何参与规划..."></textarea>
-              <button class="composer__submit">
-                <span class="composer__submit-main">开始规划</span>
-                <span class="composer__submit-sub">Ctrl + Enter</span>
-              </button>
+              <p class="composer__hint">支持粘贴截图、拖拽图片，或点击上传</p>
+              <textarea>输入目的地、天数、预算、偏好，或者继续补充这次行程想法...</textarea>
+              <button class="submit">生成方案<small>Ctrl + Enter</small></button>
             </div>
           </section>
 
           <div class="workspace__side">
+            <section class="panel">
+              <h2>旅行手账</h2>
+              <article class="scrapbook-card">
+                <strong>把当前行程导出成适合分享和保存的旅行手账长图。</strong>
+                <p>用于出发前确认、发给同行人，或者做行程存档。</p>
+                <button class="scrapbook-button">生成手账长图</button>
+              </article>
+            </section>
+
             <section class="panel plan-panel">
               <div class="panel__header">
                 <div>
-                  <p class="panel__eyebrow">方案</p>
+                  <p class="section-label">方案</p>
                   <h2>这次出行建议</h2>
                 </div>
-                <button class="plan-export">导出旅行手账图</button>
               </div>
 
-              <article class="plan-summary">
+              <article class="overview-card">
                 <div>
-                  <p class="plan-summary__label">概览</p>
-                  <h3>三天围绕西湖、茶山和紧凑夜间觅食路线展开，整体节奏偏松。</h3>
+                  <p class="section-label">行程总览</p>
+                  <h3>三天围绕西湖、茶村和紧凑夜间路线展开，整体节奏偏轻松。</h3>
+                  <p>建议住在湖滨片区，减少往返，并方便晚上回酒店。</p>
                 </div>
-                <div class="plan-highlights">
-                  <span>西湖晨间散步</span>
-                  <span>龙井茶村半日</span>
-                  <span>雨天备选已保留</span>
-                </div>
-                <div class="plan-summary__stats">
-                  <div>
+                <div class="stats-grid">
+                  <div class="stat-card">
                     <span>预计总花费</span>
-                    <strong>2600-3200 元</strong>
+                    <strong>1600-2460 元</strong>
                   </div>
-                  <div>
-                    <span>建议住宿区域</span>
-                    <strong>西湖东侧</strong>
+                  <div class="stat-card">
+                    <span>推荐住宿区域</span>
+                    <strong>西湖湖滨</strong>
                   </div>
+                  <div class="stat-card">
+                    <span>行程天数</span>
+                    <strong>3 天</strong>
+                  </div>
+                </div>
+                <div class="highlight-tags">
+                  <span>西湖</span>
+                  <span>灵隐寺</span>
+                  <span>龙井村</span>
                 </div>
               </article>
 
-              <section class="plan-section">
-                <div class="plan-section__title">约束检查</div>
-                <article class="plan-check plan-check--pass">
-                  <strong>预算在目标范围内</strong>
-                  <p>当前总价仍落在预算内，并保留了天气变化导致打车的弹性空间。</p>
+              <div class="glance-grid">
+                <article class="glance-card">
+                  <span class="section-label">第 1 天</span>
+                  <strong>湖滨慢启动</strong>
+                  <p>2 个安排 · 游玩 300 分钟 · 162 元</p>
                 </article>
-                <article class="plan-check plan-check--warn">
-                  <strong>周六下午人流拥挤风险</strong>
-                  <p>建议把龙井村出发时间提前，避开高峰打车拥堵。</p>
+                <article class="glance-card">
+                  <span class="section-label">第 2 天</span>
+                  <strong>寺庙与茶村</strong>
+                  <p>3 个安排 · 游玩 390 分钟 · 336 元</p>
                 </article>
-              </section>
-
-              <section class="plan-section">
-                <div class="plan-section__title">预算拆分</div>
-                <div class="plan-budget-list">
-                  <article class="plan-budget-item">
-                    <div>
-                      <strong>酒店</strong>
-                      <p>中档住宿，优先西湖入口和地铁都方便的片区。</p>
-                    </div>
-                    <strong>1200-1600</strong>
-                  </article>
-                  <article class="plan-budget-item">
-                    <div>
-                      <strong>餐饮</strong>
-                      <p>包含茶馆、本地面食和一顿相对正式的晚餐。</p>
-                    </div>
-                    <strong>550-780</strong>
-                  </article>
-                </div>
-              </section>
-
-              <section class="plan-section">
-                <div class="plan-section__title">每日路线</div>
-                <article class="plan-day">
-                  <div class="plan-day__header">
-                    <div>
-                      <p>第 1 天</p>
-                      <h4>西湖到达后慢节奏景观环线</h4>
-                    </div>
-                    <div class="plan-day__meta">
-                      <span>游玩 280 分钟</span>
-                      <span>通勤 54 分钟</span>
-                      <span>花费 820 元</span>
-                    </div>
-                  </div>
-
-                  <div class="plan-stops">
-                    <article class="plan-stop">
-                      <div class="plan-stop__slot">上午</div>
-                      <div class="plan-stop__body">
-                        <strong>断桥到白堤散步</strong>
-                        <p>用低通勤负担的路线做热身，在人流起来前完成核心湖景段。</p>
-                        <div class="plan-stop__costs">
-                          <span>门票 0</span>
-                          <span>餐饮 35</span>
-                          <span>通勤 12</span>
-                        </div>
-                      </div>
-                    </article>
-
-                    <article class="plan-stop">
-                      <div class="plan-stop__slot">下午</div>
-                      <div class="plan-stop__body">
-                        <strong>中国茶叶博物馆</strong>
-                        <p>雨天备选仍放在同一区域，避免为了改线造成日程碎片化。</p>
-                        <div class="plan-stop__costs">
-                          <span>门票 0</span>
-                          <span>餐饮 58</span>
-                          <span>通勤 18</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
+                <article class="glance-card">
+                  <span class="section-label">第 3 天</span>
+                  <strong>轻松收尾</strong>
+                  <p>2 个安排 · 游玩 180 分钟 · 82 元</p>
                 </article>
-              </section>
-            </section>
-
-            <section class="panel timeline-panel">
-              <div class="panel__header">
-                <div>
-                  <p class="panel__eyebrow">执行过程</p>
-                  <h2>这次方案是怎么生成的</h2>
-                </div>
               </div>
 
+              <article class="map-card">
+                <div class="panel__header">
+                  <div>
+                    <h2>路线与位置</h2>
+                  </div>
+                  <span class="feedback-choice">7 个点位</span>
+                </div>
+                <div class="map-visual"></div>
+                <div class="node-row">
+                  <span>酒店 · 湖滨</span>
+                  <span>西湖</span>
+                  <span>灵隐寺</span>
+                  <span>龙井村</span>
+                </div>
+              </article>
+
+              <div class="checks-grid">
+                <article class="check-card check-card--pass">
+                  <strong>预算在范围内</strong>
+                  <p>整体估算仍落在用户预算上限以内。</p>
+                </article>
+                <article class="check-card check-card--warn">
+                  <strong>周末下午拥挤风险</strong>
+                  <p>建议把龙井村出发时间略微提前，减少拥堵。</p>
+                </article>
+              </div>
+
+              <div class="budget-grid">
+                <article class="budget-card">
+                  <strong>住宿</strong>
+                  <p>1020-1440 元，优先住在湖滨片区，方便早晚动线。</p>
+                </article>
+                <article class="budget-card">
+                  <strong>餐饮</strong>
+                  <p>340-520 元，覆盖茶馆、本地餐食和一段夜市安排。</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel__header">
+                <div>
+                  <h2>生成详情</h2>
+                </div>
+              </div>
               <div class="timeline-list">
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">ANALYZE_QUERY</div>
-                  <div>
-                    <strong>理解用户需求</strong>
-                    <p>系统从最新一轮输入里识别出了目的地、天数、预算和轻松节奏偏好。</p>
-                  </div>
+                  <strong>ANALYZE_QUERY</strong>
+                  <p>识别出目的地、天数、预算和轻松节奏偏好。</p>
                 </article>
-
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">RECALL_MEMORY</div>
-                  <div>
-                    <strong>回收上下文信息</strong>
-                    <p>在正式路由前，先合并短期记忆和长期知识片段。</p>
-                    <div class="timeline-item__details">
-                      <span class="timeline-item__pill">长期记忆命中: 3</span>
-                    </div>
-                  </div>
+                  <strong>CALL_TOOL</strong>
+                  <p>通过高德补充天气、景点、片区和路线信息。</p>
                 </article>
-
                 <article class="timeline-item">
-                  <div class="timeline-item__stage">CALL_TOOL</div>
-                  <div>
-                    <strong>接入地图与天气信息</strong>
-                    <p>方案里用到了高德天气、POI 和路线信息来提升 grounding。</p>
-                    <div class="timeline-item__details">
-                      <span class="timeline-item__pill">来源: Amap</span>
-                      <span class="timeline-item__pill">目的地: 杭州</span>
-                    </div>
-                  </div>
-                </article>
-
-                <article class="timeline-item">
-                  <div class="timeline-item__stage">VALIDATE_PLAN</div>
-                  <div>
-                    <strong>校验方案可行性</strong>
-                    <p>预算和节奏通过校验，但仍保留了一条周六下午的人流拥挤提醒。</p>
-                  </div>
+                  <strong>VALIDATE_PLAN</strong>
+                  <p>预算通过，保留一条拥挤风险提醒给用户判断。</p>
                 </article>
               </div>
             </section>

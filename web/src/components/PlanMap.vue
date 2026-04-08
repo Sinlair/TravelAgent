@@ -39,24 +39,22 @@ let markerOverlays: Array<{ pointId: string; marker: any }> = []
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: '地图视图',
-      title: '路线与酒店位置',
+      title: '路线与位置',
       nodes: (count: number) => `已标注 ${count} 个点位`,
       emptyPlan: '生成行程后，这里会显示路线和酒店位置。',
       emptyCoordinates: '当前行程还没有足够的坐标信息，暂时无法绘制地图。',
       noKey: '路线数据已经准备好，但还需要配置高德 Web Key 才能渲染底图。',
-      plottedNodes: '当前点位',
+      plottedNodes: '关键地点',
       hotel: (index?: number) => `住宿 ${index ?? ''}`.trim(),
       day: (dayNumber?: number) => `第 ${dayNumber ?? ''} 天`.trim()
     }
   : {
-      eyebrow: 'Amap View',
-      title: 'Route And Hotel Map',
+      title: 'Route and locations',
       nodes: (count: number) => `${count} nodes plotted`,
       emptyPlan: 'The route map will appear here after a plan is generated.',
       emptyCoordinates: 'There are not enough coordinates in the current plan to draw the map yet.',
       noKey: 'The route data is ready, but an Amap Web key is still required to render the basemap.',
-      plottedNodes: 'Plotted Nodes',
+      plottedNodes: 'Key stops',
       hotel: (index?: number) => `Hotel ${index ?? ''}`.trim(),
       day: (dayNumber?: number) => `Day ${dayNumber ?? ''}`.trim()
     }))
@@ -185,7 +183,6 @@ async function loadAmap() {
   <section class="plan-map">
     <div class="plan-map__header">
       <div>
-        <p class="plan-map__eyebrow">{{ copy.eyebrow }}</p>
         <h3>{{ copy.title }}</h3>
       </div>
       <span v-if="travelPlan && mapPoints.length" class="plan-map__badge">

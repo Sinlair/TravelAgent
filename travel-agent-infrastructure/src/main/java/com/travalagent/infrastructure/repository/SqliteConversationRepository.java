@@ -29,9 +29,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Repository
 public class SqliteConversationRepository implements ConversationRepository, LongTermMemoryRepository {
+    private static final Pattern INTEGER_PATTERN = Pattern.compile("-?\\d+");
 
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
     };
@@ -434,7 +437,7 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 rs.getString("conversation_id"),
                 rs.getString("origin"),
                 rs.getString("destination"),
-                rs.getObject("days", Integer.class),
+                readInteger(rs, "days"),
                 rs.getString("budget"),
                 readStringList(rs.getString("preferences_json")),
                 rs.getString("pending_question"),
@@ -452,7 +455,7 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 rs.getString("note"),
                 agentType == null ? null : AgentType.valueOf(agentType),
                 rs.getString("destination"),
-                rs.getObject("days", Integer.class),
+                readInteger(rs, "days"),
                 rs.getString("budget"),
                 rs.getInt("has_travel_plan") == 1,
                 readMap(rs.getString("metadata_json")),
@@ -543,6 +546,33 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
             return objectMapper.writeValueAsString(value == null ? Map.of() : value);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Failed to serialize JSON payload", exception);
+        }
+    }
+
+    private Integer readInteger(ResultSet rs, String column) throws SQLException {
+        Object raw = rs.getObject(column);
+        if (raw == null) {
+            return null;
+        }
+        if (raw instanceof Number number) {
+            return number.intValue();
+        }
+        String value = rs.getString(column);
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        Matcher matcher = INTEGER_PATTERN.matcher(normalized);
+        if (!matcher.find()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(matcher.group());
+        } catch (NumberFormatException exception) {
+            return null;
         }
     }
 }

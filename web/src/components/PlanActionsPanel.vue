@@ -12,15 +12,13 @@ const props = withDefaults(defineProps<{
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: '亮点功能',
-      title: '旅行手账',
-      exportTitle: '生成旅行手账',
-      exportBody: '把当前方案导出成适合分享、保存和复盘的长图，发给同行人也更方便。',
-      exportNote: '生成后会自动下载图片',
-      exportAction: '生成手账长图'
+      title: '\u65c5\u884c\u624b\u8d26',
+      exportTitle: '\u751f\u6210\u65c5\u884c\u624b\u8d26',
+      exportBody: '\u628a\u5f53\u524d\u65b9\u6848\u5bfc\u51fa\u6210\u9002\u5408\u5206\u4eab\u3001\u4fdd\u5b58\u548c\u56de\u770b\u7684\u957f\u56fe\u3002',
+      exportNote: '\u751f\u6210\u540e\u4f1a\u81ea\u52a8\u4e0b\u8f7d\u56fe\u7247',
+      exportAction: '\u751f\u6210\u624b\u8d26\u957f\u56fe'
     }
   : {
-      eyebrow: 'Signature Action',
       title: 'Travel Scrapbook',
       exportTitle: 'Export Travel Scrapbook',
       exportBody: 'Turn this itinerary into a shareable long-form visual card that is easier to save and send around.',
@@ -40,7 +38,6 @@ async function exportScrapbook() {
   <section v-if="travelPlan" class="panel plan-actions-panel">
     <div class="panel__header">
       <div>
-        <p class="panel__eyebrow">{{ copy.eyebrow }}</p>
         <h2>{{ copy.title }}</h2>
       </div>
     </div>
