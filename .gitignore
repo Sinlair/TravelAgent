@@ -28,3 +28,5 @@ web/.env.local
 data/exports/
 data/milvus/
 logs/
+/.run/
+/tmp-chat.json

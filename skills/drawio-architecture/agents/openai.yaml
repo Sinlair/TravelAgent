@@ -1,0 +1,4 @@
+interface:
+  display_name: "Draw.io Architecture"
+  short_description: "Create clean layered draw.io architecture diagrams for TravelAgent"
+  default_prompt: "Create or revise the TravelAgent architecture diagram as a layered draw.io diagram with no text overflow, no overlaps, and orthogonal routing. Prefer splitting crowded content into multiple diagrams instead of compressing one."
