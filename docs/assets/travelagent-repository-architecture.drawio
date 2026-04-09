@@ -1,0 +1,130 @@
+<mxfile host="app.diagrams.net" modified="2026-04-09T00:00:00.000Z" agent="codex" version="24.7.17" type="device">
+  <diagram id="travelagent-repository-architecture" name="Repository Architecture">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1180" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="TravelAgent Repository Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1200" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Latest module boundaries, adapters, sidecars, and runtime switches" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="40" y="52" width="1200" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="band1" value="L1 Access / Delivery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#fdba74;strokeWidth=2;fontStyle=1;fontSize=14;fontColor=#9a3412;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="95" width="1140" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="band2" value="L2 Application Orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4ec;strokeColor=#fb923c;strokeWidth=2;fontStyle=1;fontSize=14;fontColor=#9a3412;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="1140" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="band3" value="L3 Domain Contracts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#60a5fa;strokeWidth=2;fontStyle=1;fontSize=14;fontColor=#1e3a8a;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="445" width="1140" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="band4" value="L4 Infrastructure / Integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#4ade80;strokeWidth=2;fontStyle=1;fontSize=14;fontColor=#14532d;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="650" width="1140" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="band5" value="External Systems" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=2;fontStyle=1;fontSize=14;fontColor=#334155;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="95" width="350" height="775" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="traveler" value="Traveler&#xa;chat intent / image / feedback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#fb923c;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="145" width="180" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="web" value="web&#xa;Vue workspace with chat, plan, map,&#xa;timeline, image intake, and feedback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#fb923c;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="132" width="250" height="94" as="geometry"/>
+        </mxCell>
+        <mxCell id="types" value="travel-agent-types&#xa;shared DTOs, envelopes, and errors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#fb923c;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="145" width="240" height="72" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="app" value="travel-agent-app&#xa;ConversationController / ConversationApplicationService&#xa;ConversationWorkflow / ConversationStreamHub / ReactiveTimelinePublisher&#xa;health indicators and TravelKnowledgeSeedRunner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#f97316;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="305" width="620" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="domain" value="travel-agent-domain&#xa;entities + value objects&#xa;ports: AgentRouter / SpecialistAgent / TaskMemoryExtractor&#xa;ports: ConversationSummarizer / ImageAttachmentInterpreter / AmapGateway&#xa;repositories: Conversation / LongTermMemory / TravelKnowledge / TimelinePublisher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#3b82f6;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="220" y="475" width="700" height="116" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="infra" value="travel-agent-infrastructure&#xa;OpenAI router + Weather / Geo / General / Planner agents&#xa;image interpreter, summarizer, task memory extractor&#xa;routing memory + knowledge repositories, validators, repairers&#xa;AmapToolCallbackConfig, AmapTravelTools, and AmapMcpGateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#22c55e;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="110" y="690" width="510" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="amap" value="travel-agent-amap&#xa;AmapHttpGateway&#xa;HTTP adapter for Amap OpenAPI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#22c55e;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="670" y="708" width="210" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="mcp" value="travel-agent-amap-mcp-server&#xa;standalone MCP tool server&#xa;optional sidecar process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#22c55e;strokeWidth=2;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="930" y="708" width="210" height="96" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="openai" value="OpenAI-compatible provider&#xa;chat completions + embeddings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#94a3b8;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="145" width="270" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="sqlite" value="SQLite&#xa;conversations, timeline, task memory,&#xa;plans, feedback, pending image context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#94a3b8;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="255" width="270" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="knowledge" value="Local travel knowledge JSON&#xa;curated hints and canonical destination data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#94a3b8;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="365" width="270" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="milvus" value="Milvus (optional)&#xa;vector memory and vector knowledge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#94a3b8;strokeWidth=2;dashed=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="475" width="270" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="amapApi" value="Amap OpenAPI&#xa;weather, geocode, input tips, transit route" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#94a3b8;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="585" width="270" height="82" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="note1" value="Runtime switches: tool-provider = LOCAL | MCP, memory-provider = AUTO | SQLITE | MILVUS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="220" y="848" width="920" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="note2" value="Knowledge retrieval prefers the vector store when enabled, then falls back to the local JSON dataset." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="220" y="868" width="920" height="22" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="user input" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="traveler" target="web">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="shared DTOs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="web" target="types">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="REST + uploads" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="web" target="app">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="detail + SSE" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#64748b;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="app" target="web">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="orchestrate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="app" target="domain">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="ports" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="domain" target="infra">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="AmapGateway" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="amap">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="LOCAL path" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="amapApi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="chat + embedding" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="openai">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="conversation data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="sqlite">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="local fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="knowledge">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="optional vector" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#64748b;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="milvus">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="MCP tools" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#64748b;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="infra" target="mcp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" value="server tools" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#64748b;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="mcp" target="amapApi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" value="HTTP adapter" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeColor=#475569;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="amap" target="amapApi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

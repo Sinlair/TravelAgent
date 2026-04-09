@@ -86,9 +86,15 @@ This codebase follows a DDD-inspired layered design with ports-and-adapters char
 
 System architecture:
 
-![TravelAgent System Architecture v2](./docs/assets/travelagent-system-architecture-v2.svg)
+Repository architecture:
 
-- Editable diagram: [`docs/assets/travelagent-system-architecture-v2.drawio`](./docs/assets/travelagent-system-architecture-v2.drawio)
+![TravelAgent Repository Architecture](./docs/assets/travelagent-repository-architecture.svg)
+
+Runtime workflow:
+
+![TravelAgent Runtime Workflow](./docs/assets/travelagent-runtime-workflow.svg)
+
+- Editable diagrams: [`docs/assets/travelagent-repository-architecture.drawio`](./docs/assets/travelagent-repository-architecture.drawio), [`docs/assets/travelagent-runtime-workflow.drawio`](./docs/assets/travelagent-runtime-workflow.drawio)
 - Detailed notes: [`docs/system-architecture.md`](./docs/system-architecture.md)
 
 ## Multi-Agent Flow

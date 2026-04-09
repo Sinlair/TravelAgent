@@ -87,9 +87,15 @@
 
 系统架构图：
 
-![TravelAgent 系统架构图 v2](./docs/assets/travelagent-system-architecture-v2.svg)
+仓库 / 模块架构：
 
-- 可编辑源文件：[`docs/assets/travelagent-system-architecture-v2.drawio`](./docs/assets/travelagent-system-architecture-v2.drawio)
+![TravelAgent 仓库架构图](./docs/assets/travelagent-repository-architecture.svg)
+
+运行时工作流：
+
+![TravelAgent 运行时工作流](./docs/assets/travelagent-runtime-workflow.svg)
+
+- 可编辑源文件：[`docs/assets/travelagent-repository-architecture.drawio`](./docs/assets/travelagent-repository-architecture.drawio)、[`docs/assets/travelagent-runtime-workflow.drawio`](./docs/assets/travelagent-runtime-workflow.drawio)
 - 详细说明：[`docs/system-architecture.md`](./docs/system-architecture.md)
 
 ## 多智能体工作流

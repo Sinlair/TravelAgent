@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1020" viewBox="0 0 1600 1020" role="img" aria-labelledby="title desc">
+  <title id="title">TravelAgent runtime workflow</title>
+  <desc id="desc">Runtime workflow for chat, image context staging, agent routing, planner execution, persistence, feedback, and SSE streaming.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 4 L 0 8 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowDashed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 4 L 0 8 z" fill="#64748b"/>
+    </marker>
+    <style>
+      .title { font: 700 28px "Segoe UI", Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 13px "Segoe UI", Arial, sans-serif; fill: #64748b; }
+      .bandTitle { font: 700 15px "Segoe UI", Arial, sans-serif; }
+      .band { rx: 16; ry: 16; stroke-width: 2; }
+      .band1 { fill: #fff7ed; stroke: #fdba74; }
+      .band2 { fill: #fff4ec; stroke: #fb923c; }
+      .band3 { fill: #eff6ff; stroke: #60a5fa; }
+      .band4 { fill: #f0fdf4; stroke: #4ade80; }
+      .externalBand { fill: #ffffff; stroke: #cbd5e1; }
+      .card { fill: #ffffff; rx: 12; ry: 12; stroke-width: 2; }
+      .intake { stroke: #fb923c; }
+      .workflow { stroke: #f97316; }
+      .execute { stroke: #3b82f6; }
+      .persist { stroke: #22c55e; }
+      .ext { stroke: #94a3b8; }
+      .optional { stroke-dasharray: 8 6; }
+      .cardHead { font: 600 12px "Segoe UI", Arial, sans-serif; fill: #0f172a; }
+      .cardText { font: 400 12px "Segoe UI", Arial, sans-serif; fill: #0f172a; }
+      .note { font: 400 11px "Segoe UI", Arial, sans-serif; fill: #475569; }
+      .edgeLabel { font: 400 11px "Segoe UI", Arial, sans-serif; fill: #334155; }
+      .arrow { fill: none; stroke: #475569; stroke-width: 2.2; marker-end: url(#arrow); }
+      .arrowDashed { fill: none; stroke: #64748b; stroke-width: 2.2; stroke-dasharray: 7 5; marker-end: url(#arrowDashed); }
+    </style>
+  </defs>
+
+  <text x="40" y="42" class="title">TravelAgent Runtime Workflow</text>
+  <text x="40" y="68" class="subtitle">Chat, image context, routing, planner execution, persistence, feedback, and SSE</text>
+
+  <rect x="40" y="100" width="1110" height="170" class="band band1"/>
+  <rect x="40" y="300" width="1110" height="190" class="band band2"/>
+  <rect x="40" y="520" width="1110" height="240" class="band band3"/>
+  <rect x="40" y="790" width="1110" height="170" class="band band4"/>
+  <rect x="1190" y="100" width="350" height="860" class="band externalBand"/>
+
+  <text x="58" y="125" class="bandTitle" fill="#9a3412">Intake and APIs</text>
+  <text x="58" y="325" class="bandTitle" fill="#9a3412">Workflow and Routing</text>
+  <text x="58" y="545" class="bandTitle" fill="#1e3a8a">Execution and Tool Paths</text>
+  <text x="58" y="815" class="bandTitle" fill="#14532d">Persistence and Streaming</text>
+  <text x="1208" y="125" class="bandTitle" fill="#334155">Providers and Sidecars</text>
+
+  <rect x="80" y="145" width="270" height="96" class="card intake"/>
+  <text x="215" y="171" text-anchor="middle" class="cardHead">web workspace</text>
+  <text x="215" y="189" text-anchor="middle" class="cardText">ChatPanel, PlanPanel, map, and timeline</text>
+  <text x="215" y="207" text-anchor="middle" class="cardText">image upload, confirm/dismiss, feedback actions</text>
+
+  <rect x="395" y="145" width="320" height="96" class="card intake"/>
+  <text x="555" y="171" text-anchor="middle" class="cardHead">ConversationController</text>
+  <text x="555" y="189" text-anchor="middle" class="cardText">POST /chat, GET /{id}, GET /stream</text>
+  <text x="555" y="207" text-anchor="middle" class="cardText">POST /{id}/feedback, summary, export, delete</text>
+
+  <rect x="760" y="145" width="350" height="96" class="card intake"/>
+  <text x="935" y="171" text-anchor="middle" class="cardHead">ConversationApplicationService</text>
+  <text x="935" y="189" text-anchor="middle" class="cardText">chat, detail, feedback, feedback summary, export</text>
+  <text x="935" y="207" text-anchor="middle" class="cardText">clears MCP cache on delete</text>
+
+  <rect x="120" y="345" width="370" height="118" class="card workflow"/>
+  <text x="305" y="371" text-anchor="middle" class="cardHead">ConversationWorkflow</text>
+  <text x="305" y="389" text-anchor="middle" class="cardText">save user message and stage pending image context</text>
+  <text x="305" y="407" text-anchor="middle" class="cardText">build memory from recent messages, task memory, summary</text>
+  <text x="305" y="425" text-anchor="middle" class="cardText">route specialist, execute, finalize summary and TravelPlan</text>
+
+  <rect x="540" y="350" width="230" height="92" class="card workflow"/>
+  <text x="655" y="376" text-anchor="middle" class="cardHead">ImageAttachmentInterpreter</text>
+  <text x="655" y="394" text-anchor="middle" class="cardText">OpenAI image fact extraction</text>
+  <text x="655" y="412" text-anchor="middle" class="cardText">pending confirm / dismiss loop</text>
+
+  <rect x="820" y="350" width="250" height="92" class="card workflow"/>
+  <text x="945" y="376" text-anchor="middle" class="cardHead">AgentRouter</text>
+  <text x="945" y="394" text-anchor="middle" class="cardText">choose WEATHER, GEO, GENERAL,</text>
+  <text x="945" y="412" text-anchor="middle" class="cardText">or TRAVEL_PLANNER</text>
+
+  <rect x="80" y="585" width="260" height="118" class="card execute"/>
+  <text x="210" y="611" text-anchor="middle" class="cardHead">General / Geo / Weather agents</text>
+  <text x="210" y="629" text-anchor="middle" class="cardText">specialist chat responses</text>
+  <text x="210" y="647" text-anchor="middle" class="cardText">structured AgentExecutionResult</text>
+
+  <rect x="385" y="560" width="420" height="162" class="card execute"/>
+  <text x="595" y="586" text-anchor="middle" class="cardHead">TravelPlannerAgent</text>
+  <text x="595" y="604" text-anchor="middle" class="cardText">build draft -&gt; enrich with Amap -&gt; validate</text>
+  <text x="595" y="622" text-anchor="middle" class="cardText">repair loop with strict and relaxed attempts</text>
+  <text x="595" y="640" text-anchor="middle" class="cardText">retrieve destination knowledge and weather companion</text>
+  <text x="595" y="658" text-anchor="middle" class="cardText">return answer, plan metadata, and final TravelPlan</text>
+
+  <rect x="850" y="585" width="230" height="118" class="card execute"/>
+  <text x="965" y="611" text-anchor="middle" class="cardHead">Tool path switch</text>
+  <text x="965" y="629" text-anchor="middle" class="cardText">LOCAL: AmapTravelTools -&gt; AmapHttpGateway</text>
+  <text x="965" y="647" text-anchor="middle" class="cardText">MCP: AmapMcpGateway -&gt; MCP sidecar</text>
+
+  <rect x="70" y="830" width="240" height="92" class="card persist"/>
+  <text x="190" y="856" text-anchor="middle" class="cardHead">ConversationRepository</text>
+  <text x="190" y="874" text-anchor="middle" class="cardText">messages, timeline, task memory,</text>
+  <text x="190" y="892" text-anchor="middle" class="cardText">TravelPlan, feedback, image context</text>
+
+  <rect x="330" y="830" width="240" height="92" class="card persist"/>
+  <text x="450" y="856" text-anchor="middle" class="cardHead">RoutingLongTermMemoryRepository</text>
+  <text x="450" y="874" text-anchor="middle" class="cardText">recall relevant memories</text>
+  <text x="450" y="892" text-anchor="middle" class="cardText">save summary memory after finalization</text>
+
+  <rect x="590" y="830" width="240" height="92" class="card persist"/>
+  <text x="710" y="856" text-anchor="middle" class="cardHead">RoutingTravelKnowledgeRepository</text>
+  <text x="710" y="874" text-anchor="middle" class="cardText">local JSON fallback</text>
+  <text x="710" y="892" text-anchor="middle" class="cardText">optional vector retrieval when enabled</text>
+
+  <rect x="850" y="830" width="240" height="92" class="card persist"/>
+  <text x="970" y="856" text-anchor="middle" class="cardHead">Timeline stream</text>
+  <text x="970" y="874" text-anchor="middle" class="cardText">TimelinePublisher -&gt; ReactiveTimelinePublisher</text>
+  <text x="970" y="892" text-anchor="middle" class="cardText">ConversationStreamHub -&gt; SSE</text>
+
+  <rect x="1230" y="150" width="270" height="82" class="card ext"/>
+  <text x="1365" y="176" text-anchor="middle" class="cardHead">OpenAI-compatible provider</text>
+  <text x="1365" y="194" text-anchor="middle" class="cardText">router, specialists, image, summary, repair</text>
+
+  <rect x="1230" y="265" width="270" height="82" class="card ext"/>
+  <text x="1365" y="291" text-anchor="middle" class="cardHead">SQLite</text>
+  <text x="1365" y="309" text-anchor="middle" class="cardText">session state and structured outputs</text>
+
+  <rect x="1230" y="380" width="270" height="82" class="card ext"/>
+  <text x="1365" y="406" text-anchor="middle" class="cardHead">Local travel knowledge JSON</text>
+  <text x="1365" y="424" text-anchor="middle" class="cardText">seeded hints and canonical names</text>
+
+  <rect x="1230" y="495" width="270" height="82" class="card ext optional"/>
+  <text x="1365" y="521" text-anchor="middle" class="cardHead">Milvus (optional)</text>
+  <text x="1365" y="539" text-anchor="middle" class="cardText">vector memory and vector knowledge</text>
+
+  <rect x="1230" y="610" width="270" height="82" class="card ext"/>
+  <text x="1365" y="636" text-anchor="middle" class="cardHead">Amap OpenAPI</text>
+  <text x="1365" y="654" text-anchor="middle" class="cardText">weather, geocode, input tips, transit route</text>
+
+  <rect x="1230" y="725" width="270" height="82" class="card ext optional"/>
+  <text x="1365" y="751" text-anchor="middle" class="cardHead">travel-agent-amap-mcp-server</text>
+  <text x="1365" y="769" text-anchor="middle" class="cardText">standalone MCP tool endpoint</text>
+
+  <text x="70" y="948" class="note">Feedback lives on the same conversation record: the UI posts feedback labels, and the service derives summaries and export datasets from stored feedback.</text>
+
+  <path d="M 350 193 L 395 193" class="arrow"/>
+  <text x="360" y="183" class="edgeLabel">/chat + /feedback</text>
+
+  <path d="M 715 193 L 760 193" class="arrow"/>
+  <text x="726" y="183" class="edgeLabel">service calls</text>
+
+  <path d="M 935 241 L 935 290 L 305 290 L 305 345" class="arrow"/>
+  <text x="636" y="282" class="edgeLabel">chat()</text>
+
+  <path d="M 490 392 L 540 392" class="arrow"/>
+  <text x="500" y="382" class="edgeLabel">attachments</text>
+
+  <path d="M 770 392 L 820 392" class="arrow"/>
+  <text x="780" y="382" class="edgeLabel">routing context</text>
+
+  <path d="M 945 442 L 945 505 L 210 505 L 210 585" class="arrow"/>
+  <text x="770" y="500" class="edgeLabel">WEATHER / GEO / GENERAL</text>
+
+  <path d="M 945 442 L 945 520 L 595 520 L 595 560" class="arrow"/>
+  <text x="764" y="512" class="edgeLabel">TRAVEL_PLANNER</text>
+
+  <path d="M 210 585 L 210 535 L 250 535 L 250 463" class="arrowDashed"/>
+  <text x="84" y="551" class="edgeLabel">AgentExecutionResult</text>
+
+  <path d="M 595 560 L 595 520 L 360 520 L 360 463" class="arrowDashed"/>
+  <text x="404" y="510" class="edgeLabel">answer + TravelPlan</text>
+
+  <path d="M 805 640 L 850 640" class="arrow"/>
+  <text x="815" y="630" class="edgeLabel">Amap tools</text>
+
+  <path d="M 1080 632 L 1230 650" class="arrow"/>
+  <text x="1118" y="622" class="edgeLabel">LOCAL</text>
+
+  <path d="M 1080 670 L 1230 765" class="arrowDashed"/>
+  <text x="1120" y="700" class="edgeLabel">MCP</text>
+
+  <path d="M 1365 725 L 1365 692" class="arrowDashed"/>
+  <text x="1376" y="708" class="edgeLabel">server tools</text>
+
+  <path d="M 340 644 L 1230 190" class="arrow"/>
+  <text x="670" y="432" class="edgeLabel">chat reasoning</text>
+
+  <path d="M 805 612 L 1230 190" class="arrow"/>
+  <text x="1006" y="490" class="edgeLabel">planner + repair</text>
+
+  <path d="M 655 350 L 1230 190" class="arrow"/>
+  <text x="900" y="300" class="edgeLabel">image facts</text>
+
+  <path d="M 305 463 L 190 830" class="arrow"/>
+  <text x="200" y="650" class="edgeLabel">messages + image ctx + plan</text>
+
+  <path d="M 305 463 L 450 830" class="arrow"/>
+  <text x="318" y="668" class="edgeLabel">recall / save memory</text>
+
+  <path d="M 595 722 L 710 830" class="arrow"/>
+  <text x="610" y="775" class="edgeLabel">retrieve hints</text>
+
+  <path d="M 305 420 L 970 830" class="arrow"/>
+  <text x="620" y="704" class="edgeLabel">timeline events</text>
+
+  <path d="M 970 830 L 970 780 L 215 780 L 215 241" class="arrowDashed"/>
+  <text x="456" y="772" class="edgeLabel">SSE timeline back to web</text>
+
+  <path d="M 935 241 L 935 810 L 190 810" class="arrowDashed"/>
+  <text x="944" y="528" class="edgeLabel">detail + feedback + export</text>
+
+  <path d="M 310 876 L 1230 306" class="arrow"/>
+  <text x="640" y="700" class="edgeLabel">SQLite persistence</text>
+
+  <path d="M 570 876 L 1230 306" class="arrow"/>
+  <text x="775" y="770" class="edgeLabel">AUTO / SQLITE</text>
+
+  <path d="M 570 904 L 1230 536" class="arrowDashed"/>
+  <text x="794" y="858" class="edgeLabel">MILVUS</text>
+
+  <path d="M 830 876 L 1230 421" class="arrow"/>
+  <text x="987" y="710" class="edgeLabel">local fallback</text>
+
+  <path d="M 830 904 L 1230 536" class="arrowDashed"/>
+  <text x="986" y="872" class="edgeLabel">vector knowledge</text>
+</svg>
