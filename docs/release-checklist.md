@@ -2,7 +2,7 @@
 
 ## Environment
 
-- Copy [`.env.travel-agent.example`](../.env.travel-agent.example) to `.env.travel-agent`.
+- Create `.env.travel-agent` from [`.env.travel-agent.example`](../.env.travel-agent.example).
 - Set:
   - `SPRING_PROFILES_ACTIVE=prod`
   - `SPRING_AI_OPENAI_API_KEY`
@@ -18,97 +18,56 @@
   - `TRAVEL_AGENT_KNOWLEDGE_VECTOR_ENABLED=true`
   - Milvus URI and collection settings are correct
 
-## Preflight
+## Build and Test
 
-- Run:
+- Backend tests:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
+```bash
+./mvnw -B test
 ```
 
-- The script loads `.env.travel-agent` automatically when the file exists.
-- Confirm:
-  - `Java` is `PASS`
-  - `KnowledgeData` is `PASS`
-  - `MCP` is `PASS` when using MCP mode
-  - `OpenAI` is configured for full LLM behavior
+- Backend package:
 
-## Build
-
-- Backend:
-
-```powershell
-.\mvnw.cmd -pl travel-agent-app -am -DskipTests package
+```bash
+./mvnw -pl travel-agent-app -am -DskipTests package
 ```
 
-- Frontend:
+- Frontend tests and build:
 
-```powershell
+```bash
 cd web
-npm.cmd run build
+npm ci
+npm run test
+npm run build
 ```
 
-## Smoke
+## Manual Smoke
 
-- Run release smoke:
+Start the backend:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1
+```bash
+java -jar travel-agent-app/target/travel-agent-app.jar --server.port=18080
 ```
 
-- Confirm the smoke output includes:
-  - backend startup
-  - `TRAVEL_PLANNER`
-  - structured `travelPlan`
-  - weather snapshot
-  - knowledge hints
+Optional MCP sidecar:
 
-## Runtime
-
-- Script and local output layout:
-  - [`docs/operations.md`](./operations.md)
-- Start services:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend
+```bash
+./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
-- Stop services:
+Confirm:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
-```
-
-- Runtime logs should appear under `logs/runtime/`.
-- Release smoke logs should appear under `logs/release-smoke/`.
-
-### Windows service mode
-
-- Install via NSSM:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-windows-services.ps1 -NssmPath C:\tools\nssm\nssm.exe -Build
-```
-
-- Remove:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-windows-services.ps1 -NssmPath C:\tools\nssm\nssm.exe
-```
-
-- Health endpoint:
-
-```text
-GET /actuator/health
-```
-
-- In `prod`, actuator health details are reduced unless the caller is authorized.
+- `GET /actuator/health` returns healthy status
+- `POST /api/conversations/chat` returns wrapper code `0000`
+- the response contains `agentType=TRAVEL_PLANNER`
+- the response includes a structured `travelPlan`
+- the plan includes weather and knowledge data when the required providers are configured
 
 ## Release Gate
 
 - Do not release when any of these are true:
-  - preflight has `FAIL`
-  - release smoke fails
+  - backend tests fail
+  - frontend tests or build fail
   - backend cannot return a structured `travelPlan`
   - frontend build output is missing
   - knowledge dataset is missing or empty

@@ -12,9 +12,8 @@ This module exposes Amap weather and geospatial capabilities as a standalone MCP
 
 ## Run
 
-```powershell
-$env:TRAVEL_AGENT_AMAP_API_KEY = "<your-amap-web-service-key>"
-.\mvnw.cmd -pl travel-agent-amap-mcp-server -am spring-boot:run
+```bash
+TRAVEL_AGENT_AMAP_API_KEY="<your-amap-web-service-key>" ./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
 Endpoint:
@@ -25,59 +24,36 @@ Endpoint:
 
 The Streamable HTTP transport expects `Accept: text/event-stream, application/json`.
 
-```powershell
-$accept = "text/event-stream, application/json"
+Initialize a session:
 
-$initBody = @{
-  jsonrpc = "2.0"
-  id = "init-1"
-  method = "initialize"
-  params = @{
-    protocolVersion = "2025-03-26"
-    capabilities = @{}
-    clientInfo = @{
-      name = "manual-test"
-      version = "1.0.0"
-    }
-  }
-} | ConvertTo-Json -Depth 6
-
-$init = Invoke-WebRequest -UseBasicParsing -Method Post -Uri "http://localhost:8090/mcp" -Headers @{ Accept = $accept } -ContentType "application/json" -Body $initBody
-$sessionId = $init.Headers["Mcp-Session-Id"]
-
-$notifyBody = @{ jsonrpc = "2.0"; method = "notifications/initialized" } | ConvertTo-Json -Depth 3
-Invoke-WebRequest -UseBasicParsing -Method Post -Uri "http://localhost:8090/mcp" -Headers @{ Accept = $accept; "Mcp-Session-Id" = $sessionId } -ContentType "application/json" -Body $notifyBody | Out-Null
+```bash
+curl -i \
+  -H "Accept: text/event-stream, application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":"init-1","method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"manual-test","version":"1.0.0"}}}' \
+  http://localhost:8090/mcp
 ```
+
+Use the returned `Mcp-Session-Id` header in later requests.
 
 List tools:
 
-```powershell
-$listBody = @{
-  jsonrpc = "2.0"
-  id = "tools-1"
-  method = "tools/list"
-  params = @{}
-} | ConvertTo-Json -Depth 4
-
-Invoke-WebRequest -UseBasicParsing -Method Post -Uri "http://localhost:8090/mcp" -Headers @{ Accept = $accept; "Mcp-Session-Id" = $sessionId } -ContentType "application/json" -Body $listBody
+```bash
+curl -i \
+  -H "Accept: text/event-stream, application/json" \
+  -H "Content-Type: application/json" \
+  -H "Mcp-Session-Id: <session-id>" \
+  -d '{"jsonrpc":"2.0","id":"tools-1","method":"tools/list","params":{}}' \
+  http://localhost:8090/mcp
 ```
 
 Call weather:
 
-```powershell
-$callBody = @{
-  jsonrpc = "2.0"
-  id = "call-1"
-  method = "tools/call"
-  params = @{
-    name = "amap_weather"
-    arguments = @{
-      city = "330100"
-    }
-  }
-} | ConvertTo-Json -Depth 6
-
-Invoke-WebRequest -UseBasicParsing -Method Post -Uri "http://localhost:8090/mcp" -Headers @{ Accept = $accept; "Mcp-Session-Id" = $sessionId } -ContentType "application/json" -Body $callBody
+```bash
+curl -i \
+  -H "Accept: text/event-stream, application/json" \
+  -H "Content-Type: application/json" \
+  -H "Mcp-Session-Id: <session-id>" \
+  -d '{"jsonrpc":"2.0","id":"call-1","method":"tools/call","params":{"name":"amap_weather","arguments":{"city":"330100"}}}' \
+  http://localhost:8090/mcp
 ```
-
-If you want to test Chinese input such as `天安门`, send the request body as UTF-8 bytes.

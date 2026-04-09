@@ -72,7 +72,7 @@
 | 即时方案反馈 | 在最新方案下直接记录接受、部分接受或拒绝结果 |
 | 旅行手账导出 | 把生成后的行程导出成长图，方便分享和保存 |
 | 执行过程可视化 | 通过 SSE 把规划时间线实时推到前端 |
-| 调优与运营脚本 | 提供反馈导出和离线反馈分析脚本，便于后续产品调优 |
+| 调优与运营能力 | 提供反馈汇总视图与可导出的 API 数据，便于后续产品调优 |
 
 ## 系统架构
 
@@ -137,7 +137,7 @@
 | 存储 | SQLite、可选 Milvus |
 | 前端 | Vue 3、TypeScript、Vite、Pinia、Vitest |
 | 地图能力 | 高德 / Amap |
-| 运维 | PowerShell、Docker、Docker Compose、Nginx、GitHub Actions |
+| 运维 | Docker、Docker Compose、Nginx、GitHub Actions |
 
 ## 快速开始
 
@@ -150,9 +150,7 @@
 
 ### 1. 准备环境变量
 
-```powershell
-Copy-Item .env.travel-agent.example .env.travel-agent
-```
+创建 `.env.travel-agent`，内容可参考 `.env.travel-agent.example`。
 
 重点变量：
 
@@ -166,61 +164,65 @@ Copy-Item .env.travel-agent.example .env.travel-agent
 
 ### 2. 运行预检
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
+```bash
+./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
 ### 3. 启动整套应用
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend -RunPreflight -ToolProvider LOCAL
+```bash
+cd web
+npm ci
+npm run dev
 ```
 
 默认地址：
 
-- 后端：`http://localhost:18080`
-- 前端：`http://localhost:4173`
+- 后端：`http://localhost:8080`
+- 前端：`http://localhost:5173`
 
 ### 4. 停止
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
+如需启用 MCP sidecar，可额外运行：
+
+```bash
+./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
+
+停止服务时，直接在对应终端使用 `Ctrl + C`。
 
 ## 开发方式
 
 ### 后端
 
-```powershell
-$env:SPRING_AI_OPENAI_API_KEY = "<your-openai-key>"
-.\mvnw.cmd -pl travel-agent-app -am spring-boot:run
+```bash
+SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
 ### 前端
 
-```powershell
-Set-Location .\web
-npm.cmd ci
-npm.cmd run dev
+```bash
+cd web
+npm ci
+npm run dev
 ```
 
 ### 前端构建
 
-```powershell
-Set-Location .\web
-npm.cmd run build
+```bash
+cd web
+npm run build
 ```
 
 ## 常用命令
 
 | 任务 | 命令 |
 | --- | --- |
-| 后端测试 | `.\mvnw.cmd test` |
-| 前端测试 | `Set-Location .\web; npm.cmd run test` |
-| 前端构建 | `Set-Location .\web; npm.cmd run build` |
-| Release smoke | `powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1` |
-| 导出反馈数据集 | `powershell -ExecutionPolicy Bypass -File .\scripts\export-feedback-dataset.ps1` |
-| 分析反馈闭环 | `powershell -ExecutionPolicy Bypass -File .\scripts\analyze-feedback-loop.ps1` |
+| 后端测试 | `./mvnw -B test` |
+| 后端打包 | `./mvnw -pl travel-agent-app -am -DskipTests package` |
+| 前端测试 | `cd web && npm run test` |
+| 前端构建 | `cd web && npm run build` |
+| 可选 MCP 服务 | `./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run` |
 
 ## 项目结构
 
@@ -233,7 +235,7 @@ npm.cmd run build
 | `travel-agent-amap-mcp-server/` | 面向高德工具的独立 MCP Server |
 | `travel-agent-types/` | 通用响应包装与异常类型 |
 | `web/` | Vue 前端工作台 |
-| `scripts/` | 预检、启停、导出、Smoke 和数据准备脚本 |
+| `scripts/` | Python 数据采集与清洗辅助文件 |
 | `docs/` | 架构说明、运维说明和截图资源 |
 
 ```text

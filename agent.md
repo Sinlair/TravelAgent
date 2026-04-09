@@ -11,7 +11,7 @@ Keep changes grounded in the current architecture. Prefer repo-specific fixes ov
 
 - Understand the module boundary before editing code.
 - Fix root causes instead of stacking narrow patches.
-- Keep scripts, docs, config samples, and runtime behavior aligned.
+- Keep docs, config samples, and runtime behavior aligned.
 - Do not commit secrets, local env files, logs, exported data, or build artifacts.
 - Keep changes reviewable. Small, coherent patches are preferred.
 
@@ -45,7 +45,7 @@ Keep changes grounded in the current architecture. Prefer repo-specific fixes ov
   - Vue 3 + TypeScript frontend using Vite, Pinia, and Vitest.
 
 - `scripts`
-  - PowerShell operational scripts and knowledge-processing helpers.
+  - Python knowledge-processing helpers and data targets.
 
 - `docs`
   - Operations, release, and project documentation.
@@ -54,7 +54,7 @@ Keep changes grounded in the current architecture. Prefer repo-specific fixes ov
   - Local SQLite data, exports, and optional vector-store state.
 
 - `logs`
-  - Runtime and smoke-test logs.
+  - Runtime and archived logs.
 
 ## Multi-Agent Workflow
 
@@ -114,60 +114,54 @@ Avoid editing generated or local-runtime outputs unless the task explicitly requ
 - `.env.travel-agent`
 - `web/.env.local`
 
-If a script writes local output, prefer `logs/` or `data/exports/`. Do not create new root-level dump files.
+If a local workflow writes output, prefer `logs/` or `data/exports/`. Do not create new root-level dump files.
 
 ## Build, Run, and Test Commands
 
 Initialize local env:
 
-```powershell
-Copy-Item .env.travel-agent.example .env.travel-agent
+- Create `.env.travel-agent` from `.env.travel-agent.example`.
+
+Run the backend:
+
+```bash
+./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
-Run preflight:
+Run the frontend:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
+```bash
+cd web
+npm ci
+npm run dev
 ```
 
-Start the full local stack:
+Run the optional MCP server:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend -RunPreflight -ToolProvider LOCAL
-```
-
-Stop locally started processes:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
+```bash
+./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
 Run backend tests:
 
-```powershell
-.\mvnw.cmd -B test
+```bash
+./mvnw -B test
 ```
 
 Run frontend install, tests, and build:
 
-```powershell
+```bash
 cd web
-npm.cmd ci
-npm.cmd run test
-npm.cmd run build
-```
-
-Run release-style smoke checks:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1
+npm ci
+npm run test
+npm run build
 ```
 
 ## Change Expectations
 
 - Keep behavior consistent with `README.md`, `README.zh-CN.md`, and `docs/operations.md`.
 - If configuration changes, update `.env.travel-agent.example`.
-- If scripts, startup flow, or release flow change, update the relevant docs.
+- If startup or release flow changes, update the relevant docs.
 - If UI or API-visible behavior changes, include the smallest useful verification evidence.
 - Preserve existing module boundaries. Do not move domain decisions into transport or infrastructure layers without a clear reason.
 - Prefer incremental changes that match existing naming and structure.
@@ -178,10 +172,9 @@ Run the narrowest relevant validation first, then broaden when the change affect
 
 Typical expectations:
 
-- Backend logic changes: relevant Maven tests, or full `.\mvnw.cmd -B test` when the change is cross-cutting.
-- Frontend changes: `npm.cmd run test` and `npm.cmd run build` in `web`.
-- Operational or release-path changes: `release-smoke-travel-agent.ps1`.
-- Startup/configuration changes: `preflight-travel-agent.ps1` and, when relevant, the local start script.
+- Backend logic changes: relevant Maven tests, or full `./mvnw -B test` when the change is cross-cutting.
+- Frontend changes: `npm run test` and `npm run build` in `web`.
+- Startup or configuration changes: backend startup, frontend startup when relevant, and any affected docs.
 
 Do not claim tests passed unless they were actually run.
 
@@ -204,7 +197,7 @@ Prefer commit messages that are:
 
 Before finalizing a change, verify:
 
-- the relevant tests or scripts were run
+- the relevant tests were run
 - docs and config samples match the implementation
 - no generated or local-runtime artifacts were added to version control
 - the multi-agent routing and shared execution contract still make sense

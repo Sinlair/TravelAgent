@@ -71,7 +71,7 @@ Current frontend workspace highlights:
 | Inline feedback capture | Records whether a generated plan was accepted, partially accepted, or rejected directly from the latest result card |
 | Scrapbook export | Exports the generated itinerary into a shareable long-form travel scrapbook image |
 | Execution visibility | Streams timeline events to the frontend so planning steps stay inspectable |
-| Product tuning tooling | Includes scripts for feedback export and offline feedback-loop analysis |
+| Product tuning tooling | Includes feedback summary views and export-ready APIs for offline analysis |
 
 ## Architecture
 
@@ -136,7 +136,7 @@ This makes the backend easier to inspect and evolve than a single hidden prompt 
 | Storage | SQLite, optional Milvus |
 | Frontend | Vue 3, TypeScript, Vite, Pinia, Vitest |
 | Mapping | Amap / Gaode |
-| Ops | PowerShell, Docker, Docker Compose, Nginx, GitHub Actions |
+| Ops | Docker, Docker Compose, Nginx, GitHub Actions |
 
 ## Quick Start
 
@@ -149,9 +149,7 @@ This makes the backend easier to inspect and evolve than a single hidden prompt 
 
 ### 1. Prepare environment variables
 
-```powershell
-Copy-Item .env.travel-agent.example .env.travel-agent
-```
+Create `.env.travel-agent` from `.env.travel-agent.example`.
 
 Important settings:
 
@@ -163,63 +161,67 @@ Important settings:
 - `VITE_AMAP_WEB_KEY`
 - `VITE_AMAP_SECURITY_JS_CODE`
 
-### 2. Run preflight
+### 2. Start the backend
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\preflight-travel-agent.ps1
+```bash
+./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
-### 3. Start the stack
+### 3. Start the frontend
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-travel-agent.ps1 -Build -StartFrontend -RunPreflight -ToolProvider LOCAL
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+### 4. Optional: start the MCP sidecar
+
+```bash
+./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
 Default endpoints:
 
-- Backend: `http://localhost:18080`
-- Frontend: `http://localhost:4173`
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:5173`
 
-### 4. Stop the stack
+### 5. Stop the stack
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-travel-agent.ps1
-```
+Stop the running backend, frontend, and optional MCP terminals with `Ctrl + C`.
 
 ## Development
 
 ### Backend
 
-```powershell
-$env:SPRING_AI_OPENAI_API_KEY = "<your-openai-key>"
-.\mvnw.cmd -pl travel-agent-app -am spring-boot:run
+```bash
+SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
 ### Frontend
 
-```powershell
-Set-Location .\web
-npm.cmd ci
-npm.cmd run dev
+```bash
+cd web
+npm ci
+npm run dev
 ```
 
 ### Frontend build
 
-```powershell
-Set-Location .\web
-npm.cmd run build
+```bash
+cd web
+npm run build
 ```
 
 ## Common Commands
 
 | Task | Command |
 | --- | --- |
-| Backend tests | `.\mvnw.cmd test` |
-| Frontend tests | `Set-Location .\web; npm.cmd run test` |
-| Frontend build | `Set-Location .\web; npm.cmd run build` |
-| Release smoke | `powershell -ExecutionPolicy Bypass -File .\scripts\release-smoke-travel-agent.ps1` |
-| Export feedback dataset | `powershell -ExecutionPolicy Bypass -File .\scripts\export-feedback-dataset.ps1` |
-| Analyze feedback loop | `powershell -ExecutionPolicy Bypass -File .\scripts\analyze-feedback-loop.ps1` |
+| Backend tests | `./mvnw -B test` |
+| Backend package | `./mvnw -pl travel-agent-app -am -DskipTests package` |
+| Frontend tests | `cd web && npm run test` |
+| Frontend build | `cd web && npm run build` |
+| Optional MCP server | `./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run` |
 
 ## Project Structure
 
@@ -232,7 +234,7 @@ npm.cmd run build
 | `travel-agent-amap-mcp-server/` | Standalone MCP server for Amap-backed tools |
 | `travel-agent-types/` | Shared response envelope and exception types |
 | `web/` | Vue frontend workspace |
-| `scripts/` | Preflight, start/stop, smoke, export, and data preparation scripts |
+| `scripts/` | Python data collection and cleaning helpers |
 | `docs/` | Architecture notes, operations notes, and screenshot assets |
 
 ```text
