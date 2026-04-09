@@ -71,7 +71,8 @@ describe('ChatPanel', () => {
         sending: false,
         feedback: null,
         feedbackSaving: false,
-        errorMessage: ''
+        errorMessage: '',
+        preferChinese: false
       }
     })
 
@@ -100,7 +101,8 @@ describe('ChatPanel', () => {
         sending: false,
         feedback: null,
         feedbackSaving: false,
-        errorMessage: 'Request failed'
+        errorMessage: 'Request failed',
+        preferChinese: false
       }
     })
 
@@ -114,7 +116,8 @@ describe('ChatPanel', () => {
         sending: false,
         feedback: null,
         feedbackSaving: false,
-        errorMessage: ''
+        errorMessage: '',
+        preferChinese: false
       }
     })
 

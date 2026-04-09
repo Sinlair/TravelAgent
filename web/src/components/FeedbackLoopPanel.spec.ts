@@ -63,7 +63,8 @@ describe('FeedbackLoopPanel', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('Analyze Recent Feedback On Demand')
+    expect(wrapper.text()).toContain('Aggregate View')
+    expect(wrapper.text()).toContain('Recent Feedback Performance')
     expect(wrapper.text()).toContain('New feedback arrived. This view may be stale.')
     expect(wrapper.text()).toContain('38.89%')
     expect(wrapper.text()).toContain('72.22%')
