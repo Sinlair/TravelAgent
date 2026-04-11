@@ -188,7 +188,7 @@ function detailEntries(details: TimelineEvent['details']) {
               :key="key"
               class="timeline-item__detail"
             >
-              <span class="timeline-item__detail-key">{{ detailLabel(key) }}</span>
+              <span class="timeline-item__detail-key">{{ detailLabel(key) }}:</span>
               <strong class="timeline-item__detail-value">{{ detailValue(value) }}</strong>
             </div>
           </div>

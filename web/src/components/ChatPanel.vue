@@ -664,19 +664,6 @@ function markdownToHtml(markdown: string) {
             {{ attachment.name }}
           </span>
         </div>
-      </article>
-
-      <div v-if="sending" class="message message--assistant message--thinking">
-        <div class="message__meta">
-          <span class="message__role">{{ copy.assistant }}</span>
-          <span class="message__status">{{ copy.thinking }}</span>
-        </div>
-        <div class="message__loader">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-      </div>
         <div v-if="canRenderFeedback(message)" class="message__actions">
           <button
             type="button"
@@ -707,6 +694,18 @@ function markdownToHtml(markdown: string) {
           </button>
         </div>
       </article>
+
+      <div v-if="sending" class="message message--assistant message--thinking">
+        <div class="message__meta">
+          <span class="message__role">{{ copy.assistant }}</span>
+          <span class="message__status">{{ copy.thinking }}</span>
+        </div>
+        <div class="message__loader">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
     </div>
 
     <div class="composer">

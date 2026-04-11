@@ -28,8 +28,8 @@ describe('TimelinePanel', () => {
     })
 
     expect(wrapper.text()).toContain('Execution Details')
-    expect(wrapper.text()).toContain('Attempt: 2')
-    expect(wrapper.text()).toContain('Accepted: No')
-    expect(wrapper.text()).toContain('Repair codes: budget / pace')
+    expect(wrapper.text()).toContain('Attempt:2')
+    expect(wrapper.text()).toContain('Accepted:No')
+    expect(wrapper.text()).toContain('Repair codes:budget / pace')
   })
 })
