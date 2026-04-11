@@ -1,211 +1,322 @@
-# Repository Guidelines
+# TravelAgent - AI Agent Guidelines
 
 ## Project Overview
 
-TravelAgent is a multi-module travel planning workspace built with Spring Boot 4, Spring AI 2.0, Vue 3, and Vite.
-It turns free-form travel requests into structured plans with specialist-agent routing, Amap enrichment, validation and repair, retrieval, timeline streaming, and recommendation feedback.
-
-Keep changes grounded in the current architecture. Prefer repo-specific fixes over generic AI-generated patterns.
+TravelAgent is a full-stack travel planning workspace built with Spring Boot 4, Spring AI 2.0, and Vue 3. It transforms natural language travel requests into structured travel plans with specialist-agent routing, Amap data enrichment, plan validation and repair, knowledge retrieval, timeline streaming, and recommendation feedback.
 
 ## Core Principles
 
-- Understand the module boundary before editing code.
-- Fix root causes instead of stacking narrow patches.
-- Keep docs, config samples, and runtime behavior aligned.
-- Do not commit secrets, local env files, logs, exported data, or build artifacts.
-- Keep changes reviewable. Small, coherent patches are preferred.
+### Development Principles
+- **Understand module boundaries**: Clearly understand module responsibilities before modifying code
+- **Fix root causes**: Avoid simple patch stacking; solve fundamental problems
+- **Maintain consistency**: Documentation, configuration samples, and runtime behavior must align
+- **Security first**: Never commit secrets, local environment files, logs, or build artifacts
+- **Small increments**: Keep changes reviewable; prefer small, coherent modifications
 
-## Repository Layout
+### Architecture Principles
+- Follow DDD layered design to keep domain logic pure
+- Use ports-and-adapters pattern to isolate external dependencies
+- Specialist-agent routing instead of single generic processing
+- Explicit planning pipeline rather than black-box prompt chains
 
-### Backend modules
+## Repository Structure
 
-- `travel-agent-domain`
-  - Domain contracts: entities, value objects, repository interfaces, gateways, and service contracts.
-  - Put domain rules here instead of leaking them into controllers or infrastructure code.
+### Backend Modules
 
-- `travel-agent-app`
-  - Application and orchestration layer.
-  - Owns API controllers, DTOs, bootstrapping, health checks, and workflow coordination such as `ConversationWorkflow`.
+#### `travel-agent-domain` - Domain Layer
+- **Responsibility**: Domain contract definitions
+- **Contains**: Entities, value objects, repository interfaces, gateways, service contracts
+- **Rules**: Domain rules must reside here; never leak into controllers or infrastructure layers
 
-- `travel-agent-infrastructure`
-  - Concrete implementations for LLM agents, retrieval, persistence, validators, repairers, vector integrations, and adapters.
+#### `travel-agent-app` - Application Layer
+- **Responsibility**: Application orchestration and coordination
+- **Contains**: API controllers, DTOs, bootstrap configuration, health checks, workflow coordination
+- **Core**: Main workflows such as `ConversationWorkflow`
 
-- `travel-agent-amap`
-  - Amap integration module used behind domain-facing gateway interfaces.
+#### `travel-agent-infrastructure` - Infrastructure Layer
+- **Responsibility**: Concrete implementations
+- **Contains**: LLM agents, retrieval, persistence, validators, repairers, vector integrations, adapters
 
-- `travel-agent-amap-mcp-server`
-  - Standalone MCP server for exposing Amap-backed tools.
+#### `travel-agent-amap` - Amap Integration
+- **Responsibility**: Amap HTTP integration
+- **Rules**: Provided through domain gateway interfaces; transparent to upper layers
 
-- `travel-agent-types`
-  - Shared response, error, and common transport types.
+#### `travel-agent-amap-mcp-server` - MCP Server
+- **Responsibility**: Standalone MCP server
+- **Features**: Exposes Amap-backed tool services
 
-### Frontend and support directories
+#### `travel-agent-types` - Shared Types
+- **Responsibility**: Common response, error, and transport types
+- **Rules**: Type definitions shared across modules
 
-- `web`
-  - Vue 3 + TypeScript frontend using Vite, Pinia, and Vitest.
+### Frontend and Support Directories
 
-- `scripts`
-  - Python knowledge-processing helpers and data targets.
+#### `web` - Frontend Workspace
+- **Tech Stack**: Vue 3 + TypeScript + Vite + Pinia + Vitest
+- **Features**: User interface, client-side state management, interaction logic
 
-- `docs`
-  - Operations, release, and project documentation.
+#### `scripts` - Script Utilities
+- **Contents**: Python knowledge processing helpers and data target files
 
-- `data`
-  - Local SQLite data, exports, and optional vector-store state.
+#### `docs` - Documentation
+- **Contents**: Architecture notes, operations guides, release checklists, etc.
 
-- `logs`
-  - Runtime and archived logs.
+#### `data` - Data Directory
+- **Contents**: Local SQLite data, exported files, vector store state
+
+#### `logs` - Log Directory
+- **Contents**: Runtime logs and archived logs
 
 ## Multi-Agent Workflow
 
-This project uses orchestrated multi-agent execution, not free-form agent-to-agent chat.
+### Architecture Pattern
+This project uses **orchestrated multi-agent execution**, not free-form agent-to-agent conversations.
 
-Key components:
+### Core Components
 
-- `ConversationWorkflow`
-  - Main orchestrator for intake, context assembly, routing, specialist execution, persistence, and timeline publication.
+| Component | Responsibility |
+|-----------|----------------|
+| `ConversationWorkflow` | Main orchestrator: intent recognition, context assembly, routing, specialist execution, persistence, and timeline publishing |
+| `AgentRouter` | Agent router: selects specialist agent for current turn; requests clarification when needed |
+| `SpecialistAgent` | Unified contract for specialist agents |
+| `AgentExecutionResult` | Standardized result object returned by specialist agents |
+| `TimelinePublisher` & `ConversationStreamHub` | Publish backend execution events to frontend SSE timeline |
 
-- `AgentRouter`
-  - Chooses the specialist for the current turn and may request clarification when required planning facts are missing.
+### Specialist Agent Roles
 
-- `SpecialistAgent`
-  - Unified contract implemented by specialist agents.
+| Agent Type | Responsibility |
+|------------|----------------|
+| `WEATHER` | City weather and weather-aware advice |
+| `GEO` | Place resolution, geocoding, reverse geocoding, and coordinate processing |
+| `TRAVEL_PLANNER` | Itinerary generation, Amap enrichment, validation, repair, and retrieval-supported planning |
+| `GENERAL` | Travel-related questions outside structured planner scope |
 
-- `AgentExecutionResult`
-  - Normalized result object returned by specialist agents.
-
-- `TimelinePublisher` and `ConversationStreamHub`
-  - Publish backend execution events to the frontend SSE timeline.
-
-Current specialist set:
-
-- `WEATHER`
-- `GEO`
-- `TRAVEL_PLANNER`
-- `GENERAL`
-
-When adding a new specialist:
-
-1. Add or extend a `SpecialistAgent` implementation.
-2. Update router selection rules.
-3. Preserve the shared execution contract.
-4. Update config samples and docs when new configuration is introduced.
+### Steps to Add a New Specialist Agent
+1. Implement the `SpecialistAgent` interface
+2. Update router selection rules
+3. Maintain consistency with shared execution contract
+4. Update configuration samples and documentation when introducing new configurations
 
 ## Editing Boundaries
 
-Choose the correct layer before making changes:
+### Choose Modification Location by Layer
 
-- API or workflow orchestration issues: start in `travel-agent-app`
-- Domain rules, interfaces, or value objects: start in `travel-agent-domain`
-- LLM, retrieval, persistence, Amap integration, validation, or repair logic: start in `travel-agent-infrastructure`
-- External map provider integration: start in `travel-agent-amap`
-- MCP exposure or tool-serving behavior: start in `travel-agent-amap-mcp-server`
-- UI, client state, or interaction issues: start in `web`
+| Issue Type | Starting Module |
+|------------|-----------------|
+| API or workflow orchestration issues | `travel-agent-app` |
+| Domain rules, interfaces, or value objects | `travel-agent-domain` |
+| LLM, retrieval, persistence, Amap integration, validation, or repair logic | `travel-agent-infrastructure` |
+| External map provider integration | `travel-agent-amap` |
+| MCP exposure or tool-serving behavior | `travel-agent-amap-mcp-server` |
+| UI, client state, or interaction issues | `web` |
 
-Avoid editing generated or local-runtime outputs unless the task explicitly requires it:
+### Prohibited Modifications to Generated or Runtime Outputs
 
-- `**/target/`
-- `web/dist/`
-- `web/node_modules/`
-- `logs/`
-- `data/exports/`
-- `data/milvus/`
-- `data/travel-agent.db`
-- `.env.travel-agent`
-- `web/.env.local`
+Avoid editing the following directories unless explicitly required by the task:
 
-If a local workflow writes output, prefer `logs/` or `data/exports/`. Do not create new root-level dump files.
+- `**/target/` - Maven build output
+- `web/dist/` - Frontend build output
+- `web/node_modules/` - Frontend dependencies
+- `logs/` - Runtime logs
+- `data/exports/` - Exported data
+- `data/milvus/` - Milvus vector store
+- `data/travel-agent.db` - SQLite database
+- `.env.travel-agent` - Backend environment configuration
+- `web/.env.local` - Frontend environment configuration
+
+### Output File Rules
+- Local workflow outputs should be placed in `logs/` or `data/exports/`
+- Do not create new dump files in the root directory
+- Runtime-generated root-level files should be treated as repository hygiene issues
 
 ## Build, Run, and Test Commands
 
-Initialize local env:
+### Environment Initialization
+```bash
+# Create environment configuration from example
+cp .env.travel-agent.example .env.travel-agent
+```
 
-- Create `.env.travel-agent` from `.env.travel-agent.example`.
-
-Run the backend:
+### Backend Commands
 
 ```bash
+# Start backend service
 ./mvnw -pl travel-agent-app -am spring-boot:run
-```
 
-Run the frontend:
-
-```bash
-cd web
-npm ci
-npm run dev
-```
-
-Run the optional MCP server:
-
-```bash
-./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
-```
-
-Run backend tests:
-
-```bash
+# Run all backend tests
 ./mvnw -B test
+
+# Run integration smoke test
+./mvnw -pl travel-agent-app -am -Dtest=TravelAgentSmokeIntegrationTest test
+
+# Package backend application (skip tests)
+./mvnw -pl travel-agent-app -am -DskipTests package
+
+# Start with specific API Key
+SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
-Run frontend install, tests, and build:
+### Frontend Commands
 
 ```bash
 cd web
+
+# Install dependencies
 npm ci
+
+# Start development server
+npm run dev
+
+# Run tests
 npm run test
+
+# Build production version
 npm run build
 ```
 
+### MCP Server
+
+```bash
+# Start optional MCP server
+./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
+```
+
+### Data Analysis
+
+```bash
+# Offline feedback analysis
+python scripts/analyze_feedback_loop.py
+```
+
+### Default Endpoints
+
+| Service | Address |
+|---------|---------|
+| Backend | http://localhost:8080 |
+| Frontend | http://localhost:5173 |
+
 ## Change Expectations
 
-- Keep behavior consistent with `README.md`, `README.zh-CN.md`, and `docs/operations.md`.
-- If configuration changes, update `.env.travel-agent.example`.
-- If startup or release flow changes, update the relevant docs.
-- If UI or API-visible behavior changes, include the smallest useful verification evidence.
-- Preserve existing module boundaries. Do not move domain decisions into transport or infrastructure layers without a clear reason.
-- Prefer incremental changes that match existing naming and structure.
+### Documentation Alignment
+- Behavioral changes must align with `README.md`, `README.zh-CN.md`, and `docs/operations.md`
+- Configuration changes require updating `.env.travel-agent.example`
+- Startup or release flow changes require updating relevant documentation
 
-## Testing Expectations
+### Verification Requirements
+- UI or API-visible behavior changes must include minimal verification evidence
+- Maintain existing module boundaries; do not move domain decisions to transport or infrastructure layers without clear justification
+- Prefer incremental changes that match existing naming and structure
 
-Run the narrowest relevant validation first, then broaden when the change affects shared flows.
+### Testing Strategy
+Run the narrowest relevant validation first, then expand when changes affect shared flows:
 
-Typical expectations:
+| Change Type | Testing Requirement |
+|-------------|---------------------|
+| Backend logic changes | Related Maven tests; run full `./mvnw -B test` for cross-cutting changes |
+| Frontend changes | `npm run test` and `npm run build` |
+| Startup or configuration changes | Backend startup, related frontend startup, update affected documentation |
 
-- Backend logic changes: relevant Maven tests, or full `./mvnw -B test` when the change is cross-cutting.
-- Frontend changes: `npm run test` and `npm run build` in `web`.
-- Startup or configuration changes: backend startup, frontend startup when relevant, and any affected docs.
-
-Do not claim tests passed unless they were actually run.
+**Important**: Do not claim tests passed unless they were actually run.
 
 ## Configuration and Security
 
-- Never commit `.env.travel-agent`, `web/.env.local`, logs, SQLite files, or export data.
-- Keep secrets out of source, docs, examples, and test fixtures.
-- Use `.env.travel-agent.example` and `web/.env.example` for documented configuration.
-- Treat unexpected root-level runtime files as repository hygiene issues and move them under the approved output directories.
+### Secret Management
+- **Never commit**: `.env.travel-agent`, `web/.env.local`, logs, SQLite files, or export data
+- **Keep secrets away from**: source code, documentation, examples, and test fixtures
+- **Use example files**: `.env.travel-agent.example` and `web/.env.example` for documented configurations
 
-## Commit and Review Hygiene
+### Critical Environment Variables
 
-Recent history uses short, descriptive messages such as `docs: expand architecture overview in README`.
+| Variable | Purpose |
+|----------|---------|
+| `SPRING_AI_OPENAI_API_KEY` | OpenAI API key |
+| `SPRING_AI_OPENAI_BASE_URL` | OpenAI API base URL |
+| `SPRING_AI_OPENAI_CHAT_MODEL` | Chat model name |
+| `TRAVEL_AGENT_TOOL_PROVIDER` | Tool provider |
+| `TRAVEL_AGENT_AMAP_API_KEY` | Amap API key |
+| `VITE_AMAP_WEB_KEY` | Frontend Amap web key |
+| `VITE_AMAP_SECURITY_JS_CODE` | Amap security JS code |
 
-Prefer commit messages that are:
+## Commit and Review Standards
 
-- scoped
-- descriptive
-- written in imperative style
+### Commit Message Format
+Recent history uses short, descriptive messages like `docs: expand architecture overview in README`.
 
-Before finalizing a change, verify:
+**Preferred Characteristics**:
+- Scoped
+- Descriptive
+- Written in imperative mood
 
-- the relevant tests were run
-- docs and config samples match the implementation
-- no generated or local-runtime artifacts were added to version control
-- the multi-agent routing and shared execution contract still make sense
+### Pre-Commit Checklist
+- [ ] Relevant tests have been run
+- [ ] Documentation and configuration samples match implementation
+- [ ] No generated or runtime artifacts added to version control
+- [ ] Multi-agent routing and shared execution contract remain sound
 
-## Reference Docs
+## Planning Pipeline
 
-- `README.md`
-- `README.zh-CN.md`
-- `CONTRIBUTING.md`
-- `docs/operations.md`
-- `docs/release-checklist.md`
+The planner is designed as an explicit pipeline for easy inspection and evolution:
+
+1. **Build Draft**: Construct itinerary draft from extracted travel facts
+2. **Amap Enrichment**: Enrich POIs, districts, hotels, weather, and routes with Amap
+3. **Validate Constraints**: Validate cost, opening hours, pacing, and duplicates
+4. **Repair Plan**: Repair plan if constraints fail
+5. **Retrieve Knowledge**: Retrieve destination knowledge to support planner
+6. **Render Answer**: Render structured answer and persist `TravelPlan`
+
+## Quality Assessment
+
+### CI/CD Coverage
+- CI covers backend tests, frontend tests, and production builds
+- GitHub Actions workflow: `.github/workflows/ci.yml`
+
+### Test Suite
+- **Backend**: Includes in-process smoke integration tests
+  - `TravelAgentSmokeIntegrationTest` boots the app, checks `/actuator/health`, and verifies `/api/conversations/chat` returns `agentType=TRAVEL_PLANNER` with structured `travelPlan`
+  
+### Offline Analysis
+- Feedback analysis: `python scripts/analyze_feedback_loop.py`
+- Reads `data/travel-agent.db` by default
+- Outputs JSON and Markdown reports to `data/exports/`
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Java 21, Spring Boot 4, Spring WebFlux, Actuator |
+| AI Orchestration | Spring AI, OpenAI-compatible chat integration, MCP |
+| Storage | SQLite, optional Milvus |
+| Frontend | Vue 3, TypeScript, Vite, Pinia, Vitest |
+| Mapping | Amap (Gaode) |
+| Operations | Docker, Docker Compose, Nginx, GitHub Actions |
+
+## Known Limitations
+
+- Current strongest grounding path remains China-focused due to Amap dependency
+- Some retrieval snippets still need planner-friendly structure improvements
+- Hotel and route fallback behavior is pragmatic but cannot replace live booking-grade inventory
+- End-to-end quality depends on valid model-provider and map-provider configurations
+
+## Future Improvements
+
+- Stronger planner-facing RAG schemas for hotels, transit, and trip styles
+- Better offline evaluation for usefulness and hard constraints
+- More explicit handoff policies between planner, weather, and geo specialists
+- Improved multimodal extraction quality for booking screenshots
+- Stronger production deployment templates for secrets, TLS, and observability
+
+## Reference Documentation
+
+- [README.md](./README.md) - English project guide
+- [README.zh-CN.md](./README.zh-CN.md) - Chinese project guide
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
+- [docs/system-architecture.md](./docs/system-architecture.md) - System architecture
+- [docs/knowledge-rag.md](./docs/knowledge-rag.md) - Knowledge retrieval
+- [docs/multimodal-roadmap.md](./docs/multimodal-roadmap.md) - Multimodal roadmap
+- [docs/operations.md](./docs/operations.md) - Operations guide
+- [docs/release-checklist.md](./docs/release-checklist.md) - Release checklist
+- [SECURITY.md](./SECURITY.md) - Security policy
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.

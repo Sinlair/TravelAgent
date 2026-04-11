@@ -33,6 +33,7 @@ public class TravelKnowledgeVectorStoreRepository {
     private final MilvusServiceClient milvusServiceClient;
     private final EmbeddingModel embeddingModel;
     private final TravelKnowledgeVectorStoreProperties properties;
+    private final SmartChunkingService chunkingService;
 
     @Autowired
     public TravelKnowledgeVectorStoreRepository(
@@ -43,6 +44,7 @@ public class TravelKnowledgeVectorStoreRepository {
         this.milvusServiceClient = milvusServiceClient;
         this.embeddingModel = embeddingModel;
         this.properties = properties;
+        this.chunkingService = new SmartChunkingService();
         this.vectorStore = buildMilvusVectorStore(milvusServiceClient, embeddingModel, properties);
     }
 
@@ -51,18 +53,27 @@ public class TravelKnowledgeVectorStoreRepository {
         this.milvusServiceClient = null;
         this.embeddingModel = null;
         this.properties = null;
+        this.chunkingService = new SmartChunkingService();
     }
 
     public int upsert(List<TravelKnowledgeSnippet> snippets) {
         if (snippets == null || snippets.isEmpty()) {
             return 0;
         }
+        
+        // 步骤1: 丰富元数据
         List<TravelKnowledgeSnippet> enrichedSnippets = snippets.stream()
                 .map(TravelKnowledgeRetrievalSupport::enrichSnippet)
                 .toList();
+        
+        // 步骤2: 智能分块
+        List<TravelKnowledgeSnippet> chunkedSnippets = chunkingService.chunkAll(enrichedSnippets);
+        
+        // 步骤3: 存储到向量数据库
         resetCollectionIfSupported();
-        vectorStore.add(enrichedSnippets.stream().map(this::toDocument).toList());
-        return enrichedSnippets.size();
+        vectorStore.add(chunkedSnippets.stream().map(this::toDocument).toList());
+        
+        return chunkedSnippets.size();
     }
 
     public TravelKnowledgeRetrievalResult retrieve(String destination, List<String> preferences, String query, int limit) {
@@ -101,6 +112,8 @@ public class TravelKnowledgeVectorStoreRepository {
     private Document toDocument(TravelKnowledgeSnippet snippet) {
         TravelKnowledgeSnippet enriched = TravelKnowledgeRetrievalSupport.enrichSnippet(snippet);
         Map<String, Object> metadata = new LinkedHashMap<>();
+        
+        // 基础元数据
         metadata.put("city", normalize(enriched.city()));
         metadata.put("topic", normalize(enriched.topic()));
         metadata.put("displayCity", enriched.city());
@@ -112,6 +125,20 @@ public class TravelKnowledgeVectorStoreRepository {
         metadata.put("tags", String.join(",", enriched.tags()));
         metadata.put("schemaSubtype", enriched.schemaSubtype() == null ? "" : enriched.schemaSubtype());
         metadata.put("qualityScore", enriched.qualityScore() == null ? 0 : enriched.qualityScore());
+        
+        // 增强元数据
+        metadata.put("season", String.join(",", enriched.season()));
+        metadata.put("budgetLevel", enriched.budgetLevel() == null ? "" : enriched.budgetLevel());
+        metadata.put("duration", enriched.duration() == null ? "" : enriched.duration());
+        metadata.put("bestTime", enriched.bestTime() == null ? "" : enriched.bestTime());
+        metadata.put("crowdLevel", enriched.crowdLevel() == null ? "" : enriched.crowdLevel());
+        metadata.put("location", enriched.location() == null ? "" : enriched.location());
+        metadata.put("area", enriched.area() == null ? "" : enriched.area());
+        metadata.put("rating", enriched.rating() == null ? 0.0 : enriched.rating());
+        metadata.put("priceRange", enriched.priceRange() == null ? "" : enriched.priceRange());
+        metadata.put("facilities", String.join(",", enriched.facilities()));
+        metadata.put("nearbyPOIs", String.join(",", enriched.nearbyPOIs()));
+        
         return new Document(
                 documentId(enriched),
                 enriched.title() + "\n" + enriched.content(),
@@ -120,10 +147,18 @@ public class TravelKnowledgeVectorStoreRepository {
     }
 
     private TravelKnowledgeSnippet toSnippet(Document document) {
+        return toSnippetStatic(document);
+    }
+
+    /**
+     * 静态方法供外部使用
+     */
+    static TravelKnowledgeSnippet toSnippetStatic(Document document) {
         Map<String, Object> metadata = document.getMetadata() == null ? Map.of() : document.getMetadata();
         String title = stringValue(metadata.get("title"));
         String text = document.getText() == null ? "" : document.getText();
         String content = text.startsWith(title + "\n") ? text.substring(title.length() + 1) : text;
+        
         return new TravelKnowledgeSnippet(
                 stringValue(metadata.getOrDefault("displayCity", metadata.get("city"))),
                 stringValue(metadata.getOrDefault("displayTopic", metadata.get("topic"))),
@@ -134,11 +169,23 @@ public class TravelKnowledgeVectorStoreRepository {
                 stringValue(metadata.get("schemaSubtype")),
                 intValue(metadata.get("qualityScore")),
                 parseTags(metadata.get("cityAliases")),
-                parseTags(metadata.get("tripStyleTags"))
+                parseTags(metadata.get("tripStyleTags")),
+                // 增强元数据
+                parseTags(metadata.get("season")),
+                stringValue(metadata.get("budgetLevel")),
+                stringValue(metadata.get("duration")),
+                stringValue(metadata.get("bestTime")),
+                stringValue(metadata.get("crowdLevel")),
+                stringValue(metadata.get("location")),
+                stringValue(metadata.get("area")),
+                doubleValue(metadata.get("rating")),
+                stringValue(metadata.get("priceRange")),
+                parseTags(metadata.get("facilities")),
+                parseTags(metadata.get("nearbyPOIs"))
         );
     }
 
-    private List<String> parseTags(Object value) {
+    private static List<String> parseTags(Object value) {
         if (value == null) {
             return List.of();
         }
@@ -156,11 +203,11 @@ public class TravelKnowledgeVectorStoreRepository {
         return List.copyOf(tags);
     }
 
-    private String stringValue(Object value) {
+    private static String stringValue(Object value) {
         return value == null ? "" : value.toString();
     }
 
-    private Integer intValue(Object value) {
+    private static Integer intValue(Object value) {
         if (value == null) {
             return null;
         }
@@ -169,6 +216,21 @@ public class TravelKnowledgeVectorStoreRepository {
         }
         try {
             return Integer.parseInt(value.toString());
+        }
+        catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    private static Double doubleValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        try {
+            return Double.parseDouble(value.toString());
         }
         catch (NumberFormatException exception) {
             return null;

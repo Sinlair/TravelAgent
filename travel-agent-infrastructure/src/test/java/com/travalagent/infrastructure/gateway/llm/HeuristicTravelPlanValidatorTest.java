@@ -102,7 +102,7 @@ class HeuristicTravelPlanValidatorTest {
                 "Draft plan",
                 "West Lake",
                 "Central access",
-                List.of(new TravelHotelRecommendation("Lake Hotel", "West Lake", "Hangzhou", 520, 680, "Primary option", "120.1", "30.2", "amap")),
+                List.of(new TravelHotelRecommendation("Lake Hotel", "West Lake", "Hangzhou", 520, 680, "Primary option", "120.1", "30.2", "amap", null)),
                 600,
                 0,
                 0,

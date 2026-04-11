@@ -20,6 +20,8 @@ import com.travalagent.domain.model.valobj.TransitRouteQuery;
 import com.travalagent.infrastructure.gateway.tool.AmapMcpGateway;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -274,8 +276,9 @@ public class AmapTravelPlanEnricher {
                 .limit(3)
                 .map(suggestion -> {
                     String[] coordinate = splitLocation(suggestion.location());
+                    String name = suggestion.name();
                     return new TravelHotelRecommendation(
-                            suggestion.name(),
+                            name,
                             chooseArea(plan.hotelArea(), suggestion),
                             composeAddress(city, suggestion),
                             hotelMin,
@@ -283,7 +286,8 @@ public class AmapTravelPlanEnricher {
                             hotelReasonForSuggestion(suggestion, preferChinese, resultsIndex(rankedSuggestions, suggestion)),
                             coordinate[0],
                             coordinate[1],
-                            "MCP.amap_input_tips"
+                            "MCP.amap_input_tips",
+                            generateBookingUrl(name, city, preferChinese)
                     );
                 })
                 .toList();
@@ -604,7 +608,8 @@ public class AmapTravelPlanEnricher {
                     rationale,
                     longitude,
                     latitude,
-                    "RULE.fallback"
+                    "RULE.fallback",
+                    generateBookingUrl(hotelName, null, preferChinese)
             );
         }
         String hotelName = preferChinese
@@ -636,7 +641,8 @@ public class AmapTravelPlanEnricher {
                 rationale,
                 hotelAreaGeo.longitude(),
                 hotelAreaGeo.latitude(),
-                "MCP.amap_geocode"
+                "MCP.amap_geocode",
+                generateBookingUrl(hotelName, null, preferChinese)
         );
     }
 
@@ -911,6 +917,24 @@ public class AmapTravelPlanEnricher {
     }
 
     private record LocationRef(String name, String area, String longitude, String latitude) {
+    }
+
+    private String generateBookingUrl(String hotelName, String city, boolean preferChinese) {
+        if (hotelName == null || hotelName.isBlank()) {
+            return null;
+        }
+        try {
+            String encodedName = URLEncoder.encode(hotelName, StandardCharsets.UTF_8);
+            if (preferChinese) {
+                // Ctrip search
+                return "https://hotels.ctrip.com/hotels/list?keyword=" + encodedName + "&cityname=" + URLEncoder.encode(city, StandardCharsets.UTF_8);
+            } else {
+                // Booking.com search
+                return "https://www.booking.com/searchresults.html?ss=" + encodedName;
+            }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private record ScoredHotelCandidate(PlaceSuggestion suggestion, double score, int distanceMeters) {

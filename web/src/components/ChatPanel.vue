@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { Send, Image, MessageSquare, Info, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-vue-next'
 import type {
   ChatImageAttachmentRequest,
   ChatRequest,
@@ -67,11 +68,28 @@ const factLabels = computed<Record<string, string>>(() => props.preferChinese
 
 const copy = computed(() => (props.preferChinese
   ? {
+      eyebrow: '\u5bf9\u8bdd',
       title: normalizeDisplayText(props.detail?.conversation.title) || '\u65b0\u7684\u65c5\u884c\u89c4\u5212\u4f1a\u8bdd',
+      messageCount: (count: number) => `${count} \u6761\u6d88\u606f`,
+      pendingQuestion: '\u5f85\u8865\u5145\u4fe1\u606f',
+      briefTitle: '\u5f53\u524d\u9700\u6c42\u7b80\u62a5',
+      briefReady: '\u53ef\u4ee5\u5f00\u59cb\u7ec4\u88c5\u65b9\u6848',
+      briefNeedsWork: '\u8fd8\u53ef\u4ee5\u518d\u8865\u4e00\u70b9',
+      briefGenerated: '\u6838\u5fc3\u8981\u7d20\u5df2\u8db3\u591f\uff0c\u53ef\u4ee5\u76f4\u63a5\u8fed\u4ee3\u53f3\u4fa7\u65b9\u6848\u3002',
+      briefAlmost: '\u57fa\u672c\u6761\u4ef6\u5df2\u7ecf\u6210\u578b\uff0c\u518d\u8865 1 \u5230 2 \u4e2a\u5173\u952e\u4fe1\u606f\u4f1a\u66f4\u7a33\u3002',
+      briefMissing: '\u5148\u8865\u9f50\u76ee\u7684\u5730\u3001\u5929\u6570\u3001\u9884\u7b97\u548c\u504f\u597d\uff0c\u7ed3\u679c\u4f1a\u66f4\u50cf\u4e00\u4efd\u53ef\u6267\u884c\u7684\u884c\u7a0b\u3002',
+      briefMissingLabel: '\u8fd8\u7f3a',
+      briefScore: (done: number, total: number) => `${done}/${total}`,
+      followUpLabel: '\u4e0b\u4e00\u53e5\u53ef\u4ee5\u8fd9\u6837\u8865\u5145',
+      composerTitle: '\u7ee7\u7eed\u8865\u5145\u6216\u6539\u65b9\u6848',
+      composerBody: '\u76f4\u63a5\u7528\u53e5\u5b50\u63cf\u8ff0\u53d8\u66f4\uff0c\u4f8b\u5982\u8c03\u6574\u8282\u594f\u3001\u63a7\u5236\u9884\u7b97\u3001\u66f4\u6362\u4f4f\u5bbf\u533a\u57df\u3002',
+      slotMissing: '\u5f85\u8865\u5145',
       emptyTitle: '\u5148\u628a\u76ee\u7684\u5730\u3001\u5929\u6570\u548c\u9884\u7b97\u8bf4\u6e05\u695a',
       emptyBody: '\u4f60\u53ef\u4ee5\u76f4\u63a5\u63cf\u8ff0\u65c5\u884c\u9700\u6c42\uff0c\u4e5f\u53ef\u4ee5\u7c98\u8d34\u6216\u62d6\u62fd\u622a\u56fe\uff0c\u8ba9\u7cfb\u7edf\u4ece\u56fe\u7247\u91cc\u8865\u5145\u65c5\u884c\u4fe1\u606f\u3002',
+      quickStart: '\u53ef\u4ee5\u76f4\u63a5\u4ece\u8fd9\u4e9b\u793a\u4f8b\u5f00\u59cb',
       user: '\u7528\u6237',
       assistant: '\u52a9\u624b',
+      thinking: '\u6b63\u5728\u601d\u8003...',
       feedbackSaving: '\u63d0\u4ea4\u4e2d...',
       feedbackAccepted: '\u63a5\u53d7',
       feedbackPartial: '\u90e8\u5206\u63a5\u53d7',
@@ -98,11 +116,28 @@ const copy = computed(() => (props.preferChinese
       fileError: '\u4ec5\u652f\u6301 PNG\u3001JPEG\u3001WEBP\u3001GIF\uff0c\u4e14\u5355\u5f20\u56fe\u7247\u4e0d\u80fd\u8d85\u8fc7 5 MB\u3002'
     }
   : {
+      eyebrow: 'Conversation',
       title: normalizeDisplayText(props.detail?.conversation.title) || 'New Trip Planning Session',
+      messageCount: (count: number) => `${count} messages`,
+      pendingQuestion: 'Needs More Detail',
+      briefTitle: 'Current Brief',
+      briefReady: 'Ready to shape the plan',
+      briefNeedsWork: 'A bit more detail will help',
+      briefGenerated: 'The core brief is strong enough. You can now refine the plan on the right.',
+      briefAlmost: 'The brief is mostly there. One or two more details will make the plan more reliable.',
+      briefMissing: 'Add destination, timing, budget, and preferences so the result feels like an executable itinerary.',
+      briefMissingLabel: 'Still missing',
+      briefScore: (done: number, total: number) => `${done}/${total}`,
+      followUpLabel: 'Useful next messages',
+      composerTitle: 'Add a refinement or correction',
+      composerBody: 'Write the next change directly, for example adjust pacing, tighten budget, or switch the stay area.',
+      slotMissing: 'Pending',
       emptyTitle: 'Start with the trip basics.',
       emptyBody: 'Describe the trip directly, or paste and drag travel screenshots so the system can pull useful facts from them.',
+      quickStart: 'Start from one of these prompts',
       user: 'User',
       assistant: 'Assistant',
+      thinking: 'Thinking...',
       feedbackSaving: 'Saving...',
       feedbackAccepted: 'Accept',
       feedbackPartial: 'Partially Accept',
@@ -128,6 +163,120 @@ const copy = computed(() => (props.preferChinese
       limitError: `You can attach up to ${MAX_ATTACHMENTS} images per turn.`,
       fileError: 'Only PNG, JPEG, WEBP, and GIF images up to 5 MB are supported.'
     }))
+
+const starterPrompts = computed(() => (props.preferChinese
+  ? [
+      '\u676d\u5dde\u5468\u672b 2 \u5929\uff0c\u9884\u7b97 2500\uff0c\u60f3\u770b\u666f\u5403\u996d\uff0c\u8282\u594f\u8f7b\u677e',
+      '\u4e94\u4e00\u53bb\u4e0a\u6d77 3 \u5929\uff0c\u5e26\u7238\u5988\u51fa\u884c\uff0c\u4f4f\u5730\u94c1\u65c1\uff0c\u5c11\u8d70\u8def',
+      '\u6210\u90fd 4 \u5929\uff0c\u60f3\u5403\u672c\u5730\u5c0f\u9986\u5b50\uff0c\u9884\u7b97 3500\uff0c\u987a\u4fbf\u62cd\u7167'
+    ]
+  : [
+      'Hangzhou for 2 days, budget 2500, scenic and food-focused, relaxed pace',
+      'Shanghai for 3 days with parents, stay near the metro, keep walking light',
+      'Chengdu for 4 days, local food, photography, budget 3500'
+    ]))
+
+const briefSummary = computed(() => {
+  if (!props.detail) {
+    return null
+  }
+
+  const memory = props.detail.taskMemory
+  const slots = [
+    {
+      key: 'destination',
+      label: copy.value.memoryLabels.destination,
+      value: normalizeDisplayText(memory.destination) || copy.value.slotMissing,
+      complete: Boolean(memory.destination)
+    },
+    {
+      key: 'days',
+      label: copy.value.memoryLabels.days,
+      value: memory.days ? String(memory.days) : copy.value.slotMissing,
+      complete: Boolean(memory.days)
+    },
+    {
+      key: 'budget',
+      label: copy.value.memoryLabels.budget,
+      value: normalizeDisplayText(memory.budget) || copy.value.slotMissing,
+      complete: Boolean(memory.budget)
+    },
+    {
+      key: 'preferences',
+      label: copy.value.memoryLabels.preference,
+      value: memory.preferences.length
+        ? memory.preferences.map(item => localizePreference(item)).join(' / ')
+        : copy.value.slotMissing,
+      complete: Boolean(memory.preferences.length)
+    }
+  ]
+  const completed = slots.filter(item => item.complete).length
+  const missing = slots.filter(item => !item.complete).map(item => item.label)
+  const summary = props.detail.travelPlan
+    ? copy.value.briefGenerated
+    : completed >= 3
+      ? copy.value.briefAlmost
+      : copy.value.briefMissing
+
+  return {
+    slots,
+    missing,
+    completed,
+    total: slots.length,
+    status: completed >= 3 ? copy.value.briefReady : copy.value.briefNeedsWork,
+    summary
+  }
+})
+
+const followUpPrompts = computed(() => {
+  if (!props.detail) {
+    return starterPrompts.value
+  }
+
+  const prompts: string[] = []
+  const memory = props.detail.taskMemory
+
+  if (memory.pendingQuestion) {
+    prompts.push(normalizeDisplayText(memory.pendingQuestion))
+  }
+
+  if (props.detail.travelPlan) {
+    prompts.push(...(props.preferChinese
+      ? [
+          '\u628a\u8282\u594f\u518d\u653e\u677e\u4e00\u70b9',
+          '\u4f18\u5148\u5b89\u6392\u672c\u5730\u7f8e\u98df',
+          '\u5c3d\u91cf\u628a\u9884\u7b97\u518d\u538b\u4e00\u4e0b'
+        ]
+      : [
+          'Relax the pace a bit more',
+          'Prioritize more local food',
+          'Try to reduce the budget a little'
+        ]))
+  } else {
+    if (!memory.destination) {
+      prompts.push(props.preferChinese
+        ? '\u76ee\u7684\u5730\u662f\u676d\u5dde\uff0c\u5468\u672b 2 \u5929'
+        : 'Destination is Hangzhou for a 2-day weekend trip')
+    }
+    if (!memory.days) {
+      prompts.push(props.preferChinese
+        ? '\u5b89\u6392\u6210 3 \u5929 2 \u665a'
+        : 'Make it a 3-day 2-night itinerary')
+    }
+    if (!memory.budget) {
+      prompts.push(props.preferChinese
+        ? '\u9884\u7b97\u63a7\u5236\u5728 3000 \u5143\u5de6\u53f3'
+        : 'Keep the budget around 3000 CNY')
+    }
+    if (!memory.preferences.length) {
+      prompts.push(props.preferChinese
+        ? '\u60f3\u5403\u672c\u5730\u7f8e\u98df\uff0c\u8282\u594f\u8f7b\u677e'
+        : 'I want local food and a relaxed pace')
+    }
+  }
+
+  return [...new Set(prompts.filter(Boolean))].slice(0, 4)
+})
 
 const memoryTags = computed(() => {
   if (!props.detail) {
@@ -265,6 +414,10 @@ function removeAttachment(index: number) {
   attachments.value = attachments.value.filter((_, itemIndex) => itemIndex !== index)
 }
 
+function applyPrompt(prompt: string) {
+  input.value = prompt
+}
+
 function canRenderFeedback(message: ConversationMessage) {
   return Boolean(props.detail?.travelPlan) && message.role === 'ASSISTANT' && message.id === latestAssistantMessageId.value
 }
@@ -347,6 +500,13 @@ function imageAttachments(message: ConversationMessage) {
   return message.metadata?.imageAttachments ?? []
 }
 
+function messageTimeLabel(value: string) {
+  return new Date(value).toLocaleTimeString(props.preferChinese ? 'zh-CN' : undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -415,18 +575,72 @@ function markdownToHtml(markdown: string) {
 <template>
   <section class="panel chat-panel">
     <div class="panel__header">
-      <div>
-        <h2>{{ copy.title }}</h2>
+      <div class="panel__header-info">
+        <div class="panel__icon-badge">
+          <MessageSquare :size="18" />
+        </div>
+        <div>
+          <p class="panel__eyebrow">{{ copy.eyebrow }}</p>
+          <h2>{{ copy.title }}</h2>
+          <p v-if="detail?.taskMemory.pendingQuestion" class="panel__subtle">
+            <Info :size="12" />
+            {{ copy.pendingQuestion }}: {{ normalizeDisplayText(detail.taskMemory.pendingQuestion) }}
+          </p>
+        </div>
       </div>
       <div class="memory-tags">
-        <span v-for="tag in memoryTags" :key="tag">{{ tag }}</span>
+        <span class="memory-tag memory-tag--count">{{ copy.messageCount(detail?.messages.length ?? 0) }}</span>
+        <span v-for="tag in memoryTags" :key="tag" class="memory-tag">{{ tag }}</span>
       </div>
     </div>
+
+    <article v-if="briefSummary" class="brief-card">
+      <div class="brief-card__header">
+        <div class="brief-card__title-group">
+          <Sparkles :size="16" class="brief-card__sparkle" />
+          <div>
+            <span class="brief-card__eyebrow">{{ copy.briefTitle }}</span>
+            <strong>{{ briefSummary.status }}</strong>
+            <p>{{ briefSummary.summary }}</p>
+          </div>
+        </div>
+        <div class="brief-card__score">{{ copy.briefScore(briefSummary.completed, briefSummary.total) }}</div>
+      </div>
+
+      <div class="brief-card__grid">
+        <article
+          v-for="slot in briefSummary.slots"
+          :key="slot.key"
+          class="brief-card__slot"
+          :class="{ 'brief-card__slot--done': slot.complete }"
+        >
+          <span>{{ slot.label }}</span>
+          <strong>{{ slot.value }}</strong>
+        </article>
+      </div>
+
+      <div v-if="briefSummary.missing.length" class="brief-card__missing">
+        <span>{{ copy.briefMissingLabel }}</span>
+        <p>{{ briefSummary.missing.join(' / ') }}</p>
+      </div>
+    </article>
 
     <div class="chat-list">
       <div v-if="!detail" class="chat-empty">
         <h3>{{ copy.emptyTitle }}</h3>
         <p>{{ copy.emptyBody }}</p>
+        <div class="chat-empty__prompts">
+          <button
+            v-for="prompt in starterPrompts"
+            :key="prompt"
+            type="button"
+            class="chat-empty__prompt"
+            @click="applyPrompt(prompt)"
+          >
+            {{ prompt }}
+          </button>
+        </div>
+        <span class="chat-empty__hint">{{ copy.quickStart }}</span>
       </div>
 
       <article
@@ -435,7 +649,10 @@ function markdownToHtml(markdown: string) {
         class="message"
         :class="message.role === 'USER' ? 'message--user' : 'message--assistant'"
       >
-        <span class="message__role">{{ message.role === 'USER' ? copy.user : copy.assistant }}</span>
+        <div class="message__meta">
+          <span class="message__role">{{ message.role === 'USER' ? copy.user : copy.assistant }}</span>
+          <time class="message__time">{{ messageTimeLabel(message.createdAt) }}</time>
+        </div>
         <div v-if="message.role === 'ASSISTANT'" class="message__markdown" v-html="markdownToHtml(message.content)" />
         <p v-else>{{ normalizeDisplayText(message.content) }}</p>
         <div v-if="imageAttachments(message).length" class="message__attachments">
@@ -447,6 +664,19 @@ function markdownToHtml(markdown: string) {
             {{ attachment.name }}
           </span>
         </div>
+      </article>
+
+      <div v-if="sending" class="message message--assistant message--thinking">
+        <div class="message__meta">
+          <span class="message__role">{{ copy.assistant }}</span>
+          <span class="message__status">{{ copy.thinking }}</span>
+        </div>
+        <div class="message__loader">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
         <div v-if="canRenderFeedback(message)" class="message__actions">
           <button
             type="button"
@@ -480,13 +710,22 @@ function markdownToHtml(markdown: string) {
     </div>
 
     <div class="composer">
-      <p v-if="errorMessage" class="composer__error">{{ errorMessage }}</p>
-      <p v-if="attachmentError" class="composer__error">{{ attachmentError }}</p>
+      <div v-if="errorMessage" class="composer__error">
+        <AlertCircle :size="14" />
+        <span>{{ errorMessage }}</span>
+      </div>
+      <div v-if="attachmentError" class="composer__error">
+        <AlertCircle :size="14" />
+        <span>{{ attachmentError }}</span>
+      </div>
 
       <article v-if="pendingImageContext" class="composer__image-context">
         <div class="composer__image-context-header">
-          <strong>{{ copy.imageContextTitle }}</strong>
-          <span>{{ copy.imageCount(pendingImageContext.attachments.length) }}</span>
+          <div class="composer__image-context-title">
+            <Sparkles :size="14" />
+            <strong>{{ copy.imageContextTitle }}</strong>
+          </div>
+          <span class="composer__attachment-count">{{ copy.imageCount(pendingImageContext.attachments.length) }}</span>
         </div>
         <p>{{ normalizeDisplayText(pendingImageContext.summary) }}</p>
         <div v-if="recognizedImageFacts.length" class="composer__image-fact-list">
@@ -500,6 +739,7 @@ function markdownToHtml(markdown: string) {
           </article>
         </div>
         <div v-if="missingImageFacts.length" class="composer__image-missing">
+          <AlertCircle :size="12" />
           <strong>{{ copy.needsInput }}</strong>
           <p>{{ missingImageFacts.join(', ') }}</p>
         </div>
@@ -509,12 +749,19 @@ function markdownToHtml(markdown: string) {
             :key="attachment.id"
             class="message__attachment-pill"
           >
+            <Image :size="12" />
             {{ attachment.name }}
           </span>
         </div>
         <div class="composer__image-context-actions">
-          <button class="composer__attach" type="button" :disabled="sending" @click="confirmImageContext">{{ copy.useFacts }}</button>
-          <button class="composer__attachment-remove" type="button" :disabled="sending" @click="dismissImageContext">{{ copy.ignoreFacts }}</button>
+          <button class="composer__attach" type="button" :disabled="sending" @click="confirmImageContext">
+            <CheckCircle2 :size="14" />
+            {{ copy.useFacts }}
+          </button>
+          <button class="composer__attachment-remove" type="button" :disabled="sending" @click="dismissImageContext">
+            <XCircle :size="14" />
+            {{ copy.ignoreFacts }}
+          </button>
         </div>
       </article>
 
@@ -538,7 +785,10 @@ function markdownToHtml(markdown: string) {
             <strong>{{ attachment.name }}</strong>
             <span>{{ attachment.mediaType }}</span>
           </div>
-          <button class="composer__attachment-remove" type="button" @click="removeAttachment(index)">{{ copy.remove }}</button>
+          <button class="composer__attachment-remove" type="button" @click="removeAttachment(index)">
+            <XCircle :size="14" />
+            {{ copy.remove }}
+          </button>
         </article>
       </div>
 
@@ -551,6 +801,7 @@ function markdownToHtml(markdown: string) {
         @drop.prevent="onDrop"
       >
         <p class="composer__hint">
+          <Image :size="14" />
           {{ copy.uploadHint }}
           <button type="button" class="composer__upload-link" @click="openFilePicker">{{ copy.uploadAction }}</button>
         </p>
@@ -562,8 +813,32 @@ function markdownToHtml(markdown: string) {
           @paste="onPaste"
         />
         <button class="composer__submit" :disabled="sending" @click="submit">
-          <span class="composer__submit-main">{{ copy.submit }}</span>
-          <span class="composer__submit-sub">{{ copy.submitHint }}</span>
+          <Send :size="18" v-if="!sending" />
+          <div class="dot-loader" v-else></div>
+          <div class="composer__submit-text">
+            <span class="composer__submit-main">{{ copy.submit }}</span>
+            <span class="composer__submit-sub">{{ copy.submitHint }}</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="composer__assistant">
+        <div>
+          <strong>{{ copy.composerTitle }}</strong>
+          <p>{{ copy.composerBody }}</p>
+        </div>
+      </div>
+
+      <div v-if="detail && followUpPrompts.length" class="composer__suggestions">
+        <span class="composer__suggestions-label">{{ copy.followUpLabel }}</span>
+        <button
+          v-for="prompt in followUpPrompts"
+          :key="prompt"
+          type="button"
+          class="composer__suggestion"
+          @click="applyPrompt(prompt)"
+        >
+          {{ prompt }}
         </button>
       </div>
     </div>

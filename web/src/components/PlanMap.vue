@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { Map as MapIcon, MapPin, AlertCircle, Info } from 'lucide-vue-next'
 import type { TravelPlan } from '../types/api'
 import { buildMapPoints, buildRoutePolylines, type MapPoint } from '../utils/travelPlan'
 
@@ -39,14 +40,14 @@ let markerOverlays: Array<{ pointId: string; marker: any }> = []
 
 const copy = computed(() => (props.preferChinese
   ? {
-      title: '路线与位置',
-      nodes: (count: number) => `已标注 ${count} 个点位`,
-      emptyPlan: '生成行程后，这里会显示路线和酒店位置。',
-      emptyCoordinates: '当前行程还没有足够的坐标信息，暂时无法绘制地图。',
-      noKey: '路线数据已经准备好，但还需要配置高德 Web Key 才能渲染底图。',
-      plottedNodes: '关键地点',
-      hotel: (index?: number) => `住宿 ${index ?? ''}`.trim(),
-      day: (dayNumber?: number) => `第 ${dayNumber ?? ''} 天`.trim()
+      title: '\u8def\u7ebf\u4e0e\u4f4d\u7f6e',
+      nodes: (count: number) => `\u5df2\u6807\u6ce8 ${count} \u4e2a\u70b9\u4f4d`,
+      emptyPlan: '\u751f\u6210\u884c\u7a0b\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u8def\u7ebf\u548c\u9152\u5e97\u4f4d\u7f6e\u3002',
+      emptyCoordinates: '\u5f53\u524d\u884c\u7a0b\u8fd8\u6ca1\u6709\u8db3\u591f\u7684\u5750\u6807\u4fe1\u606f\uff0c\u6682\u65f6\u65e0\u6cd5\u7ed8\u5236\u5730\u56fe\u3002',
+      noKey: '\u8def\u7ebf\u6570\u636e\u5df2\u7ecf\u51c6\u5907\u597d\uff0c\u4f46\u8fd8\u9700\u8981\u914d\u7f6e\u9ad8\u5fb7 Web Key \u624d\u80fd\u6e32\u67d3\u5e95\u56fe\u3002',
+      plottedNodes: '\u5173\u952e\u70b9\u4f4d',
+      hotel: (index?: number) => `\u4f4f\u5bbf ${index ?? ''}`.trim(),
+      day: (dayNumber?: number) => `\u7b2c ${dayNumber ?? ''} \u5929`.trim()
     }
   : {
       title: 'Route and locations',
@@ -92,7 +93,7 @@ watch([mapContainer, mapPoints, routePolylines], async () => {
 
   const lineOverlays = routePolylines.value.map((polyline, index) => new AMap.Polyline({
     path: polyline,
-    strokeColor: index % 2 === 0 ? '#2f86ff' : '#0b8c87',
+    strokeColor: index % 2 === 0 ? '#d6623a' : '#0f7b73',
     strokeOpacity: 0.84,
     strokeWeight: 5
   }))
@@ -134,11 +135,11 @@ function destroyMap() {
 }
 
 function markerHtml(label: string, kind: 'hotel' | 'stop', active = false) {
-  const background = kind === 'hotel' ? '#0b8c87' : '#ffb454'
+  const background = kind === 'hotel' ? '#0f7b73' : '#d6623a'
   const ring = active
-    ? '0 0 0 4px rgba(47,134,255,.18), 0 14px 30px rgba(0,0,0,.16)'
+    ? '0 0 0 4px rgba(214,98,58,.18), 0 14px 30px rgba(0,0,0,.16)'
     : '0 10px 24px rgba(0,0,0,.16)'
-  const border = active ? '2px solid #2f86ff' : 'none'
+  const border = active ? '2px solid #173042' : 'none'
   return `<div style="width:36px;height:36px;border-radius:18px;background:${background};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:${ring};border:${border}">${label}</div>`
 }
 
@@ -182,27 +183,39 @@ async function loadAmap() {
 <template>
   <section class="plan-map">
     <div class="plan-map__header">
-      <div>
-        <h3>{{ copy.title }}</h3>
+      <div class="panel__header-info">
+        <div class="panel__icon-badge">
+          <MapIcon :size="18" />
+        </div>
+        <div>
+          <h3>{{ copy.title }}</h3>
+          <p v-if="travelPlan && mapPoints.length" class="panel__subtle">
+            <MapPin :size="12" />
+            {{ copy.nodes(mapPoints.length) }}
+          </p>
+        </div>
       </div>
-      <span v-if="travelPlan && mapPoints.length" class="plan-map__badge">
-        {{ copy.nodes(mapPoints.length) }}
-      </span>
     </div>
 
-    <div v-if="!travelPlan" class="plan-map__empty">
-      {{ copy.emptyPlan }}
+    <div v-if="!travelPlan" class="panel__empty">
+      <MapIcon :size="32" />
+      <p>{{ copy.emptyPlan }}</p>
     </div>
-    <div v-else-if="!mapPoints.length" class="plan-map__empty">
-      {{ copy.emptyCoordinates }}
+    <div v-else-if="!mapPoints.length" class="panel__empty">
+      <AlertCircle :size="32" />
+      <p>{{ copy.emptyCoordinates }}</p>
     </div>
-    <div v-else-if="!amapKey" class="plan-map__empty">
-      {{ copy.noKey }}
+    <div v-else-if="!amapKey" class="panel__empty">
+      <Info :size="32" />
+      <p>{{ copy.noKey }}</p>
     </div>
     <div v-else ref="mapContainer" class="plan-map__canvas" />
 
     <div v-if="plottedPoints.length" class="plan-map__nodes">
-      <div class="plan-section__title">{{ copy.plottedNodes }}</div>
+      <div class="plan-section__title">
+        <MapPin :size="14" />
+        {{ copy.plottedNodes }}
+      </div>
       <div class="plan-map__node-list">
         <article
           v-for="point in plottedPoints"
@@ -211,7 +224,7 @@ async function loadAmap() {
           :class="{ 'plan-map__node--active': point.id === activePointId }"
           @click="emit('selectPoint', point.id)"
         >
-          <strong>{{ pointTitle(point) }} · {{ point.name }}</strong>
+          <strong>{{ pointTitle(point) }} / {{ point.name }}</strong>
           <p>{{ coordinateText(point) }}</p>
         </article>
       </div>

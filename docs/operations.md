@@ -50,6 +50,14 @@ Backend tests:
 ./mvnw -B test
 ```
 
+Offline feedback evaluation:
+
+```bash
+python scripts/analyze_feedback_loop.py
+```
+
+The script reads `data/travel-agent.db` by default and writes JSON plus Markdown reports under `data/exports/`.
+
 Frontend tests and build:
 
 ```bash

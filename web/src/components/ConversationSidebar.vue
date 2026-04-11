@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Plus, Trash2, Map, History, Clock } from 'lucide-vue-next'
 import type { ConversationSession } from '../types/api'
 import { normalizeDisplayText } from '../utils/text'
 
@@ -20,16 +21,22 @@ const emit = defineEmits<{
 
 const copy = computed(() => (props.preferChinese
   ? {
-      title: '\u6211\u7684\u884c\u7a0b',
+      eyebrow: 'Travel Agent',
+      title: '\u884c\u7a0b\u4ed3\u5e93',
+      count: (value: number) => `${value} \u4e2a\u5df2\u4fdd\u5b58\u4f1a\u8bdd`,
       create: '\u65b0\u5efa\u884c\u7a0b',
+      recent: '\u6700\u8fd1\u66f4\u65b0',
       loading: '\u6b63\u5728\u52a0\u8f7d\u4f1a\u8bdd...',
       empty: '\u8fd8\u6ca1\u6709\u5386\u53f2\u4f1a\u8bdd\uff0c\u5148\u53d1\u4e00\u53e5\u65c5\u884c\u9700\u6c42\u3002',
       fallback: '\u751f\u6210\u65b9\u6848\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u4e00\u6bb5\u6458\u8981\u3002',
       remove: '\u5220\u9664'
     }
   : {
-      title: 'My Trips',
+      eyebrow: 'Travel Agent',
+      title: 'Trip Library',
+      count: (value: number) => `${value} saved sessions`,
       create: 'New Plan',
+      recent: 'Recently Updated',
       loading: 'Loading conversations...',
       empty: 'No saved conversations yet. Start with a travel request.',
       fallback: 'A short summary will appear here after the itinerary is generated.',
@@ -43,9 +50,25 @@ function timeLabel(value: string) {
 
 <template>
   <aside class="sidebar">
-    <div class="sidebar__header">
-      <h1>{{ copy.title }}</h1>
-      <button class="sidebar__new" @click="emit('create')">{{ copy.create }}</button>
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-mark">
+        <Map :size="20" />
+      </div>
+      <div class="sidebar__header">
+        <p class="sidebar__eyebrow">{{ copy.eyebrow }}</p>
+        <h1>{{ copy.title }}</h1>
+        <span class="sidebar__caption">{{ copy.count(conversations.length) }}</span>
+      </div>
+    </div>
+
+    <button class="sidebar__new" @click="emit('create')">
+      <Plus :size="18" />
+      {{ copy.create }}
+    </button>
+
+    <div class="sidebar__section-label">
+      <History :size="14" />
+      {{ copy.recent }}
     </div>
 
     <div class="sidebar__list">
@@ -59,12 +82,19 @@ function timeLabel(value: string) {
         :class="{ 'sidebar__item--active': conversation.conversationId === currentConversationId }"
         @click="emit('select', conversation.conversationId)"
       >
-        <div>
+        <div class="sidebar__item-content">
           <strong>{{ normalizeDisplayText(conversation.title) }}</strong>
           <p>{{ normalizeDisplayText(conversation.summary) || copy.fallback }}</p>
-          <p>{{ timeLabel(conversation.updatedAt) }}</p>
         </div>
-        <button class="sidebar__delete" @click.stop="emit('remove', conversation.conversationId)">{{ copy.remove }}</button>
+        <div class="sidebar__item-footer">
+          <div class="sidebar__time">
+            <Clock :size="12" />
+            <span>{{ timeLabel(conversation.updatedAt) }}</span>
+          </div>
+          <button class="sidebar__delete" @click.stop="emit('remove', conversation.conversationId)">
+            <Trash2 :size="14" />
+          </button>
+        </div>
       </article>
     </div>
   </aside>

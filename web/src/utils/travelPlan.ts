@@ -74,6 +74,7 @@ export function buildRoutePolylines(plan: TravelPlan | null) {
   if (!plan) {
     return []
   }
+
   const lines: number[][][] = []
   for (const day of plan.days) {
     for (const stop of day.stops) {
@@ -97,13 +98,14 @@ export function stopCostTotal(stop: TravelPlanStop) {
 }
 
 export function hotelLabel(hotel: TravelHotelRecommendation, preferChinese: boolean) {
-  return preferChinese ? `${hotel.name} · ${hotel.area}` : `${hotel.name} · ${hotel.area}`
+  return preferChinese ? `${hotel.name} / ${hotel.area}` : `${hotel.name} / ${hotel.area}`
 }
 
 function pushLegPolyline(lines: number[][][], leg?: TravelTransitLeg | null) {
   if (!leg?.polyline?.length) {
     return
   }
+
   const points = leg.polyline
     .map(point => {
       const [longitude, latitude] = point.split(',').map(value => Number.parseFloat(value))
@@ -113,6 +115,7 @@ function pushLegPolyline(lines: number[][][], leg?: TravelTransitLeg | null) {
       return [longitude, latitude]
     })
     .filter((point): point is number[] => point !== null)
+
   if (points.length >= 2) {
     lines.push(points)
   }

@@ -108,6 +108,40 @@ final class TravelKnowledgeRetrievalSupport {
         List<String> tripStyleTags = snippet.tripStyleTags() == null || snippet.tripStyleTags().isEmpty()
                 ? inferTripStyleTags(snippet.topic(), snippet.title(), snippet.content(), snippet.tags(), schemaSubtype)
                 : dedupeValues(snippet.tripStyleTags());
+        
+        // 增强元数据推断
+        List<String> season = snippet.season() == null || snippet.season().isEmpty()
+                ? inferSeason(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.season();
+        String budgetLevel = snippet.budgetLevel() == null || snippet.budgetLevel().isBlank()
+                ? inferBudgetLevel(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.budgetLevel();
+        String duration = snippet.duration() == null || snippet.duration().isBlank()
+                ? inferDuration(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.duration();
+        String bestTime = snippet.bestTime() == null || snippet.bestTime().isBlank()
+                ? inferBestTime(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.bestTime();
+        String crowdLevel = snippet.crowdLevel() == null || snippet.crowdLevel().isBlank()
+                ? inferCrowdLevel(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.crowdLevel();
+        String location = snippet.location() == null || snippet.location().isBlank()
+                ? extractLocation(snippet.title(), snippet.content(), snippet.tags())
+                : snippet.location();
+        String area = snippet.area() == null || snippet.area().isBlank()
+                ? extractArea(snippet.title(), snippet.content(), snippet.tags())
+                : snippet.area();
+        Double rating = snippet.rating();
+        String priceRange = snippet.priceRange() == null || snippet.priceRange().isBlank()
+                ? extractPriceRange(snippet.title(), snippet.content(), snippet.tags())
+                : snippet.priceRange();
+        List<String> facilities = snippet.facilities() == null || snippet.facilities().isEmpty()
+                ? extractFacilities(snippet.topic(), snippet.title(), snippet.content(), snippet.tags())
+                : snippet.facilities();
+        List<String> nearbyPOIs = snippet.nearbyPOIs() == null || snippet.nearbyPOIs().isEmpty()
+                ? extractNearbyPOIs(snippet.title(), snippet.content(), snippet.tags())
+                : snippet.nearbyPOIs();
+        
         return new TravelKnowledgeSnippet(
                 snippet.city(),
                 snippet.topic(),
@@ -118,7 +152,18 @@ final class TravelKnowledgeRetrievalSupport {
                 schemaSubtype,
                 qualityScore,
                 cityAliases,
-                tripStyleTags
+                tripStyleTags,
+                season,
+                budgetLevel,
+                duration,
+                bestTime,
+                crowdLevel,
+                location,
+                area,
+                rating,
+                priceRange,
+                facilities,
+                nearbyPOIs
         );
     }
 
@@ -661,5 +706,273 @@ final class TravelKnowledgeRetrievalSupport {
             int score,
             int order
     ) {
+    }
+
+    // ==================== 增强元数据推断方法 ====================
+
+    /**
+     * 推断适用季节
+     */
+    private static List<String> inferSeason(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        Set<String> seasons = new LinkedHashSet<>();
+        
+        if (containsAny(searchable, List.of("spring", "cherry blossom", "樱花", "春季", "春天"))) {
+            seasons.add("春");
+        }
+        if (containsAny(searchable, List.of("summer", "beach", "surf", "夏日", "夏季", "夏天", "海滨"))) {
+            seasons.add("夏");
+        }
+        if (containsAny(searchable, List.of("autumn", "fall", "红叶", "秋季", "秋天", "枫叶"))) {
+            seasons.add("秋");
+        }
+        if (containsAny(searchable, List.of("winter", "ski", "snow", "冬季", "冬天", "滑雪", "雪"))) {
+            seasons.add("冬");
+        }
+        
+        // 如果没有特定季节，默认为全年
+        if (seasons.isEmpty()) {
+            if (containsAny(searchable, List.of("year-round", "all season", "四季", "全年"))) {
+                seasons.addAll(List.of("春", "夏", "秋", "冬"));
+            } else {
+                // 默认全年适宜
+                seasons.addAll(List.of("春", "夏", "秋", "冬"));
+            }
+        }
+        
+        return List.copyOf(seasons);
+    }
+
+    /**
+     * 推断预算等级
+     */
+    private static String inferBudgetLevel(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        if (containsAny(searchable, List.of("free", "免费", "免票", "无门票"))) {
+            return "free";
+        }
+        if (containsAny(searchable, List.of("budget", "cheap", "affordable", "便宜", "实惠", "经济", "穷游"))) {
+            return "budget";
+        }
+        if (containsAny(searchable, List.of("luxury", "premium", "高端", "豪华", "五星级"))) {
+            return "luxury";
+        }
+        if (containsAny(searchable, List.of("expensive", "pricey", "昂贵", "高端"))) {
+            return "premium";
+        }
+        
+        // 默认为中等预算
+        return "moderate";
+    }
+
+    /**
+     * 推断建议时长
+     */
+    private static String inferDuration(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        if (containsAny(searchable, List.of("1-2 hours", "1-2小时", "一小时", "两小时"))) {
+            return "1-2小时";
+        }
+        if (containsAny(searchable, List.of("half day", "半天", "3-4小时", "4小时"))) {
+            return "半天";
+        }
+        if (containsAny(searchable, List.of("full day", "全天", "一整", "8小时", "一天"))) {
+            return "全天";
+        }
+        if (containsAny(searchable, List.of("2 days", "两天", "过夜", "多日"))) {
+            return "2天+";
+        }
+        
+        // 根据主题默认时长
+        return switch (normalize(topic)) {
+            case "scenic" -> "半天";
+            case "food" -> "1-2小时";
+            case "hotel" -> "全天";
+            case "activity" -> "半天";
+            default -> "半天";
+        };
+    }
+
+    /**
+     * 推断最佳时间
+     */
+    private static String inferBestTime(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        if (containsAny(searchable, List.of("morning", "early", "早晨", "早上", "上午"))) {
+            return "早晨";
+        }
+        if (containsAny(searchable, List.of("afternoon", "下午"))) {
+            return "下午";
+        }
+        if (containsAny(searchable, List.of("evening", "sunset", "傍晚", "黄昏", "日落"))) {
+            return "傍晚";
+        }
+        if (containsAny(searchable, List.of("night", "evening", "夜晚", "晚上", "夜景"))) {
+            return "夜晚";
+        }
+        
+        // 根据主题默认时间
+        return switch (normalize(topic)) {
+            case "scenic" -> "早晨";
+            case "food" -> "下午";
+            case "nightlife" -> "夜晚";
+            default -> "下午";
+        };
+    }
+
+    /**
+     * 推断拥挤度
+     */
+    private static String inferCrowdLevel(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        if (containsAny(searchable, List.of("crowded", "busy", "popular", "拥挤", "热门", "人多", "排队"))) {
+            return "高";
+        }
+        if (containsAny(searchable, List.of("quiet", "peaceful", "hidden", "安静", "小众", "人少", "清静"))) {
+            return "低";
+        }
+        
+        // 根据主题默认拥挤度
+        return switch (normalize(topic)) {
+            case "scenic" -> "高";
+            case "food" -> "中";
+            case "hotel" -> "中";
+            case "nightlife" -> "高";
+            default -> "中";
+        };
+    }
+
+    /**
+     * 提取具体位置
+     */
+    private static String extractLocation(String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        // 查找地址模式
+        if (searchable.contains("address") || searchable.contains("地址")) {
+            String[] lines = searchable.split("\\n");
+            for (String line : lines) {
+                if (line.contains("地址") || line.contains("address")) {
+                    return line.trim();
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 提取所在区域
+     */
+    private static String extractArea(String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        // 查找区域关键词
+        List<String> areaKeywords = List.of(
+            "district", "area", "zone", "quarter", "district",
+            "区", "区域", "街区", "商圈", "景区"
+        );
+        
+        for (String keyword : areaKeywords) {
+            int index = searchable.indexOf(keyword);
+            if (index > 0) {
+                // 提取关键词前面的内容作为区域名
+                int start = Math.max(0, index - 10);
+                String area = searchable.substring(start, index).trim();
+                if (!area.isBlank() && area.length() > 1) {
+                    return area;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 提取价格范围
+     */
+    private static String extractPriceRange(String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        
+        // 匹配价格模式：¥100-200, ￥50-100, 100-200元
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "[¥￥]?(\\d+)\\s*[-~至到]\\s*[¥￥]?(\\d+)\\s*元?"
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(searchable);
+        
+        if (matcher.find()) {
+            String min = matcher.group(1);
+            String max = matcher.group(2);
+            return "¥" + min + "-" + max;
+        }
+        
+        // 匹配单一价格
+        pattern = java.util.regex.Pattern.compile("[¥￥]?(\\d+)\\s*元?");
+        matcher = pattern.matcher(searchable);
+        if (matcher.find()) {
+            return "¥" + matcher.group(1);
+        }
+        
+        return null;
+    }
+
+    /**
+     * 提取设施标签
+     */
+    private static List<String> extractFacilities(String topic, String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        Set<String> facilities = new LinkedHashSet<>();
+        
+        // 常见设施关键词
+        Map<String, List<String>> facilityMap = Map.of(
+            "WiFi", List.of("wifi", "无线网络", "网络"),
+            "停车场", List.of("parking", "停车场", "停车"),
+            "早餐", List.of("breakfast", "早餐"),
+            "泳池", List.of("pool", "游泳池", "泳池"),
+            "健身房", List.of("gym", "fitness", "健身房"),
+            "SPA", List.of("spa", "水疗", "按摩"),
+            "餐厅", List.of("restaurant", "餐厅"),
+            "电梯", List.of("elevator", "电梯"),
+            "无障碍", List.of("wheelchair", "accessible", "无障碍")
+        );
+        
+        for (Map.Entry<String, List<String>> entry : facilityMap.entrySet()) {
+            if (containsAny(searchable, entry.getValue())) {
+                facilities.add(entry.getKey());
+            }
+        }
+        
+        return List.copyOf(facilities);
+    }
+
+    /**
+     * 提取周边兴趣点
+     */
+    private static List<String> extractNearbyPOIs(String title, String content, List<String> tags) {
+        String searchable = searchableText(title, content, tags);
+        Set<String> pois = new LinkedHashSet<>();
+        
+        // 查找"附近"、"周边"、"nearby"、"close to"等关键词
+        List<String> nearbyPatterns = List.of(
+            "near", "nearby", "close to", "around", "附近", "周边", "旁边", "步行"
+        );
+        
+        for (String pattern : nearbyPatterns) {
+            int index = searchable.indexOf(pattern);
+            if (index > 0) {
+                // 提取后面的内容作为周边POI
+                int end = Math.min(searchable.length(), index + 50);
+                String nearby = searchable.substring(index, end).trim();
+                if (!nearby.isBlank()) {
+                    pois.add(nearby);
+                }
+            }
+        }
+        
+        return pois.isEmpty() ? List.of() : List.copyOf(pois);
     }
 }

@@ -219,10 +219,20 @@ npm run build
 | 任务 | 命令 |
 | --- | --- |
 | 后端测试 | `./mvnw -B test` |
+| 后端 smoke 集成测试 | `./mvnw -pl travel-agent-app -am -Dtest=TravelAgentSmokeIntegrationTest test` |
+| 离线反馈评测 | `python scripts/analyze_feedback_loop.py` |
 | 后端打包 | `./mvnw -pl travel-agent-app -am -DskipTests package` |
 | 前端测试 | `cd web && npm run test` |
 | 前端构建 | `cd web && npm run build` |
 | 可选 MCP 服务 | `./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run` |
+
+## 质量与评测
+
+- CI 会运行后端测试，以及前端测试和生产构建。
+- 后端测试套件已经包含一条进程内 smoke 集成测试：
+  `TravelAgentSmokeIntegrationTest` 会启动应用，检查 `/actuator/health`，并验证 `/api/conversations/chat` 可以返回 `agentType=TRAVEL_PLANNER` 和结构化 `travelPlan`。
+- 可以通过 `python scripts/analyze_feedback_loop.py` 做离线反馈分析。
+  该脚本默认读取 `data/travel-agent.db`，并把 JSON 与 Markdown 报告写到 `data/exports/`。
 
 ## 项目结构
 
@@ -235,7 +245,7 @@ npm run build
 | `travel-agent-amap-mcp-server/` | 面向高德工具的独立 MCP Server |
 | `travel-agent-types/` | 通用响应包装与异常类型 |
 | `web/` | Vue 前端工作台 |
-| `scripts/` | Python 数据采集与清洗辅助文件 |
+| `scripts/` | Python 知识准备与离线反馈分析脚本 |
 | `docs/` | 架构说明、运维说明和截图资源 |
 
 ```text

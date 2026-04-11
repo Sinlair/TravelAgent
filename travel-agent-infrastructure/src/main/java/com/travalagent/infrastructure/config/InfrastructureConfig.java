@@ -5,12 +5,21 @@ import io.milvus.param.ConnectParam;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration(proxyBeanMethods = false)
 public class InfrastructureConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(VectorStore.class)
+    VectorStore vectorStore(EmbeddingModel embeddingModel) {
+        return new SimpleVectorStore(embeddingModel);
+    }
 
     @Bean
     RestClient.Builder restClientBuilder() {

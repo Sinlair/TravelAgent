@@ -160,6 +160,7 @@ export interface TravelHotelRecommendation {
   longitude?: string
   latitude?: string
   source?: string
+  bookingUrl?: string
 }
 
 export interface TravelPlanStop {

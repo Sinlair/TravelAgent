@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="./README.md">English</a> |
-  <a href="./README.zh-CN.md">简体中文</a>
+  <a href="./README.zh-CN.md">Simplified Chinese</a>
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@ Most travel assistants stop at a single answer. This repository is built as a pr
 
 Current frontend workspace highlights:
 
-- Manual `中文 / EN` language toggle in the hero bar.
+- Manual `ZH / EN` language toggle in the hero bar.
 - Left rail for conversation history and quick session switching.
 - Center chat workspace with paste / drag / upload image intake.
 - Inline feedback closure directly below the latest generated answer with `Accept`, `Partially Accept`, and `Reject`.
@@ -218,10 +218,20 @@ npm run build
 | Task | Command |
 | --- | --- |
 | Backend tests | `./mvnw -B test` |
+| Backend smoke integration | `./mvnw -pl travel-agent-app -am -Dtest=TravelAgentSmokeIntegrationTest test` |
+| Offline feedback evaluation | `python scripts/analyze_feedback_loop.py` |
 | Backend package | `./mvnw -pl travel-agent-app -am -DskipTests package` |
 | Frontend tests | `cd web && npm run test` |
 | Frontend build | `cd web && npm run build` |
 | Optional MCP server | `./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run` |
+
+## Quality and Evaluation
+
+- CI covers backend tests plus frontend tests and production build.
+- The backend test suite includes an in-process smoke integration:
+  `TravelAgentSmokeIntegrationTest` boots the app, checks `/actuator/health`, and verifies that `/api/conversations/chat` can return `agentType=TRAVEL_PLANNER` with a structured `travelPlan`.
+- Offline feedback analysis is available through `python scripts/analyze_feedback_loop.py`.
+  It reads `data/travel-agent.db` by default and writes JSON plus Markdown reports under `data/exports/`.
 
 ## Project Structure
 
@@ -234,7 +244,7 @@ npm run build
 | `travel-agent-amap-mcp-server/` | Standalone MCP server for Amap-backed tools |
 | `travel-agent-types/` | Shared response envelope and exception types |
 | `web/` | Vue frontend workspace |
-| `scripts/` | Python data collection and cleaning helpers |
+| `scripts/` | Python helpers for knowledge preparation and offline feedback analysis |
 | `docs/` | Architecture notes, operations notes, and screenshot assets |
 
 ```text

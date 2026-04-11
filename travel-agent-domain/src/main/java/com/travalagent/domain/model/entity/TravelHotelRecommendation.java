@@ -9,6 +9,7 @@ public record TravelHotelRecommendation(
         String rationale,
         String longitude,
         String latitude,
-        String source
+        String source,
+        String bookingUrl
 ) {
 }

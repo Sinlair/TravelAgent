@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Search, Brain, MapPin, CheckCircle2, AlertCircle, Wrench, Thermometer, CloudSun, Hotel, Navigation, History, Sparkles, Save, Info, Clock } from 'lucide-vue-next'
 import type { ExecutionStage, TimelineEvent } from '../types/api'
 
 const props = withDefaults(defineProps<{
@@ -10,13 +11,36 @@ const props = withDefaults(defineProps<{
 
 const copy = {
   zh: {
-    title: '\u751f\u6210\u8be6\u60c5',
-    empty: '\u53d1\u9001\u9700\u6c42\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u65b9\u6848\u751f\u6210\u4e2d\u7684\u5173\u952e\u8282\u70b9\u3002'
+    title: '\u6267\u884c\u8be6\u60c5',
+    empty: '\u53d1\u9001\u9700\u6c42\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u65b9\u6848\u751f\u6210\u4e2d\u7684\u513f\u5173\u952e\u8282\u70b9\u3002'
   },
   en: {
-    title: 'Build details',
+    title: 'Execution Details',
     empty: 'Key build steps will appear here after you send a request.'
   }
+}
+
+function stageIcon(stage: ExecutionStage) {
+  return {
+    ANALYZE_QUERY: Brain,
+    RECALL_MEMORY: History,
+    SELECT_AGENT: Navigation,
+    SPECIALIST: Sparkles,
+    CALL_TOOL: Search,
+    VALIDATE_PLAN: CheckCircle2,
+    REPAIR_PLAN: Wrench,
+    FINALIZE_MEMORY: Save,
+    COMPLETED: CheckCircle2,
+    ERROR: AlertCircle
+  }[stage] ?? Info
+}
+
+function messageIcon(message: string) {
+  if (message.includes('Amap')) return MapPin
+  if (message.includes('weather')) return CloudSun
+  if (message.includes('hotel')) return Hotel
+  if (message.includes('transit')) return Navigation
+  return null
 }
 
 function stageLabel(stage: ExecutionStage) {
@@ -125,32 +149,51 @@ function detailEntries(details: TimelineEvent['details']) {
 <template>
   <section class="panel timeline-panel">
     <div class="panel__header">
-      <div>
+      <div class="panel__header-info">
+        <div class="panel__icon-badge">
+          <History :size="18" />
+        </div>
         <h2>{{ preferChinese ? copy.zh.title : copy.en.title }}</h2>
       </div>
     </div>
 
     <div class="timeline-list">
-      <article v-for="event in timeline" :key="event.id" class="timeline-item">
-        <div class="timeline-item__stage">{{ stageLabel(event.stage) }}</div>
-        <div>
-          <strong>{{ messageLabel(event.message) }}</strong>
-          <div v-if="detailEntries(event.details).length" class="timeline-item__details">
-            <span
-              v-for="detail in detailEntries(event.details)"
-              :key="`${event.id}-${detail.key}`"
-              class="timeline-item__pill"
-            >
-              {{ detail.label }}: {{ detail.value }}
-            </span>
+      <div v-if="timeline.length === 0" class="panel__empty">
+        <Clock :size="32" />
+        <p>{{ preferChinese ? copy.zh.empty : copy.en.empty }}</p>
+      </div>
+
+      <article
+        v-for="event in timeline"
+        :key="event.id"
+        class="timeline-item"
+        :class="`timeline-item--${event.stage.toLowerCase()}`"
+      >
+        <div class="timeline-item__icon">
+          <component :is="stageIcon(event.stage)" :size="14" />
+        </div>
+        <div class="timeline-item__content">
+          <div class="timeline-item__header">
+            <span class="timeline-item__stage">{{ stageLabel(event.stage) }}</span>
+            <time class="timeline-item__time">{{ new Date(event.createdAt).toLocaleTimeString() }}</time>
           </div>
-          <p>{{ new Date(event.createdAt).toLocaleString(preferChinese ? 'zh-CN' : undefined) }}</p>
+          <p class="timeline-item__message">
+            <component :is="messageIcon(event.message)" :size="12" v-if="messageIcon(event.message)" />
+            {{ messageLabel(event.message) }}
+          </p>
+
+          <div v-if="Object.keys(event.details).length" class="timeline-item__details">
+            <div
+              v-for="(value, key) in event.details"
+              :key="key"
+              class="timeline-item__detail"
+            >
+              <span class="timeline-item__detail-key">{{ detailLabel(key) }}</span>
+              <strong class="timeline-item__detail-value">{{ detailValue(value) }}</strong>
+            </div>
+          </div>
         </div>
       </article>
-
-      <div v-if="timeline.length === 0" class="timeline-empty">
-        {{ preferChinese ? copy.zh.empty : copy.en.empty }}
-      </div>
     </div>
   </section>
 </template>

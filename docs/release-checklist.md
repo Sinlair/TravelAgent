@@ -26,6 +26,12 @@
 ./mvnw -B test
 ```
 
+This suite now includes an in-process smoke integration that boots the app and verifies:
+
+- `GET /actuator/health`
+- `POST /api/conversations/chat` can return `agentType=TRAVEL_PLANNER`
+- the response includes a structured `travelPlan`
+
 - Backend package:
 
 ```bash
@@ -42,6 +48,8 @@ npm run build
 ```
 
 ## Manual Smoke
+
+Use this section for environment-level verification after build/test pass. The backend test suite already covers a local HTTP smoke flow in-process.
 
 Start the backend:
 
