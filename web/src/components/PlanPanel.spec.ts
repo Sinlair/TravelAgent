@@ -168,7 +168,7 @@ describe('PlanPanel', () => {
     expect(wrapper.text()).toContain('At A Glance')
     expect(wrapper.text()).toContain('Stays')
     expect(wrapper.text()).toContain('Budget')
-    expect(wrapper.text()).toContain('Key Checks')
+    expect(wrapper.text()).toContain('Before You Book')
     expect(wrapper.text()).toContain('Daily Itinerary')
     expect(wrapper.text()).toContain('Current Weather')
     expect(wrapper.text()).toContain('West Lake Selected Hotel')
