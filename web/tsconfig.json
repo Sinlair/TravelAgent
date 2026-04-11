@@ -10,6 +10,10 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "lib": ["ES2020", "DOM", "DOM.Iterable", "ESNext", "ESNext.Disposable"],
     "types": ["vite/client", "vitest/globals", "node"]
   },
