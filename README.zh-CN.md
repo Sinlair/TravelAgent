@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  Travel Agent 是一个全栈旅行规划工作台，能够把自然语言需求和旅行截图转成带有结构化行程、高德增强、即时方案反馈和旅行手账导出的可执行方案。
+  Travel Agent 是一个全栈旅行规划工作台，能够把自然语言需求和旅行截图转换成带有结构化行程、高德增强、即时反馈闭环和旅行手账导出的可执行方案。
 </p>
 
 <p align="center">
@@ -38,11 +38,11 @@
 很多旅行助手只会返回一段聊天文本，这个仓库更关注完整的产品流程：
 
 - 按请求类型路由到不同 specialist agent，而不是所有问题都走一个通用补全。
-- 产出结构化行程，包含每日安排、酒店建议、预算区间和可行性检查。
+- 输出结构化行程，包含每日安排、酒店建议、预算区间和可行性检查。
 - 通过高德 / Amap 做天气、POI、地理位置和路线增强。
 - 支持旅行截图输入，并在用户确认后把提取出的事实回流到规划链路。
 - 前端采用产品化的一屏工作台，而不是长滚动的调试面板。
-- 在最新结果下面直接完成 `接受 / 部分接受 / 拒绝` 的反馈闭环。
+- 在最新结果下方直接完成 `接受 / 部分接受 / 拒绝` 的反馈闭环。
 - 支持将结果导出为便于分享和保存的旅行手账长图。
 
 ## 界面展示
@@ -52,8 +52,10 @@
 - 顶部提供明确的 `中文 / EN` 语言切换。
 - 左侧是历史会话和快速切换入口。
 - 中间是聊天输入区，支持粘贴截图、拖拽图片和点击上传。
-- 最新一条生成结果下方直接提供 `接受 / 部分接受 / 拒绝` 三个反馈按钮。
-- 右侧展示旅行手账导出、结构化行程、地图信息和生成过程。
+- 最新结果下方直接提供 `接受 / 部分接受 / 拒绝` 三个反馈按钮，并支持按答案 / 行程 / 整体方案做范围化反馈。
+- 右侧展示手账导出、结构化行程、地图上下文和执行时间线。
+- 聊天、行程、地图、时间线、反馈区统一覆盖 `loading / partial / success / empty / error` 状态。
+- 时间线会显式区分完成、失败和修复后的阶段状态。
 - 页面整体压缩成首屏工作台，避免长页面滚动。
 
 <p align="center">
@@ -66,12 +68,13 @@
 | --- | --- |
 | 多智能体路由 | 在 `WEATHER`、`GEO`、`TRAVEL_PLANNER`、`GENERAL` 之间做路由，并共享上下文与时间线 |
 | 结构化规划 | 生成行程摘要、每日路线、酒店建议、预算拆分和约束检查 |
+| 稳定结果契约 | 统一返回 `feedbackTarget`、`issues`、`missingInformation`、`constraintSummary` 等结果字段 |
 | 高德增强 | 解析天气、POI、酒店片区、地理编码和市内交通 |
 | 旅行知识检索 | 从本地整理知识或可选的 Milvus 检索中补充目的地规划知识 |
 | 图片辅助输入 | 从上传截图中提取旅行事实，用户确认后回流到正常规划流程 |
-| 即时方案反馈 | 在最新方案下直接记录接受、部分接受或拒绝结果 |
+| 即时方案反馈 | 在最新方案下直接记录接受、部分接受或拒绝结果，并支持结构化原因标签 |
 | 旅行手账导出 | 把生成后的行程导出成长图，方便分享和保存 |
-| 执行过程可视化 | 通过 SSE 把规划时间线实时推到前端 |
+| 执行过程可视化 | 通过 SSE 把规划时间线实时推送到前端，并带有阶段状态与时间戳 |
 | 调优与运营能力 | 提供反馈汇总视图与可导出的 API 数据，便于后续产品调优 |
 
 ## 系统架构
@@ -97,6 +100,7 @@
 
 - 可编辑源文件：[`docs/assets/travelagent-repository-architecture.drawio`](./docs/assets/travelagent-repository-architecture.drawio)、[`docs/assets/travelagent-runtime-workflow.drawio`](./docs/assets/travelagent-runtime-workflow.drawio)
 - 详细说明：[`docs/system-architecture.md`](./docs/system-architecture.md)
+- 结果契约说明：[`docs/herness-contract.md`](./docs/herness-contract.md)
 
 ## 多智能体工作流
 
@@ -126,7 +130,7 @@
 5. 检索目的地知识作为规划补充。
 6. 输出最终回答和持久化的 `TravelPlan`。
 
-这比把所有逻辑都塞进一个大 prompt 更可控，也更容易继续演进。
+这比把所有逻辑都堆进一个大 prompt 更可控，也更容易继续演进。
 
 ## 技术栈
 
@@ -162,13 +166,13 @@
 - `VITE_AMAP_WEB_KEY`
 - `VITE_AMAP_SECURITY_JS_CODE`
 
-### 2. 运行预检
+### 2. 启动后端
 
 ```bash
 ./mvnw -pl travel-agent-app -am spring-boot:run
 ```
 
-### 3. 启动整套应用
+### 3. 启动前端
 
 ```bash
 cd web
@@ -176,20 +180,20 @@ npm ci
 npm run dev
 ```
 
-默认地址：
-
-- 后端：`http://localhost:8080`
-- 前端：`http://localhost:5173`
-
-### 4. 停止
-
-如需启用 MCP sidecar，可额外运行：
+### 4. 可选：启动 MCP sidecar
 
 ```bash
 ./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
 ```
 
-停止服务时，直接在对应终端使用 `Ctrl + C`。
+默认地址：
+
+- 后端：`http://localhost:8080`
+- 前端：`http://localhost:5173`
+
+### 5. 停止
+
+停止运行中的后端、前端和可选 MCP 终端即可，使用 `Ctrl + C`。
 
 ## 开发方式
 
@@ -231,6 +235,8 @@ npm run build
 - CI 会运行后端测试，以及前端测试和生产构建。
 - 后端测试套件已经包含一条进程内 smoke 集成测试：
   `TravelAgentSmokeIntegrationTest` 会启动应用，检查 `/actuator/health`，并验证 `/api/conversations/chat` 可以返回 `agentType=TRAVEL_PLANNER` 和结构化 `travelPlan`。
+- 统一结果契约也有对应回归覆盖：
+  后端测试覆盖聊天响应结构，前端测试覆盖聊天、行程和时间线面板的共享状态渲染。
 - 可以通过 `python scripts/analyze_feedback_loop.py` 做离线反馈分析。
   该脚本默认读取 `data/travel-agent.db`，并把 JSON 与 Markdown 报告写到 `data/exports/`。
 
@@ -264,6 +270,7 @@ npm run build
 ## 文档
 
 - [`docs/system-architecture.md`](./docs/system-architecture.md)
+- [`docs/herness-contract.md`](./docs/herness-contract.md)
 - [`docs/knowledge-rag.md`](./docs/knowledge-rag.md)
 - [`docs/multimodal-roadmap.md`](./docs/multimodal-roadmap.md)
 - [`docs/multimodal-roadmap.zh-CN.md`](./docs/multimodal-roadmap.zh-CN.md)

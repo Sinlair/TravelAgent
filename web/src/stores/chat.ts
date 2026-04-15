@@ -24,6 +24,7 @@ export const useChatStore = defineStore('chat', () => {
   const feedbackLoopLimit = ref(200)
   const loading = ref(false)
   const errorMessage = ref('')
+  const streamError = ref('')
   const feedbackLoopError = ref('')
   let eventSource: EventSource | null = null
 
@@ -49,6 +50,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       detail.value = await apiGet<ConversationDetailResponse>(`/api/conversations/${conversationId}`)
       errorMessage.value = ''
+      streamError.value = ''
       connectStream(conversationId)
     } catch (error) {
       errorMessage.value = formatError(error)
@@ -70,6 +72,7 @@ export const useChatStore = defineStore('chat', () => {
         attachments,
         imageContextAction: payload.imageContextAction
       })
+      streamError.value = ''
       await loadConversations()
       await openConversation(response.conversationId)
     } catch (error) {
@@ -140,11 +143,13 @@ export const useChatStore = defineStore('chat', () => {
     currentConversationId.value = ''
     detail.value = null
     errorMessage.value = ''
+    streamError.value = ''
     closeStream()
   }
 
   function connectStream(conversationId: string) {
     closeStream()
+    streamError.value = ''
     eventSource = new EventSource(`/api/conversations/${conversationId}/stream`)
     eventSource.onmessage = (event) => {
       const timelineEvent = JSON.parse(event.data) as TimelineEvent
@@ -156,11 +161,22 @@ export const useChatStore = defineStore('chat', () => {
       }
       detail.value.timeline = [...detail.value.timeline, timelineEvent]
     }
+    eventSource.onerror = () => {
+      streamError.value = 'Live execution updates disconnected. Retry the stream.'
+      closeStream()
+    }
   }
 
   function closeStream() {
     eventSource?.close()
     eventSource = null
+  }
+
+  function reconnectStream() {
+    if (!currentConversationId.value) {
+      return
+    }
+    connectStream(currentConversationId.value)
   }
 
   function formatError(error: unknown) {
@@ -182,6 +198,7 @@ export const useChatStore = defineStore('chat', () => {
     feedbackLoopLimit,
     loading,
     errorMessage,
+    streamError,
     feedbackLoopError,
     hasConversation,
     loadConversations,
@@ -190,6 +207,7 @@ export const useChatStore = defineStore('chat', () => {
     submitFeedback,
     loadFeedbackLoopSummary,
     deleteConversation,
-    newConversation
+    newConversation,
+    reconnectStream
   }
 })

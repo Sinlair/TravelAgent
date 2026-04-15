@@ -1082,6 +1082,61 @@ textarea {
   cursor: default;
 }
 
+.message__feedback-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(23, 48, 66, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.message__feedback-scopes,
+.message__feedback-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.message__feedback-scopes > span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.message__feedback-note {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(23, 48, 66, 0.08);
+  background: rgba(253, 250, 245, 0.92);
+  color: var(--ink);
+}
+
+.brief-card--status {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 252, 251, 0.96));
+  color: var(--ink);
+  border: 1px solid rgba(23, 48, 66, 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+.brief-card--status .brief-card__eyebrow,
+.brief-card--status .brief-card__slot span,
+.brief-card--status .brief-card__missing span {
+  color: var(--accent-deep);
+}
+
+.brief-card--status .brief-card__header p,
+.brief-card--status .brief-card__missing p,
+.brief-card--status .brief-card__slot strong {
+  color: var(--ink);
+}
+
 .message--user {
   align-self: flex-end;
   background: linear-gradient(135deg, rgba(214, 98, 58, 0.96), rgba(158, 61, 31, 0.96));

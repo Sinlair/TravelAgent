@@ -51,8 +51,10 @@ Current frontend workspace highlights:
 - Manual `ZH / EN` language toggle in the hero bar.
 - Left rail for conversation history and quick session switching.
 - Center chat workspace with paste / drag / upload image intake.
-- Inline feedback closure directly below the latest generated answer with `Accept`, `Partially Accept`, and `Reject`.
+- Inline feedback closure directly below the latest generated answer with `Accept`, `Partially Accept`, and `Reject`, including scope-aware feedback targets for answer / plan / overall evaluation.
 - Right side for scrapbook export, structured itinerary, map context, and build details.
+- Shared result-state handling across chat, itinerary, map, timeline, and feedback panels with explicit `loading`, `partial`, `success`, `empty`, and `error` states.
+- Timeline cards now expose normalized execution status so users can distinguish completed, failed, and repaired planner steps.
 - Overall layout compressed into a one-screen workspace instead of a long scrolling dashboard.
 
 <p align="center">
@@ -65,12 +67,13 @@ Current frontend workspace highlights:
 | --- | --- |
 | Specialist routing | Routes requests across `WEATHER`, `GEO`, `TRAVEL_PLANNER`, and `GENERAL` specialists with shared context and timeline events |
 | Structured planning | Builds itinerary summaries, daily routes, hotel recommendations, budget breakdowns, and constraint checks |
+| Stable result contract | Returns consistent chat and conversation-detail payloads with `feedbackTarget`, `issues`, `missingInformation`, and `constraintSummary` |
 | Amap grounding | Resolves weather, POIs, district centers, hotel area hints, and transit legs |
 | Knowledge retrieval | Retrieves destination guidance from local curated knowledge or optional Milvus-backed retrieval |
 | Image-assisted intake | Extracts travel facts from uploaded screenshots and merges confirmed facts back into planning |
-| Inline feedback capture | Records whether a generated plan was accepted, partially accepted, or rejected directly from the latest result card |
+| Inline feedback capture | Records whether a generated plan was accepted, partially accepted, or rejected directly from the latest result card, with versioned feedback targets and structured reason labels |
 | Scrapbook export | Exports the generated itinerary into a shareable long-form travel scrapbook image |
-| Execution visibility | Streams timeline events to the frontend so planning steps stay inspectable |
+| Execution visibility | Streams normalized timeline events with stage status and timestamps so planning steps stay inspectable |
 | Product tuning tooling | Includes feedback summary views and export-ready APIs for offline analysis |
 
 ## Architecture
@@ -96,6 +99,7 @@ Runtime workflow:
 
 - Editable diagrams: [`docs/assets/travelagent-repository-architecture.drawio`](./docs/assets/travelagent-repository-architecture.drawio), [`docs/assets/travelagent-runtime-workflow.drawio`](./docs/assets/travelagent-runtime-workflow.drawio)
 - Detailed notes: [`docs/system-architecture.md`](./docs/system-architecture.md)
+- Response-contract guide: [`docs/herness-contract.md`](./docs/herness-contract.md)
 
 ## Multi-Agent Flow
 
@@ -230,6 +234,8 @@ npm run build
 - CI covers backend tests plus frontend tests and production build.
 - The backend test suite includes an in-process smoke integration:
   `TravelAgentSmokeIntegrationTest` boots the app, checks `/actuator/health`, and verifies that `/api/conversations/chat` can return `agentType=TRAVEL_PLANNER` with a structured `travelPlan`.
+- The normalized result contract is covered on both sides:
+  backend tests assert the chat response shape, and frontend tests cover shared result-state rendering for chat, plan, and timeline panels.
 - Offline feedback analysis is available through `python scripts/analyze_feedback_loop.py`.
   It reads `data/travel-agent.db` by default and writes JSON plus Markdown reports under `data/exports/`.
 
@@ -263,6 +269,7 @@ npm run build
 ## Docs
 
 - [`docs/system-architecture.md`](./docs/system-architecture.md)
+- [`docs/herness-contract.md`](./docs/herness-contract.md)
 - [`docs/knowledge-rag.md`](./docs/knowledge-rag.md)
 - [`docs/multimodal-roadmap.md`](./docs/multimodal-roadmap.md)
 - [`docs/multimodal-roadmap.zh-CN.md`](./docs/multimodal-roadmap.zh-CN.md)

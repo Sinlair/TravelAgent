@@ -9,6 +9,7 @@ import com.travalagent.domain.model.valobj.AgentExecutionContext;
 import com.travalagent.domain.model.valobj.AgentExecutionResult;
 import com.travalagent.domain.model.valobj.AgentType;
 import com.travalagent.domain.model.valobj.ExecutionStage;
+import com.travalagent.domain.model.valobj.TimelineEventStatus;
 import com.travalagent.domain.model.valobj.TravelKnowledgeRetrievalResult;
 import com.travalagent.domain.model.valobj.TravelKnowledgeSelection;
 import com.travalagent.domain.model.valobj.WeatherSnapshot;
@@ -170,6 +171,7 @@ public class TravelPlannerAgent implements SpecialistAgent {
         timelinePublisher.publish(TimelineEvent.of(
                 context.conversationId(),
                 ExecutionStage.VALIDATE_PLAN,
+                validationResult.accepted() ? TimelineEventStatus.COMPLETED : TimelineEventStatus.FAILED,
                 "Validate generated plan against budget, opening hours, and load",
                 Map.of(
                         "attempt", attempt,
@@ -186,6 +188,7 @@ public class TravelPlannerAgent implements SpecialistAgent {
         timelinePublisher.publish(TimelineEvent.of(
                 context.conversationId(),
                 ExecutionStage.REPAIR_PLAN,
+                TimelineEventStatus.REPAIRED,
                 relaxedMode
                         ? "Build closest feasible alternative by relaxing constraints"
                         : "Repair plan against validation findings",

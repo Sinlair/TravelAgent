@@ -29,6 +29,10 @@ class ConversationApplicationServiceTest {
                 new ConversationFeedback(
                         "conversation-1",
                         "ACCEPTED",
+                        "message-1",
+                        "OVERALL",
+                        "2026-04-07T00:00:00Z",
+                        List.of("used_as_is"),
                         "used_as_is",
                         null,
                         com.travalagent.domain.model.valobj.AgentType.TRAVEL_PLANNER,
@@ -48,6 +52,10 @@ class ConversationApplicationServiceTest {
                 new ConversationFeedback(
                         "conversation-2",
                         "PARTIAL",
+                        "message-2",
+                        "PLAN",
+                        "2026-04-07T00:00:00Z",
+                        List.of("edited_before_use"),
                         "edited_before_use",
                         null,
                         com.travalagent.domain.model.valobj.AgentType.TRAVEL_PLANNER,
@@ -67,6 +75,10 @@ class ConversationApplicationServiceTest {
                 new ConversationFeedback(
                         "conversation-3",
                         "REJECTED",
+                        "message-3",
+                        "OVERALL",
+                        null,
+                        List.of("not_useful"),
                         "not_useful",
                         null,
                         com.travalagent.domain.model.valobj.AgentType.TRAVEL_PLANNER,

@@ -1,8 +1,12 @@
 package com.travalagent.app.service;
 
 import com.travalagent.app.dto.ChatRequest;
-import com.travalagent.app.dto.ChatResponse;
 import com.travalagent.app.dto.ChatImageAttachmentRequest;
+import com.travalagent.app.dto.ChatResponse;
+import com.travalagent.app.dto.ChatResponseFeedbackTarget;
+import com.travalagent.app.dto.ChatResponseIssue;
+import com.travalagent.app.dto.ConversationConstraintSummary;
+import com.travalagent.app.dto.ConversationMissingInformationItem;
 import com.travalagent.domain.event.TimelinePublisher;
 import com.travalagent.domain.model.entity.ConversationMessage;
 import com.travalagent.domain.model.entity.ConversationSession;
@@ -181,7 +185,7 @@ public class ConversationWorkflow {
                 null,
                 IMAGE_CONTEXT_STATUS_PENDING
         );
-        conversationRepository.savePendingImageContext(new ConversationImageContext(
+        ConversationImageContext pendingImageContext = new ConversationImageContext(
                 conversationId,
                 imageContextSummary,
                 imageFacts,
@@ -190,17 +194,20 @@ public class ConversationWorkflow {
                         .toList(),
                 Instant.now(),
                 Instant.now()
-        ));
+        );
+        conversationRepository.savePendingImageContext(pendingImageContext);
         String assistantAnswer = containsChinese(rawUserMessage == null ? imageContextSummary : rawUserMessage)
                 ? IMAGE_CONFIRM_PROMPT_ZH
                 : IMAGE_CONFIRM_PROMPT_EN;
+        String assistantMessageId = UUID.randomUUID().toString();
         conversationRepository.saveMessage(new ConversationMessage(
-                UUID.randomUUID().toString(),
+                assistantMessageId,
                 conversationId,
                 MessageRole.ASSISTANT,
                 assistantAnswer,
                 AgentType.GENERAL,
-                Instant.now()
+                Instant.now(),
+                Map.of()
         ));
         conversationRepository.saveConversation(new ConversationSession(
                 conversationId,
@@ -213,13 +220,16 @@ public class ConversationWorkflow {
         publish(conversationId, ExecutionStage.COMPLETED, "Image context extracted and awaiting confirmation", Map.of(
                 "imageAttachmentCount", imageAttachments.size()
         ));
-        return new ChatResponse(
+        return buildChatResponse(
                 conversationId,
                 AgentType.GENERAL,
                 assistantAnswer,
                 conversationRepository.findTaskMemory(conversationId).orElse(TaskMemory.empty(conversationId)),
                 null,
-                conversationRepository.findTimeline(conversationId)
+                conversationRepository.findTimeline(conversationId),
+                assistantMessageId,
+                Map.of(),
+                pendingImageContext
         );
     }
 
@@ -244,13 +254,15 @@ public class ConversationWorkflow {
                 Map.of("imageContextStatus", IMAGE_CONTEXT_STATUS_DISMISSED)
         ));
         String assistantAnswer = containsChinese(userMessage) ? IMAGE_DISMISS_ACK_ZH : IMAGE_DISMISS_ACK_EN;
+        String assistantMessageId = UUID.randomUUID().toString();
         conversationRepository.saveMessage(new ConversationMessage(
-                UUID.randomUUID().toString(),
+                assistantMessageId,
                 conversationId,
                 MessageRole.ASSISTANT,
                 assistantAnswer,
                 AgentType.GENERAL,
-                Instant.now()
+                Instant.now(),
+                Map.of()
         ));
         conversationRepository.saveConversation(new ConversationSession(
                 conversationId,
@@ -261,13 +273,16 @@ public class ConversationWorkflow {
                 Instant.now()
         ));
         publish(conversationId, ExecutionStage.COMPLETED, "Pending image context dismissed", Map.of());
-        return new ChatResponse(
+        return buildChatResponse(
                 conversationId,
                 AgentType.GENERAL,
                 assistantAnswer,
                 conversationRepository.findTaskMemory(conversationId).orElse(TaskMemory.empty(conversationId)),
                 null,
-                conversationRepository.findTimeline(conversationId)
+                conversationRepository.findTimeline(conversationId),
+                assistantMessageId,
+                Map.of(),
+                null
         );
     }
 
@@ -385,6 +400,7 @@ public class ConversationWorkflow {
             return new AgentOutcome(
                     agentType,
                     clarificationQuestion(userMessage, routeDecision.clarificationQuestion()),
+                    Map.of(),
                     null
             );
         }
@@ -402,7 +418,7 @@ public class ConversationWorkflow {
                 imageContextSummary
         ));
 
-        return new AgentOutcome(agentType, result.answer(), result.travelPlan());
+        return new AgentOutcome(agentType, result.answer(), result.metadata(), result.travelPlan());
     }
 
     private ChatResponse finalizeConversation(
@@ -413,13 +429,21 @@ public class ConversationWorkflow {
     ) {
         String conversationId = preparedConversation.conversationId();
 
+        String assistantMessageId = UUID.randomUUID().toString();
+        ChatResponseFeedbackTarget feedbackTarget = ConversationResultSupport.buildFeedbackTarget(
+                conversationId,
+                assistantMessageId,
+                agentOutcome.agentType(),
+                agentOutcome.travelPlan()
+        );
         conversationRepository.saveMessage(new ConversationMessage(
-                UUID.randomUUID().toString(),
+                assistantMessageId,
                 conversationId,
                 MessageRole.ASSISTANT,
                 agentOutcome.answer(),
                 agentOutcome.agentType(),
-                Instant.now()
+                Instant.now(),
+                ConversationResultSupport.assistantMetadata(feedbackTarget, agentOutcome.metadata())
         ));
 
         List<ConversationMessage> fullMessages = enrichMessagesForPlanning(conversationRepository.findMessages(conversationId));
@@ -475,13 +499,62 @@ public class ConversationWorkflow {
         ));
         publish(conversationId, ExecutionStage.COMPLETED, "Execution finished", Map.of("agent", agentOutcome.agentType().name()));
 
-        return new ChatResponse(
+        return buildChatResponse(
                 conversationId,
                 agentOutcome.agentType(),
                 agentOutcome.answer(),
                 updatedMemory,
                 agentOutcome.travelPlan(),
-                conversationRepository.findTimeline(conversationId)
+                conversationRepository.findTimeline(conversationId),
+                assistantMessageId,
+                agentOutcome.metadata(),
+                null
+        );
+    }
+
+    private ChatResponse buildChatResponse(
+            String conversationId,
+            AgentType agentType,
+            String answer,
+            TaskMemory taskMemory,
+            TravelPlan travelPlan,
+            List<TimelineEvent> timeline,
+            String feedbackTargetId,
+            Map<String, Object> resultMetadata,
+            ConversationImageContext imageContextCandidate
+    ) {
+        ChatResponseFeedbackTarget feedbackTarget = ConversationResultSupport.buildFeedbackTarget(
+                conversationId,
+                feedbackTargetId,
+                agentType,
+                travelPlan
+        );
+        List<ConversationMissingInformationItem> missingInformation = ConversationResultSupport.buildMissingInformation(
+                taskMemory,
+                imageContextCandidate
+        );
+        ConversationConstraintSummary constraintSummary = ConversationResultSupport.buildConstraintSummary(
+                agentType,
+                travelPlan,
+                resultMetadata
+        );
+        List<ChatResponseIssue> issues = ConversationResultSupport.buildIssues(
+                taskMemory,
+                imageContextCandidate,
+                missingInformation,
+                constraintSummary
+        );
+        return new ChatResponse(
+                conversationId,
+                agentType,
+                answer,
+                taskMemory,
+                travelPlan,
+                timeline,
+                feedbackTarget,
+                issues,
+                missingInformation,
+                constraintSummary
         );
     }
 
@@ -800,6 +873,7 @@ public class ConversationWorkflow {
     private record AgentOutcome(
             AgentType agentType,
             String answer,
+            Map<String, Object> metadata,
             TravelPlan travelPlan
     ) {
     }

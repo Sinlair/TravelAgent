@@ -16,6 +16,7 @@ import com.travalagent.domain.model.valobj.AgentType;
 import com.travalagent.domain.model.valobj.ExecutionStage;
 import com.travalagent.domain.model.valobj.LongTermMemoryItem;
 import com.travalagent.domain.model.valobj.MessageRole;
+import com.travalagent.domain.model.valobj.TimelineEventStatus;
 import com.travalagent.domain.repository.ConversationRepository;
 import com.travalagent.domain.repository.LongTermMemoryRepository;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -26,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -320,8 +322,8 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 .param("conversationId", timelineEvent.conversationId())
                 .param("stage", timelineEvent.stage().name())
                 .param("message", timelineEvent.message())
-                .param("detailsJson", writeJson(timelineEvent.details()))
-                .param("createdAt", timelineEvent.createdAt().toString())
+                .param("detailsJson", writeJson(encodeTimelineDetails(timelineEvent)))
+                .param("createdAt", timelineEvent.endedAt().toString())
                 .update();
     }
 
@@ -448,9 +450,14 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
 
     private ConversationFeedback mapFeedback(ResultSet rs, int rowNum) throws SQLException {
         String agentType = rs.getString("agent_type");
+        Map<String, Object> metadata = readMap(rs.getString("metadata_json"));
         return new ConversationFeedback(
                 rs.getString("conversation_id"),
                 rs.getString("label"),
+                metadataText(metadata, "targetId"),
+                metadataText(metadata, "targetScope"),
+                metadataText(metadata, "planVersion"),
+                metadataStringList(metadata, "reasonLabels"),
                 rs.getString("reason_code"),
                 rs.getString("note"),
                 agentType == null ? null : AgentType.valueOf(agentType),
@@ -458,7 +465,7 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 readInteger(rs, "days"),
                 rs.getString("budget"),
                 rs.getInt("has_travel_plan") == 1,
-                readMap(rs.getString("metadata_json")),
+                metadata,
                 Instant.parse(rs.getString("created_at")),
                 Instant.parse(rs.getString("updated_at"))
         );
@@ -476,14 +483,62 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
     }
 
     private TimelineEvent mapTimeline(ResultSet rs, int rowNum) throws SQLException {
+        Map<String, Object> persistedDetails = readMap(rs.getString("details_json"));
+        Map<String, Object> details = decodeTimelineDetails(persistedDetails);
         return new TimelineEvent(
                 rs.getString("id"),
                 rs.getString("conversation_id"),
                 ExecutionStage.valueOf(rs.getString("stage")),
+                readTimelineStatus(persistedDetails),
                 rs.getString("message"),
-                readMap(rs.getString("details_json")),
-                Instant.parse(rs.getString("created_at"))
+                details,
+                Instant.parse(rs.getString("created_at")),
+                readTimelineInstant(persistedDetails, "startedAt", rs.getString("created_at")),
+                readTimelineInstant(persistedDetails, "endedAt", rs.getString("created_at"))
         );
+    }
+
+    private Map<String, Object> encodeTimelineDetails(TimelineEvent timelineEvent) {
+        Map<String, Object> details = new LinkedHashMap<>(timelineEvent.details());
+        details.put("status", timelineEvent.status().name());
+        details.put("startedAt", timelineEvent.startedAt().toString());
+        details.put("endedAt", timelineEvent.endedAt().toString());
+        return Map.copyOf(details);
+    }
+
+    private Map<String, Object> decodeTimelineDetails(Map<String, Object> raw) {
+        if (raw.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Object> details = new LinkedHashMap<>(raw);
+        details.remove("status");
+        details.remove("startedAt");
+        details.remove("endedAt");
+        return Map.copyOf(details);
+    }
+
+    private TimelineEventStatus readTimelineStatus(Map<String, Object> detailsWithMetadata) {
+        Object raw = detailsWithMetadata.get("status");
+        if (raw instanceof String value && !value.isBlank()) {
+            try {
+                return TimelineEventStatus.valueOf(value.trim());
+            } catch (IllegalArgumentException ignored) {
+                return TimelineEventStatus.COMPLETED;
+            }
+        }
+        return TimelineEventStatus.COMPLETED;
+    }
+
+    private Instant readTimelineInstant(Map<String, Object> detailsWithMetadata, String key, String fallback) {
+        Object raw = detailsWithMetadata.get(key);
+        if (raw instanceof String value && !value.isBlank()) {
+            try {
+                return Instant.parse(value.trim());
+            } catch (Exception ignored) {
+                return Instant.parse(fallback);
+            }
+        }
+        return Instant.parse(fallback);
     }
 
     private List<String> readStringList(String raw) {
@@ -574,6 +629,26 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
         } catch (NumberFormatException exception) {
             return null;
         }
+    }
+
+    private String metadataText(Map<String, Object> metadata, String key) {
+        Object value = metadata.get(key);
+        if (value == null) {
+            return null;
+        }
+        String text = String.valueOf(value).trim();
+        return text.isEmpty() ? null : text;
+    }
+
+    private List<String> metadataStringList(Map<String, Object> metadata, String key) {
+        Object value = metadata.get(key);
+        if (!(value instanceof List<?> list) || list.isEmpty()) {
+            return List.of();
+        }
+        return list.stream()
+                .map(String::valueOf)
+                .filter(item -> !item.isBlank())
+                .toList();
     }
 }
 

@@ -1,24 +1,40 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Search, Brain, MapPin, CheckCircle2, AlertCircle, Wrench, Thermometer, CloudSun, Hotel, Navigation, History, Sparkles, Save, Info, Clock } from 'lucide-vue-next'
-import type { ExecutionStage, TimelineEvent } from '../types/api'
+import type { ExecutionStage, TimelineEvent, TimelineEventStatus } from '../types/api'
+import type { ConversationResultViewModel } from '../utils/conversationResult'
 
 const props = withDefaults(defineProps<{
-  timeline: TimelineEvent[]
+  resultView?: ConversationResultViewModel
+  timeline?: TimelineEvent[]
   preferChinese?: boolean
 }>(), {
   preferChinese: true
 })
 
+const emit = defineEmits<{
+  retryStream: []
+}>()
+
 const copy = {
   zh: {
     title: '\u6267\u884c\u8be6\u60c5',
-    empty: '\u53d1\u9001\u9700\u6c42\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u65b9\u6848\u751f\u6210\u4e2d\u7684\u513f\u5173\u952e\u8282\u70b9\u3002'
+    empty: '\u53d1\u9001\u9700\u6c42\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u65b9\u6848\u751f\u6210\u4e2d\u7684\u513f\u5173\u952e\u8282\u70b9\u3002',
+    partial: '\u8fd8\u6ca1\u6536\u5230\u5b8c\u6574\u7684\u65f6\u95f4\u7ebf\u4e8b\u4ef6\u3002',
+    retry: '\u91cd\u8fde\u5b9e\u65f6\u65f6\u95f4\u7ebf',
+    disconnected: '\u5b9e\u65f6\u65f6\u95f4\u7ebf\u5df2\u4e2d\u65ad'
   },
   en: {
     title: 'Execution Details',
-    empty: 'Key build steps will appear here after you send a request.'
+    empty: 'Key build steps will appear here after you send a request.',
+    partial: 'The timeline is not fully populated yet.',
+    retry: 'Retry live timeline',
+    disconnected: 'Live execution updates disconnected'
   }
 }
+
+const timeline = computed(() => props.resultView?.timeline ?? props.timeline ?? [])
+const timelineState = computed(() => props.resultView?.timelineState ?? (timeline.value.length ? 'success' : 'empty'))
 
 function stageIcon(stage: ExecutionStage) {
   return {
@@ -59,6 +75,18 @@ function stageLabel(stage: ExecutionStage) {
     COMPLETED: '\u5b8c\u6210',
     ERROR: '\u5f02\u5e38'
   }[stage] ?? stage
+}
+
+function statusLabel(status: TimelineEventStatus) {
+  if (!props.preferChinese) {
+    return status
+  }
+  return {
+    STARTED: '\u5f00\u59cb',
+    COMPLETED: '\u5b8c\u6210',
+    FAILED: '\u5931\u8d25',
+    REPAIRED: '\u5df2\u4fee\u6b63'
+  }[status] ?? status
 }
 
 function messageLabel(message: string) {
@@ -158,9 +186,16 @@ function detailEntries(details: TimelineEvent['details']) {
     </div>
 
     <div class="timeline-list">
-      <div v-if="timeline.length === 0" class="panel__empty">
+      <div v-if="timelineState === 'error'" class="panel__empty">
+        <AlertCircle :size="32" />
+        <p>{{ preferChinese ? copy.zh.disconnected : copy.en.disconnected }}</p>
+        <button type="button" class="message__feedback-choice message__feedback-choice--active" @click="emit('retryStream')">
+          {{ preferChinese ? copy.zh.retry : copy.en.retry }}
+        </button>
+      </div>
+      <div v-else-if="timeline.length === 0" class="panel__empty">
         <Clock :size="32" />
-        <p>{{ preferChinese ? copy.zh.empty : copy.en.empty }}</p>
+        <p>{{ timelineState === 'partial' ? (preferChinese ? copy.zh.partial : copy.en.partial) : (preferChinese ? copy.zh.empty : copy.en.empty) }}</p>
       </div>
 
       <article
@@ -175,7 +210,8 @@ function detailEntries(details: TimelineEvent['details']) {
         <div class="timeline-item__content">
           <div class="timeline-item__header">
             <span class="timeline-item__stage">{{ stageLabel(event.stage) }}</span>
-            <time class="timeline-item__time">{{ new Date(event.createdAt).toLocaleTimeString() }}</time>
+            <span class="timeline-item__detail-value">{{ statusLabel(event.status) }}</span>
+            <time class="timeline-item__time">{{ new Date(event.endedAt).toLocaleTimeString() }}</time>
           </div>
           <p class="timeline-item__message">
             <component :is="messageIcon(event.message)" :size="12" v-if="messageIcon(event.message)" />

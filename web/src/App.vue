@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from './stores/chat'
+import { buildConversationResultViewModel } from './utils/conversationResult'
 import {
   Globe,
   Map,
@@ -34,7 +35,8 @@ const {
   sending,
   loading,
   feedbackSaving,
-  errorMessage
+  errorMessage,
+  streamError
 } = storeToRefs(store)
 
 const language = ref<UiLanguage>('zh')
@@ -53,6 +55,11 @@ watch(language, value => {
 })
 
 const preferChinese = computed(() => language.value === 'zh')
+const resultView = computed(() => buildConversationResultViewModel(detail.value, {
+  sending: sending.value,
+  errorMessage: errorMessage.value,
+  streamError: streamError.value
+}))
 const languageLabels = {
   zh: '\u4e2d\u6587',
   en: 'EN'
@@ -389,8 +396,9 @@ onMounted(async () => {
       <div class="workspace__grid">
         <ChatPanel
           :detail="detail"
+          :result-view="resultView"
           :sending="sending"
-          :feedback="detail?.feedback || null"
+          :feedback="resultView.feedback"
           :feedback-saving="feedbackSaving"
           :error-message="errorMessage"
           :prefer-chinese="preferChinese"
@@ -400,16 +408,18 @@ onMounted(async () => {
 
         <div class="workspace__side">
           <PlanActionsPanel
-            :travel-plan="detail?.travelPlan || null"
+            :travel-plan="resultView.travelPlan"
             :prefer-chinese="preferChinese"
           />
           <PlanPanel
-            :travel-plan="detail?.travelPlan || null"
+            :travel-plan="resultView.travelPlan"
+            :result-view="resultView"
             :prefer-chinese="preferChinese"
           />
           <TimelinePanel
-            :timeline="detail?.timeline || []"
+            :result-view="resultView"
             :prefer-chinese="preferChinese"
+            @retry-stream="store.reconnectStream"
           />
         </div>
       </div>

@@ -1,5 +1,6 @@
 export type AgentType = 'WEATHER' | 'GEO' | 'TRAVEL_PLANNER' | 'GENERAL'
 export type MessageRole = 'USER' | 'ASSISTANT' | 'SYSTEM'
+export type FeedbackTargetScope = 'ANSWER' | 'PLAN' | 'OVERALL'
 export type ExecutionStage =
   | 'ANALYZE_QUERY'
   | 'RECALL_MEMORY'
@@ -11,6 +12,7 @@ export type ExecutionStage =
   | 'FINALIZE_MEMORY'
   | 'COMPLETED'
   | 'ERROR'
+export type TimelineEventStatus = 'STARTED' | 'COMPLETED' | 'FAILED' | 'REPAIRED'
 
 export type ConstraintCheckStatus = 'PASS' | 'WARN' | 'FAIL'
 export type TravelPlanSlot = 'MORNING' | 'AFTERNOON' | 'EVENING'
@@ -251,6 +253,10 @@ export interface TravelPlan {
 export interface ConversationFeedback {
   conversationId: string
   label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED'
+  targetId?: string
+  targetScope?: FeedbackTargetScope
+  planVersion?: string
+  reasonLabels: string[]
   reasonCode?: string
   note?: string
   agentType?: AgentType
@@ -265,6 +271,10 @@ export interface ConversationFeedback {
 
 export interface ConversationFeedbackRequest {
   label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED'
+  targetId?: string
+  targetScope?: FeedbackTargetScope
+  planVersion?: string
+  reasonLabels?: string[]
   reasonCode?: string
   note?: string
 }
@@ -324,9 +334,47 @@ export interface TimelineEvent {
   id: string
   conversationId: string
   stage: ExecutionStage
+  status: TimelineEventStatus
   message: string
   details: Record<string, string | number | boolean | string[] | null>
   createdAt: string
+  startedAt: string
+  endedAt: string
+}
+
+export interface ChatResponseFeedbackTarget {
+  targetId: string
+  conversationId: string
+  scope: FeedbackTargetScope
+  planVersion?: string | null
+  agentType: AgentType
+  hasTravelPlan: boolean
+  availableScopes: FeedbackTargetScope[]
+}
+
+export interface ChatResponseIssue {
+  code: string
+  severity: string
+  message: string
+}
+
+export interface ConversationMissingInformationItem {
+  code: string
+  label: string
+  prompt: string
+}
+
+export interface ConversationConstraintIssue {
+  code: string
+  severity: string
+  message: string
+}
+
+export interface ConversationConstraintSummary {
+  status: 'NONE' | 'PASS' | 'REPAIRED' | 'RISK'
+  repaired: boolean
+  hasRisk: boolean
+  issues: ConversationConstraintIssue[]
 }
 
 export interface ChatResponse {
@@ -336,6 +384,10 @@ export interface ChatResponse {
   taskMemory: TaskMemory
   travelPlan: TravelPlan | null
   timeline: TimelineEvent[]
+  feedbackTarget: ChatResponseFeedbackTarget
+  issues: ChatResponseIssue[]
+  missingInformation: ConversationMissingInformationItem[]
+  constraintSummary: ConversationConstraintSummary
 }
 
 export interface ConversationDetailResponse {
@@ -346,4 +398,8 @@ export interface ConversationDetailResponse {
   travelPlan: TravelPlan | null
   feedback: ConversationFeedback | null
   imageContextCandidate: ConversationImageContext | null
+  feedbackTarget: ChatResponseFeedbackTarget
+  issues: ChatResponseIssue[]
+  missingInformation: ConversationMissingInformationItem[]
+  constraintSummary: ConversationConstraintSummary
 }

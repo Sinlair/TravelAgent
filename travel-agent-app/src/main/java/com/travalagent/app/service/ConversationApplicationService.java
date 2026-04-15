@@ -61,14 +61,35 @@ public class ConversationApplicationService {
     @Observed(name = "travel.agent.conversation-detail")
     public ConversationDetailResponse conversationDetail(String conversationId) {
         var session = conversationRepository.findConversation(conversationId).orElseThrow();
+        var messages = conversationRepository.findMessages(conversationId);
+        var timeline = conversationRepository.findTimeline(conversationId);
+        var taskMemory = conversationRepository.findTaskMemory(conversationId).orElse(TaskMemory.empty(conversationId));
+        var travelPlan = conversationRepository.findTravelPlan(conversationId).orElse(null);
+        var feedback = conversationRepository.findFeedback(conversationId).orElse(null);
+        var imageContextCandidate = conversationRepository.findPendingImageContext(conversationId).orElse(null);
+        var resultMetadata = ConversationResultSupport.extractResultMetadata(messages);
         return new ConversationDetailResponse(
                 session,
-                conversationRepository.findMessages(conversationId),
-                conversationRepository.findTimeline(conversationId),
-                conversationRepository.findTaskMemory(conversationId).orElse(TaskMemory.empty(conversationId)),
-                conversationRepository.findTravelPlan(conversationId).orElse(null),
-                conversationRepository.findFeedback(conversationId).orElse(null),
-                conversationRepository.findPendingImageContext(conversationId).orElse(null)
+                messages,
+                timeline,
+                taskMemory,
+                travelPlan,
+                feedback,
+                imageContextCandidate,
+                ConversationResultSupport.buildFeedbackTarget(
+                        conversationId,
+                        latestAssistantMessageId(messages),
+                        session.lastAgent(),
+                        travelPlan
+                ),
+                ConversationResultSupport.buildIssues(
+                        taskMemory,
+                        imageContextCandidate,
+                        ConversationResultSupport.buildMissingInformation(taskMemory, imageContextCandidate),
+                        ConversationResultSupport.buildConstraintSummary(session.lastAgent(), travelPlan, resultMetadata)
+                ),
+                ConversationResultSupport.buildMissingInformation(taskMemory, imageContextCandidate),
+                ConversationResultSupport.buildConstraintSummary(session.lastAgent(), travelPlan, resultMetadata)
         );
     }
 
@@ -82,17 +103,35 @@ public class ConversationApplicationService {
 
         ConversationFeedback existing = conversationRepository.findFeedback(conversationId).orElse(null);
         Instant createdAt = existing == null ? Instant.now() : existing.createdAt();
+        String targetScope = normalizeTargetScope(request.targetScope(), travelPlan != null);
+        List<String> reasonLabels = normalizeReasonLabels(request.reasonLabels(), request.reasonCode());
+        String reasonCode = reasonLabels.isEmpty() ? normalizeOptional(request.reasonCode()) : reasonLabels.getFirst();
+        Map<String, Object> feedbackMetadata = new LinkedHashMap<>(feedbackMetadata(session.lastAgent(), taskMemory, travelPlan));
+        if (request.targetId() != null && !request.targetId().isBlank()) {
+            feedbackMetadata.put("targetId", request.targetId().trim());
+        }
+        feedbackMetadata.put("targetScope", targetScope);
+        if (request.planVersion() != null && !request.planVersion().isBlank()) {
+            feedbackMetadata.put("planVersion", request.planVersion().trim());
+        }
+        if (!reasonLabels.isEmpty()) {
+            feedbackMetadata.put("reasonLabels", reasonLabels);
+        }
         ConversationFeedback feedback = new ConversationFeedback(
                 conversationId,
                 label,
-                normalizeOptional(request.reasonCode()),
+                normalizeOptional(request.targetId()),
+                targetScope,
+                normalizeOptional(request.planVersion()),
+                reasonLabels,
+                reasonCode,
                 normalizeOptional(request.note()),
                 session.lastAgent(),
                 taskMemory.destination(),
                 taskMemory.days(),
                 taskMemory.budget(),
                 travelPlan != null,
-                feedbackMetadata(session.lastAgent(), taskMemory, travelPlan),
+                feedbackMetadata,
                 createdAt,
                 Instant.now()
         );
@@ -164,6 +203,32 @@ public class ConversationApplicationService {
 
     private String normalizeOptional(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private List<String> normalizeReasonLabels(List<String> requestReasonLabels, String requestReasonCode) {
+        List<String> normalized = new ArrayList<>();
+        if (requestReasonLabels != null) {
+            normalized.addAll(requestReasonLabels.stream()
+                    .filter(value -> value != null && !value.isBlank())
+                    .map(value -> value.trim().toLowerCase(Locale.ROOT))
+                    .distinct()
+                    .toList());
+        }
+        String normalizedReasonCode = normalizeOptional(requestReasonCode);
+        if (normalizedReasonCode != null) {
+            normalized.add(normalizedReasonCode.toLowerCase(Locale.ROOT));
+        }
+        return normalized.stream().distinct().toList();
+    }
+
+    private String normalizeTargetScope(String rawScope, boolean hasTravelPlan) {
+        String normalized = rawScope == null || rawScope.isBlank()
+                ? (hasTravelPlan ? "OVERALL" : "ANSWER")
+                : rawScope.trim().toUpperCase(Locale.ROOT);
+        return switch (normalized) {
+            case "ANSWER", "PLAN", "OVERALL" -> normalized;
+            default -> throw new AppException(ResponseCode.INVALID_REQUEST, "targetScope must be ANSWER, PLAN, or OVERALL");
+        };
     }
 
     private int normalizeLimit(int limit) {
@@ -389,5 +454,15 @@ public class ConversationApplicationService {
             metadata.put("validationWarnCount", travelPlan.checks().stream().filter(check -> check.status().name().equals("WARN")).count());
         }
         return metadata;
+    }
+
+    private String latestAssistantMessageId(List<com.travalagent.domain.model.entity.ConversationMessage> messages) {
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            var message = messages.get(i);
+            if (message.role() == com.travalagent.domain.model.valobj.MessageRole.ASSISTANT) {
+                return message.id();
+            }
+        }
+        return null;
     }
 }

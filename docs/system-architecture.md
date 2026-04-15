@@ -40,6 +40,29 @@ Reading guide:
 5. Conversation state, long-term memory, knowledge retrieval, feedback, and timeline events are persisted through repository adapters.
 6. Timeline events stream back to the frontend through `ReactiveTimelinePublisher` and `ConversationStreamHub`, while feedback summary/export reads from the same stored conversation records.
 
+## Response Contract
+
+The chat and conversation detail APIs now expose a stable result contract for all specialists:
+
+- `agentType`, `answer`, `taskMemory`, `travelPlan`, and `timeline` remain the core payload blocks.
+- `feedbackTarget` provides a stable answer target id, default scope, available scopes, and a plan version when a structured itinerary exists.
+- `issues` carries top-level user-facing flags such as clarification needed, pending image confirmation, repaired plan, or unresolved plan risk.
+- `missingInformation` exposes structured missing slots such as destination, trip length, budget, or preferences.
+- `constraintSummary` distinguishes `PASS`, `REPAIRED`, `RISK`, and `NONE`, plus structured constraint issues.
+
+See [`docs/herness-contract.md`](./herness-contract.md) for the field-level guide and verification commands.
+
+## Timeline Semantics
+
+Timeline events now carry both a stage and a normalized status:
+
+- `STARTED`
+- `COMPLETED`
+- `FAILED`
+- `REPAIRED`
+
+Each event also includes `startedAt` and `endedAt`. These values are persisted with the timeline payload so SSE and stored history stay aligned without requiring a separate database migration.
+
 ## Runtime Switches
 
 - `travel.agent.tool-provider`: `LOCAL` routes through `AmapTravelTools` and `AmapHttpGateway`; `MCP` routes through `AmapMcpGateway` and the standalone MCP server.

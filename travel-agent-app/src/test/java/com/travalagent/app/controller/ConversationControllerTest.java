@@ -1,6 +1,7 @@
 package com.travalagent.app.controller;
 
 import com.travalagent.app.dto.ChatResponse;
+import com.travalagent.app.dto.ChatResponseFeedbackTarget;
 import com.travalagent.app.dto.FeedbackDatasetRecord;
 import com.travalagent.app.dto.FeedbackLoopSummaryResponse;
 import com.travalagent.app.service.ConversationApplicationService;
@@ -39,7 +40,19 @@ class ConversationControllerTest {
                 "Sunny today",
                 TaskMemory.empty("conversation-1"),
                 null,
-                List.of()
+                List.of(),
+                new ChatResponseFeedbackTarget(
+                        "message-1",
+                        "conversation-1",
+                        "ANSWER",
+                        null,
+                        AgentType.WEATHER,
+                        false,
+                        List.of("ANSWER", "OVERALL")
+                ),
+                List.of(),
+                List.of(),
+                com.travalagent.app.dto.ConversationConstraintSummary.none()
         );
 
         webTestClient.post()
@@ -55,7 +68,9 @@ class ConversationControllerTest {
                 .expectBody()
                 .jsonPath("$.code").isEqualTo("0000")
                 .jsonPath("$.data.conversationId").isEqualTo("conversation-1")
-                .jsonPath("$.data.agentType").isEqualTo("WEATHER");
+                .jsonPath("$.data.agentType").isEqualTo("WEATHER")
+                .jsonPath("$.data.feedbackTarget.scope").isEqualTo("ANSWER")
+                .jsonPath("$.data.issues").isArray();
     }
 
     @Test
@@ -66,7 +81,19 @@ class ConversationControllerTest {
                 "I extracted the trip details from the uploaded image.",
                 TaskMemory.empty("conversation-2"),
                 null,
-                List.of()
+                List.of(),
+                new ChatResponseFeedbackTarget(
+                        "message-2",
+                        "conversation-2",
+                        "ANSWER",
+                        null,
+                        AgentType.TRAVEL_PLANNER,
+                        false,
+                        List.of("ANSWER", "OVERALL")
+                ),
+                List.of(),
+                List.of(),
+                com.travalagent.app.dto.ConversationConstraintSummary.none()
         );
 
         webTestClient.post()
@@ -88,7 +115,9 @@ class ConversationControllerTest {
                 .expectBody()
                 .jsonPath("$.code").isEqualTo("0000")
                 .jsonPath("$.data.conversationId").isEqualTo("conversation-2")
-                .jsonPath("$.data.agentType").isEqualTo("TRAVEL_PLANNER");
+                .jsonPath("$.data.agentType").isEqualTo("TRAVEL_PLANNER")
+                .jsonPath("$.data.feedbackTarget.targetId").isEqualTo("message-2")
+                .jsonPath("$.data.issues").isArray();
     }
 
     @Test
@@ -107,6 +136,10 @@ class ConversationControllerTest {
         conversationApplicationService.feedbackResponse = new ConversationFeedback(
                 "conversation-1",
                 "ACCEPTED",
+                "message-1",
+                "OVERALL",
+                "2026-04-07T00:00:00Z",
+                List.of("used_as_is"),
                 "used_as_is",
                 "Good enough to use directly.",
                 AgentType.TRAVEL_PLANNER,

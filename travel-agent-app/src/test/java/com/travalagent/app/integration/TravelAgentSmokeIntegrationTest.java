@@ -41,6 +41,7 @@ import java.util.Collections;
                 "travel.agent.amap.api-key=",
                 "travel.agent.amap.mock-when-missing-key=true",
                 "travel.agent.amap.mock-on-error=true",
+                "spring.main.allow-bean-definition-overriding=true",
                 "management.tracing.sampling.probability=0.0",
                 "spring.autoconfigure.exclude="
                         + "org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration,"
@@ -48,7 +49,8 @@ import java.util.Collections;
                         + "org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration,"
                         + "org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration,"
                         + "org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration,"
-                        + "org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration"
+                        + "org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration,"
+                        + "org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration"
         }
 )
 class TravelAgentSmokeIntegrationTest {
@@ -89,6 +91,10 @@ class TravelAgentSmokeIntegrationTest {
                 .jsonPath("$.code").isEqualTo("0000")
                 .jsonPath("$.data.agentType").isEqualTo("TRAVEL_PLANNER")
                 .jsonPath("$.data.travelPlan").exists()
+                .jsonPath("$.data.feedbackTarget.scope").isEqualTo("OVERALL")
+                .jsonPath("$.data.issues").isArray()
+                .jsonPath("$.data.missingInformation").isArray()
+                .jsonPath("$.data.constraintSummary.status").exists()
                 .jsonPath("$.data.travelPlan.days[0]").exists()
                 .jsonPath("$.data.travelPlan.days[1]").exists()
                 .jsonPath("$.data.travelPlan.weatherSnapshot.city").isEqualTo("Hangzhou")

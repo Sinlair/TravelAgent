@@ -7,6 +7,7 @@ const timeline: TimelineEvent[] = [
     id: 'event-1',
     conversationId: 'conversation-1',
     stage: 'VALIDATE_PLAN',
+    status: 'FAILED',
     message: 'Validate generated plan against budget, opening hours, and load',
     details: {
       attempt: 2,
@@ -14,7 +15,9 @@ const timeline: TimelineEvent[] = [
       failCount: 1,
       repairCodes: ['budget', 'pace']
     },
-    createdAt: '2026-04-03T08:00:00Z'
+    createdAt: '2026-04-03T08:00:00Z',
+    startedAt: '2026-04-03T08:00:00Z',
+    endedAt: '2026-04-03T08:00:00Z'
   }
 ]
 

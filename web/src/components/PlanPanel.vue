@@ -23,11 +23,13 @@ import {
 } from 'lucide-vue-next'
 import PlanMap from './PlanMap.vue'
 import type { TravelConstraintCheck, TravelPlan, TravelPlanStop, TravelTransitLeg } from '../types/api'
+import type { ConversationResultViewModel } from '../utils/conversationResult'
 import { hotelPointId, stopPointId } from '../utils/travelPlan'
 import { normalizeDisplayText } from '../utils/text'
 
 const props = withDefaults(defineProps<{
   travelPlan: TravelPlan | null
+  resultView?: ConversationResultViewModel
   preferChinese?: boolean
 }>(), {
   preferChinese: true
@@ -45,6 +47,8 @@ const sectionRefs = ref<Record<SectionId, HTMLElement | null>>({
   checks: null,
   itinerary: null
 })
+const panelState = computed(() => props.resultView?.planState ?? (props.travelPlan ? 'success' : 'empty'))
+const mapState = computed(() => props.resultView?.mapState ?? (props.travelPlan ? 'success' : 'empty'))
 
 const copy = computed(() => (props.preferChinese
   ? {
@@ -222,6 +226,20 @@ const copy = computed(() => (props.preferChinese
       reduceBudgetBody: 'Trim stay cost or remove a paid stop first. That usually feels more natural than cutting trip length.',
       relaxPaceBody: 'Dropping one cross-town stop per day often improves comfort more than shrinking every stop.',
       confirmLocationBody: 'Verify the hotel, anchor POIs, and return stop area before locking the plan.'
+    }))
+
+const panelStateCopy = computed(() => (props.preferChinese
+  ? {
+      loading: '正在整理结构化行程...',
+      partial: '当前只有部分方案数据，右侧内容会按已知信息尽量展开。',
+      empty: '还没有可展示的结构化行程。',
+      error: '结构化行程暂时不可用，请先修复请求错误后重试。'
+    }
+  : {
+      loading: 'Preparing the structured itinerary...',
+      partial: 'Only part of the plan is available right now, so this panel is showing the grounded pieces only.',
+      empty: 'There is no structured itinerary to show yet.',
+      error: 'The structured itinerary is temporarily unavailable. Fix the request error and retry.'
     }))
 
 const visibleHotels = computed(() => props.travelPlan?.hotels.slice(0, 3) ?? [])
@@ -668,6 +686,13 @@ function getSectionIcon(id: SectionId) {
       </div>
     </div>
 
+    <div v-if="panelState !== 'success'" class="panel__empty plan-panel__status">
+      <AlertCircle v-if="panelState === 'error'" :size="24" />
+      <Clock v-else-if="panelState === 'loading'" :size="24" />
+      <Info v-else :size="24" />
+      <p>{{ panelStateCopy[panelState] }}</p>
+    </div>
+
     <div v-if="!travelPlan" class="panel__empty">
       <Calendar :size="32" />
       <h3>{{ copy.emptyTitle }}</h3>
@@ -770,7 +795,7 @@ function getSectionIcon(id: SectionId) {
             :class="`next-action--${action.tone}`"
           >
             <div class="next-action__title-row">
-              <component :is="action.tone === 'good' ? CheckCircle2 : Star" :size="14" />
+              <component :is="action.tone === 'default' ? Star : CheckCircle2" :size="14" />
               <span>{{ action.title }}</span>
             </div>
             <p>{{ action.body }}</p>
@@ -804,6 +829,7 @@ function getSectionIcon(id: SectionId) {
       <div :ref="el => setSectionRef('map', el)" class="plan-anchor">
         <PlanMap
           :travel-plan="travelPlan"
+          :state="mapState"
           :prefer-chinese="preferChinese"
           :active-point-id="activePointId"
           @select-point="activePointId = $event"

@@ -2,10 +2,12 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Map as MapIcon, MapPin, AlertCircle, Info } from 'lucide-vue-next'
 import type { TravelPlan } from '../types/api'
+import type { ResultPanelState } from '../utils/conversationResult'
 import { buildMapPoints, buildRoutePolylines, type MapPoint } from '../utils/travelPlan'
 
 const props = withDefaults(defineProps<{
   travelPlan: TravelPlan | null
+  state?: ResultPanelState
   preferChinese?: boolean
   activePointId?: string
 }>(), {
@@ -43,8 +45,11 @@ const copy = computed(() => (props.preferChinese
       title: '\u8def\u7ebf\u4e0e\u4f4d\u7f6e',
       nodes: (count: number) => `\u5df2\u6807\u6ce8 ${count} \u4e2a\u70b9\u4f4d`,
       emptyPlan: '\u751f\u6210\u884c\u7a0b\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u8def\u7ebf\u548c\u9152\u5e97\u4f4d\u7f6e\u3002',
+      partialPlan: '\u5f53\u524d\u53ea\u6709\u90e8\u5206\u5730\u56fe\u4e0a\u4e0b\u6587\uff0c\u7ed3\u6784\u5316\u8def\u7ebf\u8fd8\u6ca1\u6709\u5b8c\u6574\u751f\u6210\u3002',
       emptyCoordinates: '\u5f53\u524d\u884c\u7a0b\u8fd8\u6ca1\u6709\u8db3\u591f\u7684\u5750\u6807\u4fe1\u606f\uff0c\u6682\u65f6\u65e0\u6cd5\u7ed8\u5236\u5730\u56fe\u3002',
       noKey: '\u8def\u7ebf\u6570\u636e\u5df2\u7ecf\u51c6\u5907\u597d\uff0c\u4f46\u8fd8\u9700\u8981\u914d\u7f6e\u9ad8\u5fb7 Web Key \u624d\u80fd\u6e32\u67d3\u5e95\u56fe\u3002',
+      loading: '\u6b63\u5728\u51c6\u5907\u5730\u56fe\u70b9\u4f4d...',
+      error: '\u5730\u56fe\u72b6\u6001\u66f4\u65b0\u4e2d\u65ad\uff0c\u53ef\u4ee5\u7ee7\u7eed\u67e5\u770b\u6587\u672c\u7ed3\u679c\u3002',
       plottedNodes: '\u5173\u952e\u70b9\u4f4d',
       hotel: (index?: number) => `\u4f4f\u5bbf ${index ?? ''}`.trim(),
       day: (dayNumber?: number) => `\u7b2c ${dayNumber ?? ''} \u5929`.trim()
@@ -53,8 +58,11 @@ const copy = computed(() => (props.preferChinese
       title: 'Route and locations',
       nodes: (count: number) => `${count} nodes plotted`,
       emptyPlan: 'The route map will appear here after a plan is generated.',
+      partialPlan: 'Only part of the result is available, so the map is waiting for a fuller structured route.',
       emptyCoordinates: 'There are not enough coordinates in the current plan to draw the map yet.',
       noKey: 'The route data is ready, but an Amap Web key is still required to render the basemap.',
+      loading: 'Preparing map points...',
+      error: 'Live map status updates were interrupted, but the text result is still available.',
       plottedNodes: 'Key stops',
       hotel: (index?: number) => `Hotel ${index ?? ''}`.trim(),
       day: (dayNumber?: number) => `Day ${dayNumber ?? ''}`.trim()
@@ -197,9 +205,17 @@ async function loadAmap() {
       </div>
     </div>
 
-    <div v-if="!travelPlan" class="panel__empty">
+    <div v-if="state === 'loading'" class="panel__empty">
+      <Info :size="32" />
+      <p>{{ copy.loading }}</p>
+    </div>
+    <div v-else-if="state === 'error'" class="panel__empty">
+      <AlertCircle :size="32" />
+      <p>{{ copy.error }}</p>
+    </div>
+    <div v-else-if="!travelPlan" class="panel__empty">
       <MapIcon :size="32" />
-      <p>{{ copy.emptyPlan }}</p>
+      <p>{{ state === 'partial' ? copy.partialPlan : copy.emptyPlan }}</p>
     </div>
     <div v-else-if="!mapPoints.length" class="panel__empty">
       <AlertCircle :size="32" />

@@ -7,12 +7,16 @@ import type {
   ConversationDetailResponse,
   ConversationFeedback,
   ConversationFeedbackRequest,
-  ConversationMessage
+  ConversationMessage,
+  FeedbackTargetScope
 } from '../types/api'
+import { buildConversationResultViewModel } from '../utils/conversationResult'
+import type { ConversationResultViewModel } from '../utils/conversationResult'
 import { normalizeDisplayText } from '../utils/text'
 
 const props = withDefaults(defineProps<{
   detail: ConversationDetailResponse | null
+  resultView?: ConversationResultViewModel
   sending: boolean
   feedback: ConversationFeedback | null
   feedbackSaving: boolean
@@ -32,15 +36,95 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const attachments = ref<ChatImageAttachmentRequest[]>([])
 const attachmentError = ref('')
 const isDragging = ref(false)
+const feedbackEditorLabel = ref<'PARTIAL' | 'REJECTED' | ''>('')
+const feedbackScope = ref<FeedbackTargetScope>('ANSWER')
+const feedbackNote = ref('')
+const feedbackReasonLabels = ref<string[]>([])
 
 const MAX_ATTACHMENTS = 4
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 
 const pendingImageContext = computed(() => props.detail?.imageContextCandidate ?? null)
-const latestAssistantMessageId = computed(() =>
-  [...(props.detail?.messages ?? [])].reverse().find(message => message.role === 'ASSISTANT')?.id ?? ''
+const resolvedResultView = computed(() => props.resultView ?? buildConversationResultViewModel(props.detail, {
+  sending: props.sending,
+  errorMessage: props.errorMessage
+}))
+const latestAssistantMessageId = computed(() => resolvedResultView.value.latestAssistantMessageId)
+const availableFeedbackScopes = computed<FeedbackTargetScope[]>(() =>
+  (resolvedResultView.value.feedbackTarget?.availableScopes ?? ['ANSWER']) as FeedbackTargetScope[]
 )
+const normalizedFeedbackScope = computed<FeedbackTargetScope>(() =>
+  (resolvedResultView.value.feedbackTarget?.scope ?? 'ANSWER') as FeedbackTargetScope
+)
+
+const feedbackUi = computed(() => {
+  const scopeLabels = props.preferChinese
+    ? {
+        ANSWER: '文本答案',
+        PLAN: '结构化行程',
+        OVERALL: '整体方案'
+      }
+    : {
+        ANSWER: 'Answer',
+        PLAN: 'Plan',
+        OVERALL: 'Overall'
+      }
+  const scopeHint = props.preferChinese
+    ? '评价范围'
+    : 'Feedback scope'
+  const notePlaceholder = props.preferChinese
+    ? '可选：补充你改了什么、哪里不准，或为什么不打算采用。'
+    : 'Optional: add what you changed, what felt wrong, or why you would not use it.'
+  const saveLabel = props.preferChinese
+    ? (props.feedbackSaving ? '提交中...' : '提交反馈')
+    : (props.feedbackSaving ? 'Saving...' : 'Submit feedback')
+  const cancelLabel = props.preferChinese ? '取消' : 'Cancel'
+  const issueTitle = props.preferChinese ? '当前状态' : 'Current result state'
+  const missingTitle = props.preferChinese ? '还缺这些关键信息' : 'Missing trip details'
+
+  const reasonOptions = {
+    PARTIAL: props.preferChinese
+      ? [
+          { code: 'budget_needs_adjustment', label: '预算要再调' },
+          { code: 'pace_needs_adjustment', label: '节奏要再松' },
+          { code: 'location_needs_confirmation', label: '地点还要确认' },
+          { code: 'too_generic', label: '内容还偏泛' }
+        ]
+      : [
+          { code: 'budget_needs_adjustment', label: 'Budget needs work' },
+          { code: 'pace_needs_adjustment', label: 'Pace needs work' },
+          { code: 'location_needs_confirmation', label: 'Location needs review' },
+          { code: 'too_generic', label: 'Still too generic' }
+        ],
+    REJECTED: props.preferChinese
+      ? [
+          { code: 'not_useful', label: '整体没用上' },
+          { code: 'incorrect_grounding', label: '地点不准' },
+          { code: 'budget_mismatch', label: '预算不匹配' },
+          { code: 'too_packed', label: '行程太满' },
+          { code: 'missing_context', label: '缺关键上下文' }
+        ]
+      : [
+          { code: 'not_useful', label: 'Not useful' },
+          { code: 'incorrect_grounding', label: 'Incorrect grounding' },
+          { code: 'budget_mismatch', label: 'Budget mismatch' },
+          { code: 'too_packed', label: 'Too packed' },
+          { code: 'missing_context', label: 'Missing context' }
+        ]
+  } as const
+
+  return {
+    scopeLabels,
+    scopeHint,
+    notePlaceholder,
+    saveLabel,
+    cancelLabel,
+    issueTitle,
+    missingTitle,
+    reasonOptions
+  }
+})
 
 const factLabels = computed<Record<string, string>>(() => props.preferChinese
   ? {
@@ -94,6 +178,7 @@ const copy = computed(() => (props.preferChinese
       feedbackAccepted: '\u63a5\u53d7',
       feedbackPartial: '\u90e8\u5206\u63a5\u53d7',
       feedbackRejected: '\u62d2\u7edd',
+      feedbackAdjust: '\u8bf4\u8bf4\u54ea\u91cc\u8fd8\u8981\u6539',
       memoryLabels: {
         origin: '\u51fa\u53d1\u5730',
         destination: '\u76ee\u7684\u5730',
@@ -142,6 +227,7 @@ const copy = computed(() => (props.preferChinese
       feedbackAccepted: 'Accept',
       feedbackPartial: 'Partially Accept',
       feedbackRejected: 'Reject',
+      feedbackAdjust: 'Say what still needs work',
       memoryLabels: {
         origin: 'Origin',
         destination: 'Destination',
@@ -315,6 +401,18 @@ const missingImageFacts = computed(() => {
   return missingFields.map(field => factLabels.value[field] ?? field)
 })
 
+const resultStatusCards = computed(() => {
+  const cards: Array<{ title: string; body: string; tone: 'info' | 'warn' }> = []
+  for (const issue of resolvedResultView.value.issues) {
+    cards.push({
+      title: issueLabel(issue.code),
+      body: issueMessage(issue.code, issue.message),
+      tone: issue.severity === 'WARN' ? 'warn' : 'info'
+    })
+  }
+  return cards
+})
+
 function submit() {
   if (!input.value.trim() && attachments.value.length === 0) {
     return
@@ -419,12 +517,18 @@ function applyPrompt(prompt: string) {
 }
 
 function canRenderFeedback(message: ConversationMessage) {
-  return Boolean(props.detail?.travelPlan) && message.role === 'ASSISTANT' && message.id === latestAssistantMessageId.value
+  return Boolean(resolvedResultView.value.feedbackTarget) && message.role === 'ASSISTANT' && message.id === latestAssistantMessageId.value
 }
 
 function feedbackChoiceClass(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED') {
   return {
     'message__feedback-choice--active': props.feedback?.label === label
+  }
+}
+
+function feedbackScopeClass(scope: FeedbackTargetScope) {
+  return {
+    'message__feedback-choice--active': feedbackScope.value === scope
   }
 }
 
@@ -480,11 +584,99 @@ function localizePreference(value: string) {
   return trimmed
 }
 
-function submitFeedback(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED', reasonCode?: string) {
-  if (props.feedbackSaving) {
+function openFeedbackEditor(label: 'PARTIAL' | 'REJECTED') {
+  feedbackEditorLabel.value = label
+  feedbackScope.value = normalizedFeedbackScope.value
+  feedbackReasonLabels.value = []
+  feedbackNote.value = ''
+}
+
+function closeFeedbackEditor() {
+  feedbackEditorLabel.value = ''
+  feedbackReasonLabels.value = []
+  feedbackNote.value = ''
+}
+
+function toggleFeedbackReason(code: string) {
+  if (feedbackReasonLabels.value.includes(code)) {
+    feedbackReasonLabels.value = feedbackReasonLabels.value.filter(item => item !== code)
     return
   }
-  emit('feedback', { label, reasonCode })
+  feedbackReasonLabels.value = [...feedbackReasonLabels.value, code]
+}
+
+function submitFeedback(label: 'ACCEPTED' | 'PARTIAL' | 'REJECTED', reasonLabels: string[] = [], note = '') {
+  if (props.feedbackSaving || !resolvedResultView.value.feedbackTarget) {
+    return
+  }
+  emit('feedback', {
+    label,
+    targetId: resolvedResultView.value.feedbackTarget.targetId,
+    targetScope: label === 'ACCEPTED' ? normalizedFeedbackScope.value : feedbackScope.value,
+    planVersion: resolvedResultView.value.feedbackTarget.planVersion ?? undefined,
+    reasonLabels,
+    reasonCode: reasonLabels[0],
+    note: note.trim() || undefined
+  })
+  if (label !== 'ACCEPTED') {
+    closeFeedbackEditor()
+  }
+}
+
+function submitFeedbackEditor() {
+  if (!feedbackEditorLabel.value) {
+    return
+  }
+  submitFeedback(feedbackEditorLabel.value, feedbackReasonLabels.value, feedbackNote.value)
+}
+
+function feedbackReasonOptions() {
+  if (!feedbackEditorLabel.value) {
+    return []
+  }
+  return feedbackUi.value.reasonOptions[feedbackEditorLabel.value]
+}
+
+function issueLabel(code: string) {
+  if (!props.preferChinese) {
+    return {
+      IMAGE_CONTEXT_CONFIRMATION_REQUIRED: 'Image facts pending',
+      CLARIFICATION_REQUIRED: 'More detail needed',
+      PLAN_REQUIRES_REVIEW: 'Plan still has risk',
+      PLAN_REPAIRED: 'Plan passed after repair'
+    }[code] ?? code
+  }
+  return {
+    IMAGE_CONTEXT_CONFIRMATION_REQUIRED: '图片信息待确认',
+    CLARIFICATION_REQUIRED: '还需要补充信息',
+    PLAN_REQUIRES_REVIEW: '方案仍有风险',
+    PLAN_REPAIRED: '方案已修复通过'
+  }[code] ?? code
+}
+
+function issueMessage(code: string, fallback: string) {
+  if (!props.preferChinese) {
+    return fallback
+  }
+  return {
+    IMAGE_CONTEXT_CONFIRMATION_REQUIRED: '先确认或忽略截图里提取到的旅行事实，再继续规划。',
+    CLARIFICATION_REQUIRED: '补齐目的地、天数、预算或偏好后，方案会更稳定。',
+    PLAN_REQUIRES_REVIEW: '当前结果还能参考，但建议先处理风险再直接采用。',
+    PLAN_REPAIRED: '系统已经为你做过修复，这份方案带着一些取舍。'
+  }[code] ?? fallback
+}
+
+function missingPromptLabel(code: string, prompt: string) {
+  if (!props.preferChinese) {
+    return prompt
+  }
+  return {
+    destination: '补一个明确目的地，比如杭州、西湖周边或成都主城区。',
+    days: '补一下旅行天数或晚数，比如 3 天 2 晚。',
+    budget: '补一个预算上限或期望区间，系统更容易做取舍。',
+    preferences: '补一点偏好，比如轻松节奏、本地美食、亲子或拍照。',
+    origin: '如果跨城交通重要，补一下出发地。'
+  }[code] ?? prompt
 }
 
 function readFileAsDataUrl(file: File) {
@@ -625,6 +817,37 @@ function markdownToHtml(markdown: string) {
       </div>
     </article>
 
+    <article v-if="resultStatusCards.length || resolvedResultView.missingInformation.length" class="brief-card brief-card--status">
+      <div class="brief-card__header">
+        <div class="brief-card__title-group">
+          <AlertCircle :size="16" class="brief-card__sparkle" />
+          <div>
+            <span class="brief-card__eyebrow">{{ feedbackUi.issueTitle }}</span>
+            <strong>{{ resolvedResultView.chatState === 'success' ? copy.briefReady : copy.feedbackAdjust }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="resultStatusCards.length" class="brief-card__grid">
+        <article
+          v-for="card in resultStatusCards"
+          :key="`${card.title}-${card.body}`"
+          class="brief-card__slot"
+          :class="{ 'brief-card__slot--done': card.tone === 'info' }"
+        >
+          <span>{{ card.title }}</span>
+          <strong>{{ card.body }}</strong>
+        </article>
+      </div>
+
+      <div v-if="resolvedResultView.missingInformation.length" class="brief-card__missing">
+        <span>{{ feedbackUi.missingTitle }}</span>
+        <p>
+          {{ resolvedResultView.missingInformation.map(item => `${item.label}: ${missingPromptLabel(item.code, item.prompt)}`).join(' / ') }}
+        </p>
+      </div>
+    </article>
+
     <div class="chat-list">
       <div v-if="!detail" class="chat-empty">
         <h3>{{ copy.emptyTitle }}</h3>
@@ -670,7 +893,7 @@ function markdownToHtml(markdown: string) {
             class="message__feedback-choice"
             :class="feedbackChoiceClass('ACCEPTED')"
             :disabled="feedbackSaving"
-            @click="submitFeedback('ACCEPTED', 'used_as_is')"
+            @click="submitFeedback('ACCEPTED')"
           >
             {{ feedbackSaving && feedback?.label === 'ACCEPTED' ? copy.feedbackSaving : copy.feedbackAccepted }}
           </button>
@@ -679,7 +902,7 @@ function markdownToHtml(markdown: string) {
             class="message__feedback-choice"
             :class="feedbackChoiceClass('PARTIAL')"
             :disabled="feedbackSaving"
-            @click="submitFeedback('PARTIAL', 'edited_before_use')"
+            @click="openFeedbackEditor('PARTIAL')"
           >
             {{ feedbackSaving && feedback?.label === 'PARTIAL' ? copy.feedbackSaving : copy.feedbackPartial }}
           </button>
@@ -688,10 +911,63 @@ function markdownToHtml(markdown: string) {
             class="message__feedback-choice"
             :class="feedbackChoiceClass('REJECTED')"
             :disabled="feedbackSaving"
-            @click="submitFeedback('REJECTED', 'not_useful')"
+            @click="openFeedbackEditor('REJECTED')"
           >
             {{ feedbackSaving && feedback?.label === 'REJECTED' ? copy.feedbackSaving : copy.feedbackRejected }}
           </button>
+        </div>
+        <div v-if="canRenderFeedback(message) && feedbackEditorLabel" class="message__feedback-editor">
+          <div class="message__feedback-scopes">
+            <span>{{ feedbackUi.scopeHint }}</span>
+            <button
+              v-for="scope in availableFeedbackScopes"
+              :key="scope"
+              type="button"
+              class="message__feedback-choice"
+              :class="feedbackScopeClass(scope)"
+              :disabled="feedbackSaving"
+              @click="feedbackScope = scope"
+            >
+              {{ feedbackUi.scopeLabels[scope] }}
+            </button>
+          </div>
+          <div class="message__feedback-reasons">
+            <button
+              v-for="option in feedbackReasonOptions()"
+              :key="option.code"
+              type="button"
+              class="composer__suggestion"
+              :class="{ 'message__feedback-choice--active': feedbackReasonLabels.includes(option.code) }"
+              :disabled="feedbackSaving"
+              @click="toggleFeedbackReason(option.code)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+          <textarea
+            v-model="feedbackNote"
+            rows="3"
+            class="message__feedback-note"
+            :placeholder="feedbackUi.notePlaceholder"
+          />
+          <div class="message__actions">
+            <button
+              type="button"
+              class="message__feedback-choice message__feedback-choice--active"
+              :disabled="feedbackSaving || !feedbackReasonLabels.length"
+              @click="submitFeedbackEditor"
+            >
+              {{ feedbackUi.saveLabel }}
+            </button>
+            <button
+              type="button"
+              class="message__feedback-choice"
+              :disabled="feedbackSaving"
+              @click="closeFeedbackEditor"
+            >
+              {{ feedbackUi.cancelLabel }}
+            </button>
+          </div>
         </div>
       </article>
 

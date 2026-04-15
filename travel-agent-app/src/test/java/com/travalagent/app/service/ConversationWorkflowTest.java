@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -181,6 +182,9 @@ class ConversationWorkflowTest {
         assertSame(updatedMemory, response.taskMemory());
         assertSame(travelPlan, response.travelPlan());
         assertSame(timeline, response.timeline());
+        assertNotNull(response.feedbackTarget());
+        assertEquals("OVERALL", response.feedbackTarget().scope());
+        assertTrue(response.issues().isEmpty());
 
         verify(conversationRepository).saveTravelPlan(travelPlan);
         verify(longTermMemoryRepository).saveMemory(eq(conversationId), eq("TRAVEL_PLANNER"), eq("Summary"), anyMap());
@@ -222,6 +226,8 @@ class ConversationWorkflowTest {
         ChatResponse response = conversationWorkflow.execute(request);
 
         assertEquals(AgentType.GENERAL, response.agentType());
+        assertEquals("ANSWER", response.feedbackTarget().scope());
+        assertEquals("IMAGE_CONTEXT_CONFIRMATION_REQUIRED", response.issues().getFirst().code());
         verify(conversationRepository).savePendingImageContext(any(ConversationImageContext.class));
         verify(plannerAgent, never()).execute(any());
 

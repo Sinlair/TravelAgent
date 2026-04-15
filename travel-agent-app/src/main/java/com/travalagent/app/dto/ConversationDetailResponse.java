@@ -17,7 +17,17 @@ public record ConversationDetailResponse(
         TaskMemory taskMemory,
         TravelPlan travelPlan,
         ConversationFeedback feedback,
-        ConversationImageContext imageContextCandidate
+        ConversationImageContext imageContextCandidate,
+        ChatResponseFeedbackTarget feedbackTarget,
+        List<ChatResponseIssue> issues,
+        List<ConversationMissingInformationItem> missingInformation,
+        ConversationConstraintSummary constraintSummary
 ) {
+    public ConversationDetailResponse {
+        timeline = timeline == null ? List.of() : List.copyOf(timeline);
+        issues = issues == null ? List.of() : List.copyOf(issues);
+        missingInformation = missingInformation == null ? List.of() : List.copyOf(missingInformation);
+        constraintSummary = constraintSummary == null ? ConversationConstraintSummary.none() : constraintSummary;
+    }
 }
 

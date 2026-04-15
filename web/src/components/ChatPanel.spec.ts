@@ -40,6 +40,23 @@ const detail: ConversationDetailResponse = {
   },
   travelPlan: null,
   feedback: null,
+  feedbackTarget: {
+    targetId: 'message-2',
+    conversationId: 'conversation-1',
+    scope: 'ANSWER',
+    planVersion: null,
+    agentType: 'GENERAL',
+    hasTravelPlan: false,
+    availableScopes: ['ANSWER', 'OVERALL']
+  },
+  issues: [],
+  missingInformation: [],
+  constraintSummary: {
+    status: 'NONE',
+    repaired: false,
+    hasRisk: false,
+    issues: []
+  },
   imageContextCandidate: {
     conversationId: 'conversation-1',
     summary: '- Hotel: West Lake\n- Check-in: Friday night',
