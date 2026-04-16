@@ -12,6 +12,7 @@ import com.travalagent.domain.model.entity.ConversationSession;
 import com.travalagent.domain.model.entity.TaskMemory;
 import com.travalagent.domain.model.entity.TimelineEvent;
 import com.travalagent.domain.model.entity.TravelPlan;
+import com.travalagent.domain.model.entity.TravelPlanDay;
 import com.travalagent.domain.model.valobj.AgentExecutionContext;
 import com.travalagent.domain.model.valobj.AgentExecutionResult;
 import com.travalagent.domain.model.valobj.AgentRouteDecision;
@@ -48,6 +49,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -197,6 +199,129 @@ class ConversationWorkflowTest {
         verify(conversationRepository).saveTravelPlanVersion(any());
         verify(longTermMemoryRepository).saveMemory(eq(conversationId), eq("TRAVEL_PLANNER"), eq("Summary"), anyMap());
         verify(timelinePublisher, atLeastOnce()).publish(any(TimelineEvent.class));
+    }
+
+    @Test
+    void executeKeepsStructuredBriefFieldsWhenFinalizingConversation() {
+        String conversationId = "conversation-brief";
+        ChatRequest request = new ChatRequest(
+                conversationId,
+                "Plan a 2 day Hangzhou trip for a couple from 2026-05-02 to 2026-05-03 with a 2500 CNY budget",
+                new com.travalagent.app.dto.TripBriefRequest(
+                        "Shanghai",
+                        "Hangzhou",
+                        "2026-05-02",
+                        "2026-05-03",
+                        2,
+                        "couple",
+                        "2500 CNY",
+                        List.of("West Lake", "local food")
+                ),
+                List.of(),
+                null
+        );
+
+        TaskMemory storedTaskMemory = TaskMemory.empty(conversationId);
+        TravelPlan travelPlan = new TravelPlan(
+                conversationId,
+                "Hangzhou plan",
+                "Two day city break",
+                "West Lake",
+                "Central access",
+                List.of(),
+                2500,
+                1800,
+                2200,
+                List.of("West Lake"),
+                List.of(),
+                List.of(),
+                List.of(
+                        new TravelPlanDay(
+                                1,
+                                "Arrival and lakefront",
+                                "09:00",
+                                "18:00",
+                                60,
+                                240,
+                                200,
+                                List.of(),
+                                null
+                        ),
+                        new TravelPlanDay(
+                                2,
+                                "Tea village and departure",
+                                "09:00",
+                                "16:00",
+                                50,
+                                220,
+                                180,
+                                List.of(),
+                                null
+                        )
+                ),
+                Instant.now()
+        );
+
+        List<ConversationMessage> recentMessages = List.of(new ConversationMessage(
+                "msg-user",
+                conversationId,
+                MessageRole.USER,
+                request.message(),
+                null,
+                Instant.now()
+        ));
+        List<ConversationMessage> fullMessages = List.of(
+                recentMessages.get(0),
+                new ConversationMessage(
+                        "msg-assistant",
+                        conversationId,
+                        MessageRole.ASSISTANT,
+                        "Here is your itinerary.",
+                        AgentType.TRAVEL_PLANNER,
+                        Instant.now()
+                )
+        );
+
+        when(conversationRepository.findConversation(conversationId)).thenReturn(Optional.empty());
+        when(conversationRepository.findTaskMemory(conversationId)).thenReturn(Optional.of(storedTaskMemory));
+        when(conversationRepository.findRecentMessages(conversationId, 12)).thenReturn(recentMessages);
+        when(taskMemoryExtractor.extract(any(TaskMemory.class), anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(longTermMemoryRepository.searchRelevant(request.message(), 3)).thenReturn(List.of());
+        when(agentRouter.route(any())).thenReturn(new AgentRouteDecision(
+                AgentType.TRAVEL_PLANNER,
+                "keyword route: planner",
+                false,
+                null
+        ));
+        when(plannerAgent.execute(any())).thenReturn(new AgentExecutionResult(
+                AgentType.TRAVEL_PLANNER,
+                "Here is your itinerary.",
+                Map.of("plannerMode", "constraint-driven"),
+                travelPlan
+        ));
+        when(conversationRepository.findMessages(conversationId)).thenReturn(fullMessages);
+        when(conversationRepository.findTimeline(conversationId)).thenReturn(List.of());
+
+        ChatResponse response = conversationWorkflow.execute(request);
+
+        assertEquals("Shanghai", response.taskMemory().origin());
+        assertEquals("Hangzhou", response.taskMemory().destination());
+        assertEquals("2026-05-02", response.taskMemory().startDate());
+        assertEquals("2026-05-03", response.taskMemory().endDate());
+        assertEquals("couple", response.taskMemory().travelers());
+        assertEquals("2500 CNY", response.taskMemory().budget());
+        assertEquals(List.of("West Lake", "local food"), response.taskMemory().preferences());
+        assertEquals("2026-05-02", response.travelPlan().days().get(0).date());
+        assertEquals("2026-05-03", response.travelPlan().days().get(1).date());
+        assertTrue(response.missingInformation().isEmpty());
+
+        ArgumentCaptor<TaskMemory> taskMemoryCaptor = ArgumentCaptor.forClass(TaskMemory.class);
+        verify(taskMemoryExtractor, times(2)).extract(taskMemoryCaptor.capture(), anyList());
+        assertEquals("2026-05-02", taskMemoryCaptor.getAllValues().get(0).startDate());
+        assertEquals("couple", taskMemoryCaptor.getAllValues().get(0).travelers());
+        assertEquals("2026-05-02", taskMemoryCaptor.getAllValues().get(1).startDate());
+        assertEquals("couple", taskMemoryCaptor.getAllValues().get(1).travelers());
     }
 
     @Test

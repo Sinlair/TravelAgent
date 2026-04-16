@@ -29,7 +29,7 @@ public class OpenAiAgentRouter implements AgentRouter {
     @Override
     public AgentRouteDecision route(RoutingContext context) {
         if (!openAiAvailability.isAvailable()) {
-            return heuristic(context.userMessage());
+            return heuristic(context);
         }
         try {
             RouterOutput output = chatClientBuilder.build()
@@ -58,7 +58,7 @@ public class OpenAiAgentRouter implements AgentRouter {
                     .call()
                     .entity(RouterOutput.class);
             if (output == null || output.agentType() == null) {
-                return heuristic(context.userMessage());
+                return heuristic(context);
             }
             return new AgentRouteDecision(
                     output.agentType(),
@@ -67,11 +67,12 @@ public class OpenAiAgentRouter implements AgentRouter {
                     output.clarificationQuestion()
             );
         } catch (Exception exception) {
-            return heuristic(context.userMessage());
+            return heuristic(context);
         }
     }
 
-    private AgentRouteDecision heuristic(String message) {
+    private AgentRouteDecision heuristic(RoutingContext context) {
+        String message = context == null ? null : context.userMessage();
         String content = message == null ? "" : message.toLowerCase();
         boolean chinese = containsChinese(message);
         if (containsAny(content, "weather", "temperature", "rain") || containsAny(message, "天气", "温度", "下雨")) {
@@ -80,10 +81,18 @@ public class OpenAiAgentRouter implements AgentRouter {
         if (containsAny(content, "coordinate", "address", "geocode", "latitude", "longitude") || containsAny(message, "经纬度", "地址", "坐标", "地理编码")) {
             return new AgentRouteDecision(AgentType.GEO, "keyword route: geo", false, null);
         }
-        if (containsAny(content, "trip", "itinerary", "budget", "travel", "days") || containsAny(message, "旅行", "旅游", "攻略", "行程", "预算", "几天")) {
-            boolean missingDestination = !hasDestinationHint(message, content);
-            boolean missingDays = !hasDayHint(message, content);
-            boolean missingBudget = !hasBudgetHint(message, content);
+        boolean hasTaskMemoryContext = context != null
+                && context.taskMemory() != null
+                && (hasText(context.taskMemory().destination())
+                || context.taskMemory().days() != null
+                || hasText(context.taskMemory().budget()));
+        boolean plannerHint = containsAny(content, "trip", "itinerary", "budget", "travel", "days")
+                || containsAny(message, "旅行", "旅游", "攻略", "行程", "预算", "几天")
+                || (hasTaskMemoryContext && containsAny(content, "refresh", "replan", "day", "hotel", "stay"));
+        if (plannerHint) {
+            boolean missingDestination = !hasDestinationHint(context, message, content);
+            boolean missingDays = !hasDayHint(context, message, content);
+            boolean missingBudget = !hasBudgetHint(context, message, content);
             boolean clarify = missingDestination || missingDays || missingBudget;
             return new AgentRouteDecision(
                     AgentType.TRAVEL_PLANNER,
@@ -95,7 +104,10 @@ public class OpenAiAgentRouter implements AgentRouter {
         return new AgentRouteDecision(AgentType.GENERAL, "fallback route", false, null);
     }
 
-    private boolean hasDestinationHint(String message, String content) {
+    private boolean hasDestinationHint(RoutingContext context, String message, String content) {
+        if (context != null && context.taskMemory() != null && hasText(context.taskMemory().destination())) {
+            return true;
+        }
         if (content.contains(" to ")) {
             return true;
         }
@@ -110,11 +122,17 @@ public class OpenAiAgentRouter implements AgentRouter {
                 || containsAny(message, "杭州", "上海", "北京", "广州", "深圳", "成都", "重庆", "西安", "苏州", "南京");
     }
 
-    private boolean hasDayHint(String message, String content) {
+    private boolean hasDayHint(RoutingContext context, String message, String content) {
+        if (context != null && context.taskMemory() != null && context.taskMemory().days() != null) {
+            return true;
+        }
         return content.contains("day") || (message != null && ZH_DAYS.matcher(message).find());
     }
 
-    private boolean hasBudgetHint(String message, String content) {
+    private boolean hasBudgetHint(RoutingContext context, String message, String content) {
+        if (context != null && context.taskMemory() != null && hasText(context.taskMemory().budget())) {
+            return true;
+        }
         return content.contains("budget")
                 || content.contains("cny")
                 || content.contains("rmb")
@@ -132,6 +150,10 @@ public class OpenAiAgentRouter implements AgentRouter {
 
     private boolean containsChinese(String value) {
         return value != null && value.codePoints().anyMatch(codePoint -> codePoint >= 0x4E00 && codePoint <= 0x9FFF);
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     private record RouterOutput(

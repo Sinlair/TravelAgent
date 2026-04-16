@@ -96,3 +96,25 @@ Started: 2026-04-15 22:54 +08:00
   - the new local-demo startup path
   - the quality-scenario replay command
 - Updated `ralph/prd.json` so `US-017` is now marked passed.
+
+---
+
+## 2026-04-17 02:20 +08:00 - Browser acceptance closure for remaining UI stories
+- Fixed three issues that blocked browser-level closure in `local-demo`:
+  - Preserved structured brief fields during conversation finalization by re-extracting memory from `workingMemory` instead of the stale stored snapshot.
+  - Preserved and heuristically recognized `startDate`, `endDate`, and `travelers` in the fallback task-memory extractor.
+  - Allowed heuristic planner routing to use existing task memory for scoped follow-up requests such as hotel/day replans.
+  - Removed a `Map.of(...)` null-value crash in user-message metadata for partial brief updates.
+- Added regression coverage for:
+  - structured brief fields surviving finalization
+  - heuristic planner routing for scoped follow-up requests with existing task memory
+- Re-ran `.\mvnw.cmd -B test`; all backend/module tests passed after the fixes.
+- Performed headless browser acceptance against `local-demo` on `2026-04-17` and verified:
+  - `US-003`: trip brief editor renders missing markers and submits structured brief payload
+  - `US-005`: itinerary UI renders real dates (`2026-05-02`, `2026-05-03`)
+  - `US-007`: trust-state copy renders on stay recommendations
+  - `US-010`: hotel-area and day-level replan controls both render and surface refreshed banners
+  - `US-013`: checklist interaction updates the pending count immediately
+  - `US-016`: recent version comparison renders after scoped replans
+  - `US-019`: feedback operations filters work for destination, agent, scope, and reason label
+- `ralph/prd.json` now marks all productization stories `US-001` through `US-019` as passed.

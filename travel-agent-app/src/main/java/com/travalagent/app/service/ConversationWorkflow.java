@@ -493,7 +493,10 @@ public class ConversationWorkflow {
         ));
 
         List<ConversationMessage> fullMessages = enrichMessagesForPlanning(conversationRepository.findMessages(conversationId));
-        TaskMemory updatedMemory = taskMemoryExtractor.extract(memoryContext.storedTaskMemory(), fullMessages);
+        TaskMemory updatedMemory = taskMemoryExtractor.extract(memoryContext.workingMemory(), fullMessages);
+        if (updatedMemory == null) {
+            updatedMemory = memoryContext.workingMemory();
+        }
         if (routeDecision.clarificationRequired()) {
             updatedMemory = updatedMemory.merge(new TaskMemory(
                     conversationId,
@@ -1048,16 +1051,16 @@ public class ConversationWorkflow {
             metadata.put("imageFacts", imageFacts);
         }
         if (briefPatch != null) {
-            metadata.put("tripBrief", Map.of(
-                    "origin", briefPatch.origin(),
-                    "destination", briefPatch.destination(),
-                    "startDate", briefPatch.startDate(),
-                    "endDate", briefPatch.endDate(),
-                    "days", briefPatch.days(),
-                    "travelers", briefPatch.travelers(),
-                    "budget", briefPatch.budget(),
-                    "preferences", briefPatch.preferences()
-            ));
+            Map<String, Object> tripBrief = new LinkedHashMap<>();
+            tripBrief.put("origin", briefPatch.origin());
+            tripBrief.put("destination", briefPatch.destination());
+            tripBrief.put("startDate", briefPatch.startDate());
+            tripBrief.put("endDate", briefPatch.endDate());
+            tripBrief.put("days", briefPatch.days());
+            tripBrief.put("travelers", briefPatch.travelers());
+            tripBrief.put("budget", briefPatch.budget());
+            tripBrief.put("preferences", briefPatch.preferences());
+            metadata.put("tripBrief", tripBrief);
         }
         return metadata;
     }

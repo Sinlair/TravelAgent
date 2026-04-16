@@ -27,6 +27,7 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
     private static final Pattern ZH_CITY_PREFIX = Pattern.compile("([\\p{IsHan}]{2,20})\\s*(?:三天|两天|一天|四天|五天|六天|七天)");
     private static final Pattern ZH_DAYS_THEN_DESTINATION = Pattern.compile("(?:^|[，,\\s])(?:[一二两三四五六七八九十0-9]{1,3})\\s*天\\s*([\\p{IsHan}]{2,20})(?:[，,\\s]|$)");
     private static final Pattern BUDGET = Pattern.compile("(\\d{3,6})");
+    private static final Pattern ISO_DATE = Pattern.compile("(20\\d{2}-\\d{2}-\\d{2})");
 
     private final ChatClient.Builder chatClientBuilder;
     private final OpenAiAvailability openAiAvailability;
@@ -91,7 +92,19 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
                 LlmExtractionSanitizer.sanitizeStructuredText(existing.destination()),
                 LlmExtractionSanitizer.sanitizeStructuredText(extractDestination(userText))
         );
+        String startDate = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.startDate()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractStartDate(userText))
+        );
+        String endDate = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.endDate()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractEndDate(userText))
+        );
         Integer days = existing.days() != null ? existing.days() : extractDays(userText);
+        String travelers = firstNonBlank(
+                LlmExtractionSanitizer.sanitizeStructuredText(existing.travelers()),
+                LlmExtractionSanitizer.sanitizeStructuredText(extractTravelers(userText))
+        );
         String budget = firstNonBlank(
                 LlmExtractionSanitizer.sanitizeStructuredText(existing.budget()),
                 LlmExtractionSanitizer.sanitizeStructuredText(extractBudgetText(userText, chinese))
@@ -105,7 +118,10 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
                 existing.conversationId(),
                 emptyToNull(origin),
                 emptyToNull(destination),
+                emptyToNull(startDate),
+                emptyToNull(endDate),
                 days,
+                emptyToNull(travelers),
                 emptyToNull(budget),
                 preferences,
                 pendingQuestion,
@@ -169,6 +185,19 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
         return matcher.find() ? Integer.parseInt(matcher.group(1)) : null;
     }
 
+    private String extractStartDate(String text) {
+        Matcher matcher = ISO_DATE.matcher(text);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private String extractEndDate(String text) {
+        Matcher matcher = ISO_DATE.matcher(text);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
     private String extractBudgetText(String text, boolean chinese) {
         Matcher matcher = BUDGET.matcher(text.replace(",", ""));
         while (matcher.find()) {
@@ -191,6 +220,23 @@ public class OpenAiTaskMemoryExtractor implements TaskMemoryExtractor {
             preferences.add("relaxed pace");
         }
         return List.copyOf(preferences);
+    }
+
+    private String extractTravelers(String text) {
+        String lower = text == null ? "" : text.toLowerCase();
+        if (lower.contains("couple") || (text != null && (text.contains("情侣") || text.contains("夫妻") || text.contains("两个人")))) {
+            return "couple";
+        }
+        if (lower.contains("family") || (text != null && (text.contains("家庭") || text.contains("爸妈") || text.contains("父母")))) {
+            return "family";
+        }
+        if (lower.contains("solo") || (text != null && (text.contains("独自") || text.contains("一个人")))) {
+            return "solo";
+        }
+        if (lower.contains("friends") || (text != null && text.contains("朋友"))) {
+            return "friends";
+        }
+        return null;
     }
 
     private List<String> mergePreferences(List<String> existing, List<String> incoming) {

@@ -46,8 +46,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by applying brief fields from the workspace and confirming the structured request payload."
     },
     {
       "id": "US-004",
@@ -77,8 +77,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by confirming itinerary cards render actual dates for Day 1 and Day 2."
     },
     {
       "id": "US-006",
@@ -108,8 +108,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by confirming trust-state copy is rendered on stay recommendations."
     },
     {
       "id": "US-008",
@@ -154,8 +154,8 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by confirming hotel-area and day-level replan controls both render and surface refreshed-section banners."
     },
     {
       "id": "US-011",
@@ -200,8 +200,8 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by toggling checklist state and observing pending counts update immediately."
     },
     {
       "id": "US-014",
@@ -246,8 +246,8 @@
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by confirming the recent version comparison panel renders dates, hotel area, and budget summaries after scoped replans."
     },
     {
       "id": "US-017",
@@ -292,8 +292,8 @@
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
+      "passes": true,
+      "notes": "Verified on 2026-04-17 in a headless browser session against the local-demo profile by submitting feedback and filtering the operations panel by destination, agent, scope, and reason label."
     }
   ]
 }
