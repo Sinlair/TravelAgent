@@ -14,6 +14,11 @@
 - [travelPlan.ts](file://web/src/utils/travelPlan.ts)
 - [travelScrapbook.ts](file://web/src/utils/travelScrapbook.ts)
 - [main.ts](file://web/src/main.ts)
+- [style.css](file://web/src/style.css)
+- [vite.config.ts](file://web/vite.config.ts)
+- [package.json](file://web/package.json)
+- [ChatPanel.spec.ts](file://web/src/components/ChatPanel.spec.ts)
+- [PlanPanel.spec.ts](file://web/src/components/PlanPanel.spec.ts)
 </cite>
 
 ## 目录
@@ -29,23 +34,28 @@
 10. [附录](#附录)
 
 ## 简介
-本文件系统性梳理了旅行规划工作台前端的Vue组件架构，重点解析App.vue主组件与四大核心面板（侧边栏、聊天、方案、时间线）之间的设计模式、数据流与交互关系。文档覆盖props传递、事件冒泡、状态共享、生命周期管理、响应式与计算属性使用，并给出组件开发最佳实践与复用策略，帮助开发者快速理解与扩展该工作台。
+本文件系统性梳理了旅行规划工作台前端的Vue组件架构，重点解析App.vue主组件与五大核心面板（侧边栏、聊天、方案、时间线、导出）之间的设计模式、数据流与交互关系。文档覆盖props传递、事件冒泡、状态共享、生命周期管理、响应式与计算属性使用，并给出组件开发最佳实践与复用策略，帮助开发者快速理解与扩展该工作台。
 
 ## 项目结构
-前端位于web/src目录，采用“页面容器 + 功能面板”的组织方式：
+前端位于web/src目录，采用"页面容器 + 功能面板"的组织方式：
 - 页面容器：App.vue负责全局状态、语言切换、头部信息与布局
 - 功能面板：ConversationSidebar、ChatPanel、PlanPanel、TimelinePanel、PlanActionsPanel
 - 状态管理：Pinia Store（chat.ts）
 - 类型定义：统一在types/api.ts中
 - 工具函数：text.ts、travelPlan.ts、travelScrapbook.ts
+- 样式系统：现代化CSS变量和主题设计
+- 测试框架：Vitest + Vue Test Utils
 
 ```mermaid
 graph TB
 subgraph "应用入口"
 MAIN["main.ts<br/>创建应用与Pinia"]
+VITE["vite.config.ts<br/>Vite构建配置"]
+PKG["package.json<br/>依赖管理"]
 end
 subgraph "页面容器"
 APP["App.vue<br/>全局状态/语言/头部/布局"]
+STYLE["style.css<br/>现代化样式系统"]
 end
 subgraph "功能面板"
 SIDEBAR["ConversationSidebar.vue<br/>会话列表/选择/创建/删除"]
@@ -58,8 +68,10 @@ subgraph "状态与类型"
 STORE["chat.ts<br/>Pinia Store"]
 TYPES["api.ts<br/>类型定义"]
 UTILS["text.ts / travelPlan.ts / travelScrapbook.ts<br/>工具函数"]
+TESTS["ChatPanel.spec.ts / PlanPanel.spec.ts<br/>组件测试"]
 end
 MAIN --> APP
+APP --> STYLE
 APP --> SIDEBAR
 APP --> CHAT
 APP --> PLAN
@@ -77,32 +89,39 @@ SIDEBAR --> TYPES
 CHAT --> UTILS
 PLAN --> UTILS
 ACTIONS --> UTILS
+VITE --> TESTS
+PKG --> TESTS
 ```
 
-图表来源
+**图表来源**
 - [main.ts:1-7](file://web/src/main.ts#L1-L7)
-- [App.vue:1-381](file://web/src/App.vue#L1-L381)
+- [App.vue:1-419](file://web/src/App.vue#L1-L419)
 - [chat.ts:1-196](file://web/src/stores/chat.ts#L1-L196)
-- [api.ts:1-349](file://web/src/types/api.ts#L1-L349)
+- [style.css:1-800](file://web/src/style.css#L1-L800)
+- [vite.config.ts:1-19](file://web/vite.config.ts#L1-L19)
+- [package.json:1-28](file://web/package.json#L1-L28)
 
-章节来源
+**章节来源**
 - [main.ts:1-7](file://web/src/main.ts#L1-L7)
-- [App.vue:1-381](file://web/src/App.vue#L1-L381)
+- [App.vue:1-419](file://web/src/App.vue#L1-L419)
+- [style.css:1-800](file://web/src/style.css#L1-L800)
+- [vite.config.ts:1-19](file://web/vite.config.ts#L1-L19)
+- [package.json:1-28](file://web/package.json#L1-L28)
 
 ## 核心组件
-本节聚焦四大核心组件的职责与协作：
+本节聚焦五大核心组件的职责与协作：
 - ConversationSidebar：会话库管理，支持选择、新建、删除会话
 - ChatPanel：对话与消息展示，支持文本与图片附件输入，支持图片上下文确认/忽略
 - PlanPanel：旅行方案的综合视图，包含概览、决策卡片、预算、检查、每日行程与地图
 - TimelinePanel：显示规划过程中的关键步骤与细节
 - PlanActionsPanel：导出手账（分享版/执行版），基于旅行方案生成
 
-章节来源
-- [ConversationSidebar.vue:1-88](file://web/src/components/ConversationSidebar.vue#L1-L88)
-- [ChatPanel.vue:1-797](file://web/src/components/ChatPanel.vue#L1-L797)
-- [PlanPanel.vue:1-800](file://web/src/components/PlanPanel.vue#L1-L800)
-- [TimelinePanel.vue:1-157](file://web/src/components/TimelinePanel.vue#L1-L157)
-- [PlanActionsPanel.vue:1-334](file://web/src/components/PlanActionsPanel.vue#L1-L334)
+**章节来源**
+- [ConversationSidebar.vue:1-102](file://web/src/components/ConversationSidebar.vue#L1-L102)
+- [ChatPanel.vue:1-846](file://web/src/components/ChatPanel.vue#L1-L846)
+- [PlanPanel.vue:1-1538](file://web/src/components/PlanPanel.vue#L1-L1538)
+- [TimelinePanel.vue:1-200](file://web/src/components/TimelinePanel.vue#L1-L200)
+- [PlanActionsPanel.vue:1-377](file://web/src/components/PlanActionsPanel.vue#L1-L377)
 
 ## 架构总览
 App.vue作为根容器，聚合所有子面板并通过Pinia Store集中管理状态。组件间通过props向下传递数据，通过事件向上冒泡触发业务动作；Pinia Store负责与后端API交互、维护会话与方案数据、建立服务端事件流以实时更新时间线。
@@ -148,11 +167,11 @@ U->>AP : 导出手账(模板选择)
 AP-->>APP : 触发下载(基于PlanPanel数据)
 ```
 
-图表来源
-- [App.vue:264-270](file://web/src/App.vue#L264-L270)
+**图表来源**
+- [App.vue:285-291](file://web/src/App.vue#L285-L291)
 - [chat.ts:32-96](file://web/src/stores/chat.ts#L32-L96)
-- [ChatPanel.vue:315-339](file://web/src/components/ChatPanel.vue#L315-L339)
-- [PlanActionsPanel.vue:122-132](file://web/src/components/PlanActionsPanel.vue#L122-L132)
+- [ChatPanel.vue:318-332](file://web/src/components/ChatPanel.vue#L318-L332)
+- [PlanActionsPanel.vue:133-143](file://web/src/components/PlanActionsPanel.vue#L133-L143)
 
 ## 详细组件分析
 
@@ -165,13 +184,15 @@ AP-->>APP : 触发下载(基于PlanPanel数据)
   - 本地化：语言存储于localStorage，支持中英切换
   - 头部信息：焦点标题/摘要、亮点、统计、流程步骤
   - 子面板：左侧会话库、右侧聊天+方案+时间线+操作面板
+  - 现代化样式：基于CSS变量的主题系统
 - 与Pinia交互
   - 使用storeToRefs解构读取状态，避免丢失响应性
   - 通过事件回调直接调用store方法，实现父子通信
 
-章节来源
-- [App.vue:1-381](file://web/src/App.vue#L1-L381)
+**章节来源**
+- [App.vue:1-419](file://web/src/App.vue#L1-L419)
 - [chat.ts:173-194](file://web/src/stores/chat.ts#L173-L194)
+- [style.css:8-28](file://web/src/style.css#L8-L28)
 
 ### ConversationSidebar 会话侧边栏
 - 职责
@@ -185,8 +206,8 @@ AP-->>APP : 触发下载(基于PlanPanel数据)
   - 删除按钮阻止冒泡，触发remove事件
   - 本地化文案按语言切换
 
-章节来源
-- [ConversationSidebar.vue:1-88](file://web/src/components/ConversationSidebar.vue#L1-L88)
+**章节来源**
+- [ConversationSidebar.vue:1-102](file://web/src/components/ConversationSidebar.vue#L1-L102)
 
 ### ChatPanel 对话面板
 - 职责
@@ -215,12 +236,12 @@ EmitSend --> Clear
 Clear --> End
 ```
 
-图表来源
-- [ChatPanel.vue:315-339](file://web/src/components/ChatPanel.vue#L315-L339)
-- [ChatPanel.vue:352-381](file://web/src/components/ChatPanel.vue#L352-L381)
+**图表来源**
+- [ChatPanel.vue:318-332](file://web/src/components/ChatPanel.vue#L318-L332)
+- [ChatPanel.vue:334-349](file://web/src/components/ChatPanel.vue#L334-L349)
 
-章节来源
-- [ChatPanel.vue:1-797](file://web/src/components/ChatPanel.vue#L1-L797)
+**章节来源**
+- [ChatPanel.vue:1-846](file://web/src/components/ChatPanel.vue#L1-L846)
 
 ### PlanPanel 方案面板
 - 职责
@@ -231,13 +252,13 @@ Clear --> End
   - 通过PlanMap组件展示地图与选中点位
   - 通过activePointId与父组件通信，实现点击联动
 - 决策与建议
-  - 基于约束检查、预算、节拍度、地点置信度生成“执行把握”等卡片
-  - 基于检查与预算生成“下一步建议”
+  - 基于约束检查、预算、节拍度、地点置信度生成"执行把握"等卡片
+  - 基于检查与预算生成"下一步建议"
 - 性能注意
   - 大型列表渲染建议结合虚拟滚动（当前未实现）
 
-章节来源
-- [PlanPanel.vue:1-800](file://web/src/components/PlanPanel.vue#L1-L800)
+**章节来源**
+- [PlanPanel.vue:1-1538](file://web/src/components/PlanPanel.vue#L1-L1538)
 - [travelPlan.ts:1-123](file://web/src/utils/travelPlan.ts#L1-L123)
 
 ### TimelinePanel 时间线面板
@@ -248,8 +269,8 @@ Clear --> End
   - 阶段与消息均按语言本地化
   - 详情对象过滤空值后展示为标签
 
-章节来源
-- [TimelinePanel.vue:1-157](file://web/src/components/TimelinePanel.vue#L1-L157)
+**章节来源**
+- [TimelinePanel.vue:1-200](file://web/src/components/TimelinePanel.vue#L1-L200)
 
 ### PlanActionsPanel 导出面板
 - 职责
@@ -261,8 +282,8 @@ Clear --> End
 - 性能注意
   - 导出涉及Canvas绘制，建议在后台线程或异步队列中进行
 
-章节来源
-- [PlanActionsPanel.vue:1-334](file://web/src/components/PlanActionsPanel.vue#L1-L334)
+**章节来源**
+- [PlanActionsPanel.vue:1-377](file://web/src/components/PlanActionsPanel.vue#L1-L377)
 - [travelScrapbook.ts:81-110](file://web/src/utils/travelScrapbook.ts#L81-L110)
 
 ## 依赖关系分析
@@ -310,12 +331,12 @@ TimelinePanel --> PiniaStore : "无直接调用"
 PlanActionsPanel --> PiniaStore : "无直接调用"
 ```
 
-图表来源
-- [App.vue:273-380](file://web/src/App.vue#L273-L380)
+**图表来源**
+- [App.vue:296-416](file://web/src/App.vue#L296-L416)
 - [chat.ts:15-196](file://web/src/stores/chat.ts#L15-L196)
 
-章节来源
-- [App.vue:273-380](file://web/src/App.vue#L273-L380)
+**章节来源**
+- [App.vue:296-416](file://web/src/App.vue#L296-L416)
 - [chat.ts:15-196](file://web/src/stores/chat.ts#L15-L196)
 
 ## 性能考量
@@ -328,8 +349,9 @@ PlanActionsPanel --> PiniaStore : "无直接调用"
 - 网络与流
   - SSE连接在切换会话时及时关闭与重建，避免内存泄漏
   - 错误统一格式化，避免频繁重试导致抖动
-
-[本节为通用指导，无需特定文件来源]
+- 样式性能
+  - CSS变量减少样式计算开销
+  - backdrop-filter和box-shadow在移动端可能影响性能
 
 ## 故障排查指南
 - 常见问题
@@ -337,19 +359,19 @@ PlanActionsPanel --> PiniaStore : "无直接调用"
   - 发送消息失败：查看errorMessage，确认sending状态与payload合法性
   - 时间线不更新：确认SSE连接是否正常，事件id去重逻辑
   - 图片上传失败：检查附件数量/大小/类型限制
+  - 样式异常：检查CSS变量是否正确加载，媒体查询是否生效
 - 定位手段
   - 在App.vue中观察errorMessage与loading状态
   - 在chat.ts中定位API调用与SSE连接逻辑
   - 在ChatPanel.vue中核对附件校验与错误提示
+  - 使用浏览器开发者工具检查网络请求和样式渲染
 
-章节来源
+**章节来源**
 - [chat.ts:32-96](file://web/src/stores/chat.ts#L32-L96)
-- [ChatPanel.vue:352-381](file://web/src/components/ChatPanel.vue#L352-L381)
+- [ChatPanel.vue:355-384](file://web/src/components/ChatPanel.vue#L355-L384)
 
 ## 结论
-该Vue组件架构以App.vue为中心，通过Pinia Store统一管理状态与后端交互，四大核心面板职责清晰、边界明确。组件间通过props与事件形成清晰的数据流与控制流，配合计算属性与本地化工具，实现了良好的可维护性与可扩展性。后续可在大列表渲染、Canvas导出与SSE稳定性方面进一步优化。
-
-[本节为总结，无需特定文件来源]
+该Vue组件架构以App.vue为中心，通过Pinia Store统一管理状态与后端交互，五大核心面板职责清晰、边界明确。组件间通过props与事件形成清晰的数据流与控制流，配合计算属性与本地化工具，实现了良好的可维护性与可扩展性。新增的PlanActionsPanel组件进一步完善了用户体验，现代化的样式系统提供了更好的视觉效果。后续可在大列表渲染、Canvas导出与SSE稳定性方面进一步优化。
 
 ## 附录
 
@@ -366,14 +388,34 @@ PlanActionsPanel --> PiniaStore : "无直接调用"
 - 事件与状态
   - 子向父传递事件时，尽量封装payload，保持接口稳定
   - Pinia store集中管理跨组件共享状态，避免跨层级props
+- 样式开发
+  - 使用CSS变量统一主题色彩
+  - 采用BEM命名约定，确保样式可维护性
+  - 考虑移动端适配，使用媒体查询
 
-[本节为通用指导，无需特定文件来源]
+### 测试策略
+- 单元测试
+  - 使用Vitest和Vue Test Utils进行组件测试
+  - 为关键组件编写测试用例，覆盖主要交互场景
+- 集成测试
+  - 测试组件间的交互和数据流
+  - 验证事件冒泡和props传递的正确性
+- 性能测试
+  - 测试大量数据渲染的性能表现
+  - 验证图片上传和Canvas导出的性能
 
-### 插槽与自定义指令示例
-- 插槽
-  - PlanPanel中可将“快速导航”、“决策卡片”等抽象为具名插槽，便于主题化定制
-- 自定义指令
-  - 可引入v-tooltip用于长文本截断提示
-  - 可引入v-intersect用于懒加载与虚拟滚动
+### 构建与部署
+- 开发环境
+  - Vite提供快速热重载和开发体验
+  - TypeScript提供静态类型检查
+  - Vitest集成测试框架
+- 生产环境
+  - Vite构建优化，生成压缩后的静态资源
+  - 支持代理配置，便于前后端联调
+  - Docker支持，便于容器化部署
 
-[本节为概念性建议，无需特定文件来源]
+**章节来源**
+- [vite.config.ts:1-19](file://web/vite.config.ts#L1-L19)
+- [package.json:1-28](file://web/package.json#L1-L28)
+- [ChatPanel.spec.ts:1-129](file://web/src/components/ChatPanel.spec.ts#L1-L129)
+- [PlanPanel.spec.ts:1-199](file://web/src/components/PlanPanel.spec.ts#L1-L199)

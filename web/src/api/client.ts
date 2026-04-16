@@ -27,6 +27,18 @@ export async function apiPost<T>(url: string, body: unknown): Promise<T> {
   )
 }
 
+export async function apiPatch<T>(url: string, body: unknown): Promise<T> {
+  return unwrap<T>(
+    await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+  )
+}
+
 export async function apiDelete<T>(url: string): Promise<T> {
   return unwrap<T>(
     await fetch(url, {

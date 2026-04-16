@@ -7,6 +7,7 @@ import com.travalagent.domain.model.entity.ConversationSession;
 import com.travalagent.domain.model.entity.TaskMemory;
 import com.travalagent.domain.model.entity.TimelineEvent;
 import com.travalagent.domain.model.entity.TravelPlan;
+import com.travalagent.domain.model.entity.TravelPlanVersionSnapshot;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,10 @@ public interface ConversationRepository {
     Optional<TravelPlan> findTravelPlan(String conversationId);
 
     void saveTravelPlan(TravelPlan travelPlan);
+
+    List<TravelPlanVersionSnapshot> listTravelPlanVersions(String conversationId, int limit);
+
+    void saveTravelPlanVersion(TravelPlanVersionSnapshot versionSnapshot);
 
     void saveTimeline(TimelineEvent timelineEvent);
 

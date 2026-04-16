@@ -2,6 +2,7 @@ package com.travalagent.app.controller;
 
 import com.travalagent.app.dto.ChatRequest;
 import com.travalagent.app.dto.ChatResponse;
+import com.travalagent.app.dto.ConversationChecklistUpdateRequest;
 import com.travalagent.app.dto.ConversationDetailResponse;
 import com.travalagent.app.dto.ConversationFeedbackRequest;
 import com.travalagent.app.dto.FeedbackDatasetRecord;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,16 +59,44 @@ public class ConversationController {
 
     @GetMapping("/feedback/export")
     public ApiResponse<List<FeedbackDatasetRecord>> exportFeedbackDataset(
-            @RequestParam(defaultValue = "200") int limit
+            @RequestParam(defaultValue = "200") int limit,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String agentType,
+            @RequestParam(required = false) String targetScope,
+            @RequestParam(required = false) String reasonLabel,
+            @RequestParam(required = false) String planVersionFrom,
+            @RequestParam(required = false) String planVersionTo
     ) {
-        return ApiResponse.success(conversationApplicationService.exportFeedbackDataset(limit));
+        return ApiResponse.success(conversationApplicationService.exportFeedbackDataset(
+                limit,
+                destination,
+                agentType,
+                targetScope,
+                reasonLabel,
+                planVersionFrom,
+                planVersionTo
+        ));
     }
 
     @GetMapping("/feedback/summary")
     public ApiResponse<FeedbackLoopSummaryResponse> feedbackLoopSummary(
-            @RequestParam(defaultValue = "200") int limit
+            @RequestParam(defaultValue = "200") int limit,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String agentType,
+            @RequestParam(required = false) String targetScope,
+            @RequestParam(required = false) String reasonLabel,
+            @RequestParam(required = false) String planVersionFrom,
+            @RequestParam(required = false) String planVersionTo
     ) {
-        return ApiResponse.success(conversationApplicationService.feedbackLoopSummary(limit));
+        return ApiResponse.success(conversationApplicationService.feedbackLoopSummary(
+                limit,
+                destination,
+                agentType,
+                targetScope,
+                reasonLabel,
+                planVersionFrom,
+                planVersionTo
+        ));
     }
 
     @GetMapping("/{conversationId}")
@@ -80,6 +110,14 @@ public class ConversationController {
             @Valid @RequestBody ConversationFeedbackRequest request
     ) {
         return ApiResponse.success(conversationApplicationService.saveFeedback(conversationId, request));
+    }
+
+    @PatchMapping("/{conversationId}/checklist")
+    public ApiResponse<com.travalagent.domain.model.entity.TravelPlan> updateChecklist(
+            @PathVariable String conversationId,
+            @Valid @RequestBody ConversationChecklistUpdateRequest request
+    ) {
+        return ApiResponse.success(conversationApplicationService.updateChecklist(conversationId, request));
     }
 
     @DeleteMapping("/{conversationId}")

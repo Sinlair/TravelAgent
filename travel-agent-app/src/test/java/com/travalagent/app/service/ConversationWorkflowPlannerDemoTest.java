@@ -95,7 +95,7 @@ class ConversationWorkflowPlannerDemoTest {
         );
 
         String conversationId = "planner-demo-1";
-        ChatRequest request = new ChatRequest(conversationId, "Plan a 2 day Hangzhou trip with a 700 CNY budget.", List.of(), null);
+        ChatRequest request = new ChatRequest(conversationId, "Plan a 2 day Hangzhou trip with a 700 CNY budget.", null, List.of(), null);
         TaskMemory storedTaskMemory = TaskMemory.empty(conversationId);
         TaskMemory workingMemory = new TaskMemory(
                 conversationId,

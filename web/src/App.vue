@@ -14,13 +14,17 @@ import {
   Info,
   Calendar,
   Wallet,
-  Activity
+  Activity,
+  CheckCircle2,
+  Navigation
 } from 'lucide-vue-next'
 import ConversationSidebar from './components/ConversationSidebar.vue'
 import ChatPanel from './components/ChatPanel.vue'
 import TimelinePanel from './components/TimelinePanel.vue'
 import PlanPanel from './components/PlanPanel.vue'
 import PlanActionsPanel from './components/PlanActionsPanel.vue'
+import FeedbackLoopPanel from './components/FeedbackLoopPanel.vue'
+import PlanExecutionPanel from './components/PlanExecutionPanel.vue'
 import { normalizeDisplayText } from './utils/text'
 
 type UiLanguage = 'zh' | 'en'
@@ -35,6 +39,12 @@ const {
   sending,
   loading,
   feedbackSaving,
+  feedbackLoopSummary,
+  feedbackLoopLoading,
+  feedbackLoopStale,
+  feedbackLoopLimit,
+  feedbackLoopFilters,
+  feedbackLoopError,
   errorMessage,
   streamError
 } = storeToRefs(store)
@@ -289,8 +299,33 @@ function getStatIcon(label: string) {
   return Info
 }
 
+function handleReplanHotel() {
+  void store.sendMessage({
+    replanScope: {
+      scope: 'HOTEL_AREA'
+    }
+  })
+}
+
+function handleReplanDay(dayNumber: number) {
+  void store.sendMessage({
+    replanScope: {
+      scope: 'DAY',
+      dayNumber
+    }
+  })
+}
+
+function handleChecklistToggle(itemKey: string, confirmed: boolean) {
+  void store.updateChecklist({
+    itemKey,
+    confirmed
+  })
+}
+
 onMounted(async () => {
   await store.loadConversations()
+  await store.loadFeedbackLoopSummary()
   const targetConversationId = currentConversationId.value || conversations.value[0]?.conversationId
   if (targetConversationId) {
     await store.openConversation(targetConversationId)
@@ -411,6 +446,15 @@ onMounted(async () => {
             :travel-plan="resultView.travelPlan"
             :prefer-chinese="preferChinese"
           />
+          <PlanExecutionPanel
+            :travel-plan="resultView.travelPlan"
+            :recent-version-diff="detail?.recentVersionDiff ?? null"
+            :sending="sending"
+            :prefer-chinese="preferChinese"
+            @replan-hotel="handleReplanHotel"
+            @replan-day="handleReplanDay"
+            @toggle-checklist="handleChecklistToggle"
+          />
           <PlanPanel
             :travel-plan="resultView.travelPlan"
             :result-view="resultView"
@@ -420,6 +464,16 @@ onMounted(async () => {
             :result-view="resultView"
             :prefer-chinese="preferChinese"
             @retry-stream="store.reconnectStream"
+          />
+          <FeedbackLoopPanel
+            :summary="feedbackLoopSummary"
+            :loading="feedbackLoopLoading"
+            :stale="feedbackLoopStale"
+            :error-message="feedbackLoopError"
+            :initial-limit="feedbackLoopLimit"
+            :initial-filters="feedbackLoopFilters"
+            :prefer-chinese="preferChinese"
+            @refresh="({ limit, ...filters }) => store.loadFeedbackLoopSummary(limit, filters)"
           />
         </div>
       </div>

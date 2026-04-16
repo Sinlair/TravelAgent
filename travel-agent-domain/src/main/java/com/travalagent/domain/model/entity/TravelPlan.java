@@ -24,6 +24,8 @@ public record TravelPlan(
         TravelKnowledgeRetrievalResult knowledgeRetrieval,
         boolean constraintRelaxed,
         List<String> adjustmentSuggestions,
+        List<TravelChecklistItem> checklist,
+        List<String> refreshedSections,
         Instant updatedAt
 ) {
 
@@ -34,6 +36,8 @@ public record TravelPlan(
         checks = checks == null ? List.of() : List.copyOf(checks);
         days = days == null ? List.of() : List.copyOf(days);
         adjustmentSuggestions = adjustmentSuggestions == null ? List.of() : List.copyOf(adjustmentSuggestions);
+        checklist = checklist == null ? List.of() : List.copyOf(checklist);
+        refreshedSections = refreshedSections == null ? List.of() : List.copyOf(refreshedSections);
     }
 
     public TravelPlan(
@@ -70,6 +74,8 @@ public record TravelPlan(
                 null,
                 false,
                 List.of(),
+                List.of(),
+                List.of(),
                 updatedAt
         );
     }
@@ -98,6 +104,37 @@ public record TravelPlan(
                 knowledgeRetrieval,
                 constraintRelaxed,
                 adjustmentSuggestions,
+                checklist,
+                refreshedSections,
+                updatedAt
+        );
+    }
+
+    public TravelPlan withExecutionContext(
+            List<TravelChecklistItem> checklist,
+            List<String> refreshedSections,
+            Instant updatedAt
+    ) {
+        return new TravelPlan(
+                conversationId,
+                title,
+                summary,
+                hotelArea,
+                hotelAreaReason,
+                hotels,
+                totalBudget,
+                estimatedTotalMin,
+                estimatedTotalMax,
+                highlights,
+                budget,
+                checks,
+                days,
+                weatherSnapshot,
+                knowledgeRetrieval,
+                constraintRelaxed,
+                adjustmentSuggestions,
+                checklist,
+                refreshedSections,
                 updatedAt
         );
     }

@@ -7,6 +7,8 @@ import com.travalagent.app.dto.ChatResponseFeedbackTarget;
 import com.travalagent.app.dto.ChatResponseIssue;
 import com.travalagent.app.dto.ConversationConstraintSummary;
 import com.travalagent.app.dto.ConversationMissingInformationItem;
+import com.travalagent.app.dto.ReplanScopeRequest;
+import com.travalagent.app.dto.TripBriefRequest;
 import com.travalagent.domain.event.TimelinePublisher;
 import com.travalagent.domain.model.entity.ConversationMessage;
 import com.travalagent.domain.model.entity.ConversationSession;
@@ -15,7 +17,10 @@ import com.travalagent.domain.model.entity.ConversationImageFacts;
 import com.travalagent.domain.model.entity.ConversationImageContext;
 import com.travalagent.domain.model.entity.TaskMemory;
 import com.travalagent.domain.model.entity.TimelineEvent;
+import com.travalagent.domain.model.entity.TravelChecklistItem;
 import com.travalagent.domain.model.entity.TravelPlan;
+import com.travalagent.domain.model.entity.TravelPlanDay;
+import com.travalagent.domain.model.entity.TravelPlanVersionSnapshot;
 import com.travalagent.domain.model.valobj.AgentExecutionContext;
 import com.travalagent.domain.model.valobj.AgentExecutionResult;
 import com.travalagent.domain.model.valobj.AgentRouteDecision;
@@ -39,7 +44,9 @@ import com.travalagent.types.exception.AppException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -111,7 +118,10 @@ public class ConversationWorkflow {
     public ChatResponse execute(ChatRequest request) {
         List<ImageAttachment> imageAttachments = normalizeImageAttachments(request.attachments());
         String rawUserMessage = normalizeText(request.message());
+        TaskMemory briefPatch = taskMemoryPatchFromBrief(request.conversationId(), request.brief());
         ImageContextAction imageContextAction = normalizeImageContextAction(request.imageContextAction());
+        ReplanScopeSelection replanScope = normalizeReplanScope(request.conversationId(), request.replanScope());
+        TravelPlan existingPlan = currentPlanForReplan(request.conversationId(), replanScope);
         if (imageContextAction == ImageContextAction.DISMISS) {
             return dismissPendingImageContext(request.conversationId(), rawUserMessage);
         }
@@ -136,7 +146,14 @@ public class ConversationWorkflow {
         } else {
             imageContextSummary = null;
         }
-        String effectiveUserMessage = buildEffectiveUserMessage(rawUserMessage, imageAttachments, imageContextSummary);
+        String effectiveUserMessage = buildEffectiveUserMessage(
+                rawUserMessage,
+                imageAttachments,
+                imageContextSummary,
+                briefPatch,
+                replanScope,
+                existingPlan
+        );
 
         PreparedConversation preparedConversation = prepareConversation(
                 request.conversationId(),
@@ -145,9 +162,10 @@ public class ConversationWorkflow {
                 imageAttachments,
                 imageContextSummary,
                 confirmedFacts,
-                imageContextAction == ImageContextAction.CONFIRM && pendingImageContext != null ? IMAGE_CONTEXT_STATUS_CONFIRMED : null
+                imageContextAction == ImageContextAction.CONFIRM && pendingImageContext != null ? IMAGE_CONTEXT_STATUS_CONFIRMED : null,
+                briefPatch
         );
-        MemoryContext memoryContext = buildMemoryContext(preparedConversation.conversationId(), effectiveUserMessage, confirmedFacts);
+        MemoryContext memoryContext = buildMemoryContext(preparedConversation.conversationId(), effectiveUserMessage, confirmedFacts, briefPatch);
         AgentRouteDecision routeDecision = route(preparedConversation, effectiveUserMessage, memoryContext);
         AgentOutcome agentOutcome = resolveAgentOutcome(
                 preparedConversation,
@@ -160,7 +178,15 @@ public class ConversationWorkflow {
         if (imageContextAction == ImageContextAction.CONFIRM && pendingImageContext != null) {
             conversationRepository.deletePendingImageContext(preparedConversation.conversationId());
         }
-        return finalizeConversation(preparedConversation, memoryContext, routeDecision, agentOutcome);
+        return finalizeConversation(
+                preparedConversation,
+                memoryContext,
+                routeDecision,
+                agentOutcome,
+                existingPlan,
+                replanScope,
+                effectiveUserMessage
+        );
     }
 
     private ChatResponse stagePendingImageContext(
@@ -183,7 +209,8 @@ public class ConversationWorkflow {
                 imageAttachments,
                 null,
                 null,
-                IMAGE_CONTEXT_STATUS_PENDING
+                IMAGE_CONTEXT_STATUS_PENDING,
+                null
         );
         ConversationImageContext pendingImageContext = new ConversationImageContext(
                 conversationId,
@@ -228,6 +255,7 @@ public class ConversationWorkflow {
                 null,
                 conversationRepository.findTimeline(conversationId),
                 assistantMessageId,
+                null,
                 Map.of(),
                 pendingImageContext
         );
@@ -281,6 +309,7 @@ public class ConversationWorkflow {
                 null,
                 conversationRepository.findTimeline(conversationId),
                 assistantMessageId,
+                null,
                 Map.of(),
                 null
         );
@@ -293,7 +322,8 @@ public class ConversationWorkflow {
             List<ImageAttachment> imageAttachments,
             String imageContextSummary,
             ConversationImageFacts imageFacts,
-            String imageContextStatus
+            String imageContextStatus,
+            TaskMemory briefPatch
     ) {
         String conversationId = requestedConversationId == null || requestedConversationId.isBlank()
                 ? UUID.randomUUID().toString()
@@ -326,7 +356,7 @@ public class ConversationWorkflow {
                 storedMessage,
                 null,
                 Instant.now(),
-                userMessageMetadata(imageAttachments, imageContextSummary, imageFacts, imageContextStatus)
+                userMessageMetadata(imageAttachments, imageContextSummary, imageFacts, imageContextStatus, briefPatch)
         ));
 
         Map<String, Object> analysisDetails = new LinkedHashMap<>();
@@ -343,13 +373,19 @@ public class ConversationWorkflow {
         return new PreparedConversation(conversationId, session);
     }
 
-    private MemoryContext buildMemoryContext(String conversationId, String userMessage, ConversationImageFacts confirmedFacts) {
+    private MemoryContext buildMemoryContext(String conversationId, String userMessage, ConversationImageFacts confirmedFacts, TaskMemory briefPatch) {
         TaskMemory storedTaskMemory = conversationRepository.findTaskMemory(conversationId)
                 .orElse(TaskMemory.empty(conversationId));
         List<ConversationMessage> recentMessages = enrichMessagesForPlanning(
                 conversationRepository.findRecentMessages(conversationId, properties.getMemoryWindow())
         );
-        TaskMemory seededMemory = confirmedFacts == null ? storedTaskMemory : storedTaskMemory.merge(taskMemoryPatchFromFacts(conversationId, confirmedFacts));
+        TaskMemory seededMemory = storedTaskMemory;
+        if (briefPatch != null) {
+            seededMemory = seededMemory.merge(briefPatch);
+        }
+        if (confirmedFacts != null) {
+            seededMemory = seededMemory.merge(taskMemoryPatchFromFacts(conversationId, confirmedFacts));
+        }
         TaskMemory workingMemory = taskMemoryExtractor.extract(seededMemory, recentMessages);
         List<LongTermMemoryItem> longTermMemories = longTermMemoryRepository.searchRelevant(userMessage, 3);
 
@@ -425,16 +461,26 @@ public class ConversationWorkflow {
             PreparedConversation preparedConversation,
             MemoryContext memoryContext,
             AgentRouteDecision routeDecision,
-            AgentOutcome agentOutcome
+            AgentOutcome agentOutcome,
+            TravelPlan existingPlan,
+            ReplanScopeSelection replanScope,
+            String effectiveUserMessage
     ) {
         String conversationId = preparedConversation.conversationId();
 
         String assistantMessageId = UUID.randomUUID().toString();
+        TravelPlan finalizedPlan = finalizeTravelPlan(agentOutcome.travelPlan(), memoryContext.workingMemory(), existingPlan, replanScope);
+        String planVersion = null;
+        if (finalizedPlan != null) {
+            conversationRepository.saveTravelPlan(finalizedPlan);
+            planVersion = persistPlanVersion(conversationId, finalizedPlan, effectiveUserMessage, replanScope);
+        }
         ChatResponseFeedbackTarget feedbackTarget = ConversationResultSupport.buildFeedbackTarget(
                 conversationId,
                 assistantMessageId,
                 agentOutcome.agentType(),
-                agentOutcome.travelPlan()
+                finalizedPlan,
+                planVersion
         );
         conversationRepository.saveMessage(new ConversationMessage(
                 assistantMessageId,
@@ -455,6 +501,9 @@ public class ConversationWorkflow {
                     null,
                     null,
                     null,
+                    null,
+                    null,
+                    null,
                     List.of(),
                     agentOutcome.answer(),
                     null,
@@ -462,10 +511,6 @@ public class ConversationWorkflow {
             ));
         }
         conversationRepository.saveTaskMemory(updatedMemory);
-
-        if (agentOutcome.travelPlan() != null) {
-            conversationRepository.saveTravelPlan(agentOutcome.travelPlan());
-        }
 
         String summary = preparedConversation.session().summary();
         if (fullMessages.size() >= properties.getSummaryThreshold()) {
@@ -495,7 +540,7 @@ public class ConversationWorkflow {
 
         publish(conversationId, ExecutionStage.FINALIZE_MEMORY, "Persist summary, task memory, and structured plan", Map.of(
                 "hasSummary", summary != null && !summary.isBlank(),
-                "hasPlan", agentOutcome.travelPlan() != null
+                "hasPlan", finalizedPlan != null
         ));
         publish(conversationId, ExecutionStage.COMPLETED, "Execution finished", Map.of("agent", agentOutcome.agentType().name()));
 
@@ -504,9 +549,10 @@ public class ConversationWorkflow {
                 agentOutcome.agentType(),
                 agentOutcome.answer(),
                 updatedMemory,
-                agentOutcome.travelPlan(),
+                finalizedPlan,
                 conversationRepository.findTimeline(conversationId),
                 assistantMessageId,
+                planVersion,
                 agentOutcome.metadata(),
                 null
         );
@@ -520,6 +566,7 @@ public class ConversationWorkflow {
             TravelPlan travelPlan,
             List<TimelineEvent> timeline,
             String feedbackTargetId,
+            String planVersion,
             Map<String, Object> resultMetadata,
             ConversationImageContext imageContextCandidate
     ) {
@@ -527,7 +574,8 @@ public class ConversationWorkflow {
                 conversationId,
                 feedbackTargetId,
                 agentType,
-                travelPlan
+                travelPlan,
+                planVersion
         );
         List<ConversationMissingInformationItem> missingInformation = ConversationResultSupport.buildMissingInformation(
                 taskMemory,
@@ -556,6 +604,212 @@ public class ConversationWorkflow {
                 missingInformation,
                 constraintSummary
         );
+    }
+
+    private TravelPlan finalizeTravelPlan(
+            TravelPlan candidatePlan,
+            TaskMemory taskMemory,
+            TravelPlan existingPlan,
+            ReplanScopeSelection replanScope
+    ) {
+        if (candidatePlan == null) {
+            return null;
+        }
+        TravelPlan datedPlan = applyTripDates(candidatePlan, taskMemory);
+        TravelPlan mergedPlan = mergeScopedReplan(datedPlan, existingPlan, replanScope);
+        List<TravelChecklistItem> checklist = buildChecklist(mergedPlan, taskMemory, existingPlan == null ? List.of() : existingPlan.checklist());
+        return mergedPlan.withExecutionContext(checklist, refreshedSections(replanScope), Instant.now());
+    }
+
+    private TravelPlan applyTripDates(TravelPlan plan, TaskMemory taskMemory) {
+        if (plan == null || taskMemory == null || taskMemory.startDate() == null || taskMemory.startDate().isBlank()) {
+            return plan;
+        }
+        LocalDate startDate;
+        try {
+            startDate = LocalDate.parse(taskMemory.startDate().trim());
+        } catch (DateTimeParseException ignored) {
+            return plan;
+        }
+        List<TravelPlanDay> datedDays = new java.util.ArrayList<>();
+        for (int i = 0; i < plan.days().size(); i++) {
+            TravelPlanDay day = plan.days().get(i);
+            datedDays.add(new TravelPlanDay(
+                    day.dayNumber(),
+                    startDate.plusDays(i).toString(),
+                    day.theme(),
+                    day.startTime(),
+                    day.endTime(),
+                    day.totalTransitMinutes(),
+                    day.totalActivityMinutes(),
+                    day.estimatedCost(),
+                    day.stops(),
+                    day.returnToHotel()
+            ));
+        }
+        return new TravelPlan(
+                plan.conversationId(),
+                plan.title(),
+                plan.summary(),
+                plan.hotelArea(),
+                plan.hotelAreaReason(),
+                plan.hotels(),
+                plan.totalBudget(),
+                plan.estimatedTotalMin(),
+                plan.estimatedTotalMax(),
+                plan.highlights(),
+                plan.budget(),
+                plan.checks(),
+                datedDays,
+                plan.weatherSnapshot(),
+                plan.knowledgeRetrieval(),
+                plan.constraintRelaxed(),
+                plan.adjustmentSuggestions(),
+                plan.checklist(),
+                plan.refreshedSections(),
+                plan.updatedAt()
+        );
+    }
+
+    private TravelPlan mergeScopedReplan(TravelPlan candidatePlan, TravelPlan existingPlan, ReplanScopeSelection replanScope) {
+        if (candidatePlan == null || existingPlan == null || replanScope == null) {
+            return candidatePlan;
+        }
+        return switch (replanScope.scope()) {
+            case "HOTEL_AREA" -> new TravelPlan(
+                    existingPlan.conversationId(),
+                    candidatePlan.title(),
+                    candidatePlan.summary(),
+                    candidatePlan.hotelArea(),
+                    candidatePlan.hotelAreaReason(),
+                    candidatePlan.hotels(),
+                    existingPlan.totalBudget(),
+                    candidatePlan.estimatedTotalMin(),
+                    candidatePlan.estimatedTotalMax(),
+                    existingPlan.highlights(),
+                    candidatePlan.budget(),
+                    candidatePlan.checks(),
+                    existingPlan.days(),
+                    candidatePlan.weatherSnapshot(),
+                    candidatePlan.knowledgeRetrieval(),
+                    candidatePlan.constraintRelaxed(),
+                    candidatePlan.adjustmentSuggestions(),
+                    existingPlan.checklist(),
+                    existingPlan.refreshedSections(),
+                    candidatePlan.updatedAt()
+            );
+            case "DAY" -> new TravelPlan(
+                    existingPlan.conversationId(),
+                    candidatePlan.title(),
+                    candidatePlan.summary(),
+                    existingPlan.hotelArea(),
+                    existingPlan.hotelAreaReason(),
+                    existingPlan.hotels(),
+                    existingPlan.totalBudget(),
+                    candidatePlan.estimatedTotalMin(),
+                    candidatePlan.estimatedTotalMax(),
+                    existingPlan.highlights(),
+                    candidatePlan.budget(),
+                    candidatePlan.checks(),
+                    mergeDays(existingPlan.days(), candidatePlan.days(), replanScope.dayNumber()),
+                    candidatePlan.weatherSnapshot() == null ? existingPlan.weatherSnapshot() : candidatePlan.weatherSnapshot(),
+                    candidatePlan.knowledgeRetrieval() == null ? existingPlan.knowledgeRetrieval() : candidatePlan.knowledgeRetrieval(),
+                    candidatePlan.constraintRelaxed(),
+                    candidatePlan.adjustmentSuggestions(),
+                    existingPlan.checklist(),
+                    existingPlan.refreshedSections(),
+                    candidatePlan.updatedAt()
+            );
+            default -> candidatePlan;
+        };
+    }
+
+    private List<TravelPlanDay> mergeDays(List<TravelPlanDay> existingDays, List<TravelPlanDay> candidateDays, Integer targetDayNumber) {
+        if (existingDays == null || existingDays.isEmpty()) {
+            return candidateDays == null ? List.of() : candidateDays;
+        }
+        if (targetDayNumber == null || candidateDays == null || candidateDays.isEmpty()) {
+            return existingDays;
+        }
+        TravelPlanDay refreshedDay = candidateDays.stream()
+                .filter(day -> targetDayNumber.equals(day.dayNumber()))
+                .findFirst()
+                .orElse(candidateDays.getFirst());
+        return existingDays.stream()
+                .map(day -> targetDayNumber.equals(day.dayNumber()) ? refreshedDay : day)
+                .toList();
+    }
+
+    private List<TravelChecklistItem> buildChecklist(TravelPlan plan, TaskMemory taskMemory, List<TravelChecklistItem> existingChecklist) {
+        Map<String, Boolean> confirmedByKey = existingChecklist.stream()
+                .collect(Collectors.toMap(TravelChecklistItem::key, TravelChecklistItem::confirmed, (left, right) -> right));
+        String hotelSummary = plan.hotels().isEmpty()
+                ? "Confirm the preferred hotel area before booking."
+                : "Lock the stay in " + plan.hotels().getFirst().area() + " and confirm the final hotel.";
+        return List.of(
+                checklistItem("accommodation", "Accommodation", hotelSummary, confirmedByKey),
+                checklistItem("transport", "Transport", taskMemory.origin() == null || taskMemory.origin().isBlank()
+                        ? "Confirm how you will arrive at the destination and return."
+                        : "Confirm outbound transport from " + taskMemory.origin() + ".", confirmedByKey),
+                checklistItem("tickets", "Tickets", plan.highlights().isEmpty()
+                        ? "Review whether any timed entry tickets are needed."
+                        : "Check advance booking needs for " + String.join(", ", plan.highlights().stream().limit(3).toList()) + ".", confirmedByKey),
+                checklistItem("weather", "Weather", renderDateWindow(taskMemory) == null
+                        ? "Recheck the local weather closer to departure."
+                        : "Recheck the weather for " + renderDateWindow(taskMemory) + " before departure.", confirmedByKey),
+                checklistItem("essentials", "Travel Essentials", "Check IDs, charging gear, medicines, and payment setup.", confirmedByKey)
+        );
+    }
+
+    private TravelChecklistItem checklistItem(String key, String title, String details, Map<String, Boolean> confirmedByKey) {
+        return new TravelChecklistItem(key, title, details, confirmedByKey.getOrDefault(key, false));
+    }
+
+    private String persistPlanVersion(
+            String conversationId,
+            TravelPlan travelPlan,
+            String effectiveUserMessage,
+            ReplanScopeSelection replanScope
+    ) {
+        String versionId = UUID.randomUUID().toString();
+        Instant createdAt = travelPlan.updatedAt() == null ? Instant.now() : travelPlan.updatedAt();
+        conversationRepository.saveTravelPlanVersion(new TravelPlanVersionSnapshot(
+                versionId,
+                conversationId,
+                summarizePlanInput(effectiveUserMessage),
+                replanScope == null ? "FULL_PLAN" : replanScope.scope(),
+                travelPlan,
+                createdAt
+        ));
+        return createdAt.toString();
+    }
+
+    private String summarizePlanInput(String effectiveUserMessage) {
+        if (effectiveUserMessage == null || effectiveUserMessage.isBlank()) {
+            return "Travel plan refresh";
+        }
+        String normalized = effectiveUserMessage.strip();
+        return normalized.length() > 200 ? normalized.substring(0, 200) : normalized;
+    }
+
+    private String renderDateWindow(TaskMemory taskMemory) {
+        if (taskMemory == null) {
+            return null;
+        }
+        if (taskMemory.startDate() != null && taskMemory.endDate() != null) {
+            return taskMemory.startDate() + " to " + taskMemory.endDate();
+        }
+        return taskMemory.startDate();
+    }
+
+    private List<String> refreshedSections(ReplanScopeSelection replanScope) {
+        if (replanScope == null) {
+            return List.of();
+        }
+        if ("DAY".equals(replanScope.scope()) && replanScope.dayNumber() != null) {
+            return List.of("DAY:" + replanScope.dayNumber());
+        }
+        return List.of(replanScope.scope());
     }
 
     private SpecialistAgent selectSpecialist(AgentType agentType) {
@@ -604,6 +858,34 @@ public class ConversationWorkflow {
         };
     }
 
+    private ReplanScopeSelection normalizeReplanScope(String requestedConversationId, ReplanScopeRequest request) {
+        if (request == null || request.scope() == null || request.scope().isBlank()) {
+            return null;
+        }
+        if (requestedConversationId == null || requestedConversationId.isBlank()) {
+            throw new AppException(ResponseCode.INVALID_REQUEST, "Scoped replans require an existing conversation");
+        }
+        String normalizedScope = request.scope().trim().toUpperCase();
+        return switch (normalizedScope) {
+            case "HOTEL_AREA" -> new ReplanScopeSelection("HOTEL_AREA", null);
+            case "DAY" -> {
+                if (request.dayNumber() == null || request.dayNumber() < 1) {
+                    throw new AppException(ResponseCode.INVALID_REQUEST, "DAY replan scope requires a positive dayNumber");
+                }
+                yield new ReplanScopeSelection("DAY", request.dayNumber());
+            }
+            default -> throw new AppException(ResponseCode.INVALID_REQUEST, "replanScope must be HOTEL_AREA or DAY");
+        };
+    }
+
+    private TravelPlan currentPlanForReplan(String requestedConversationId, ReplanScopeSelection replanScope) {
+        if (replanScope == null) {
+            return null;
+        }
+        return conversationRepository.findTravelPlan(requestedConversationId.trim())
+                .orElseThrow(() -> new AppException(ResponseCode.INVALID_REQUEST, "No existing plan is available for the requested scoped replan"));
+    }
+
     private List<ImageAttachment> normalizeImageAttachments(List<ChatImageAttachmentRequest> requests) {
         if (requests == null || requests.isEmpty()) {
             return List.of();
@@ -647,15 +929,33 @@ public class ConversationWorkflow {
         );
     }
 
-    private String buildEffectiveUserMessage(String rawUserMessage, List<ImageAttachment> imageAttachments, String imageContextSummary) {
-        if ((rawUserMessage == null || rawUserMessage.isBlank()) && imageAttachments.isEmpty()) {
-            throw new AppException(ResponseCode.INVALID_REQUEST, "Either a text message or at least one image is required");
+    private String buildEffectiveUserMessage(
+            String rawUserMessage,
+            List<ImageAttachment> imageAttachments,
+            String imageContextSummary,
+            TaskMemory briefPatch,
+            ReplanScopeSelection replanScope,
+            TravelPlan existingPlan
+    ) {
+        if ((rawUserMessage == null || rawUserMessage.isBlank()) && imageAttachments.isEmpty() && briefPatch == null && replanScope == null) {
+            throw new AppException(ResponseCode.INVALID_REQUEST, "Either a text message, a structured brief update, a scoped replan, or at least one image is required");
         }
         String baseMessage = rawUserMessage;
         if (baseMessage == null || baseMessage.isBlank()) {
-            baseMessage = containsChinese(imageContextSummary) ? IMAGE_ONLY_MESSAGE_ZH : IMAGE_ONLY_MESSAGE_EN;
+            baseMessage = replanScope != null
+                    ? defaultReplanMessage(replanScope)
+                    : briefPatch == null
+                    ? (containsChinese(imageContextSummary) ? IMAGE_ONLY_MESSAGE_ZH : IMAGE_ONLY_MESSAGE_EN)
+                    : renderBriefAsMessage(briefPatch);
         }
         StringBuilder builder = new StringBuilder(baseMessage);
+        if (replanScope != null) {
+            builder.append("\n\nScoped replan request: ").append(renderReplanScope(replanScope));
+            String replanContext = renderReplanContext(existingPlan, replanScope);
+            if (replanContext != null && !replanContext.isBlank()) {
+                builder.append("\nCurrent scoped context:\n").append(replanContext);
+            }
+        }
         if (!imageAttachments.isEmpty()) {
             builder.append("\n\nUploaded images: ").append(renderAttachmentNames(imageAttachments));
         }
@@ -675,6 +975,43 @@ public class ConversationWorkflow {
         return containsChinese(effectiveUserMessage) ? IMAGE_UPLOAD_NOTE_ZH : IMAGE_UPLOAD_NOTE_EN;
     }
 
+    private String defaultReplanMessage(ReplanScopeSelection replanScope) {
+        return switch (replanScope.scope()) {
+            case "HOTEL_AREA" -> "Refresh only the hotel area and stay recommendations. Keep the daily itinerary unchanged.";
+            case "DAY" -> "Refresh only Day " + replanScope.dayNumber() + " and keep the other days stable.";
+            default -> "Refresh the plan.";
+        };
+    }
+
+    private String renderReplanScope(ReplanScopeSelection replanScope) {
+        return switch (replanScope.scope()) {
+            case "HOTEL_AREA" -> "Hotel area only";
+            case "DAY" -> "Day " + replanScope.dayNumber() + " only";
+            default -> replanScope.scope();
+        };
+    }
+
+    private String renderReplanContext(TravelPlan existingPlan, ReplanScopeSelection replanScope) {
+        if (existingPlan == null || replanScope == null) {
+            return null;
+        }
+        if ("HOTEL_AREA".equals(replanScope.scope())) {
+            String currentHotel = existingPlan.hotels().isEmpty() ? existingPlan.hotelArea() : existingPlan.hotels().getFirst().name();
+            return "Current hotel area: " + existingPlan.hotelArea() + "\nCurrent stay anchor: " + currentHotel;
+        }
+        if ("DAY".equals(replanScope.scope())) {
+            return existingPlan.days().stream()
+                    .filter(day -> replanScope.dayNumber().equals(day.dayNumber()))
+                    .findFirst()
+                    .map(day -> {
+                        String stops = day.stops().stream().map(stop -> stop.name()).limit(4).collect(Collectors.joining(", "));
+                        return "Current Day " + day.dayNumber() + ": " + day.theme() + "\nCurrent stops: " + stops;
+                    })
+                    .orElse(null);
+        }
+        return null;
+    }
+
     private String buildConfirmedUserMessage(String rawUserMessage, String summary) {
         if (rawUserMessage != null && !rawUserMessage.isBlank()) {
             return rawUserMessage + "\n\nConfirmed extracted image facts:\n" + summary;
@@ -686,12 +1023,14 @@ public class ConversationWorkflow {
             List<ImageAttachment> imageAttachments,
             String imageContextSummary,
             ConversationImageFacts imageFacts,
-            String imageContextStatus
+            String imageContextStatus,
+            TaskMemory briefPatch
     ) {
         if (imageAttachments.isEmpty()
                 && (imageContextSummary == null || imageContextSummary.isBlank())
                 && (imageFacts == null || !imageFacts.hasRecognizedFacts())
-                && (imageContextStatus == null || imageContextStatus.isBlank())) {
+                && (imageContextStatus == null || imageContextStatus.isBlank())
+                && briefPatch == null) {
             return Map.of();
         }
         Map<String, Object> metadata = new LinkedHashMap<>();
@@ -707,6 +1046,18 @@ public class ConversationWorkflow {
         }
         if (imageFacts != null) {
             metadata.put("imageFacts", imageFacts);
+        }
+        if (briefPatch != null) {
+            metadata.put("tripBrief", Map.of(
+                    "origin", briefPatch.origin(),
+                    "destination", briefPatch.destination(),
+                    "startDate", briefPatch.startDate(),
+                    "endDate", briefPatch.endDate(),
+                    "days", briefPatch.days(),
+                    "travelers", briefPatch.travelers(),
+                    "budget", briefPatch.budget(),
+                    "preferences", briefPatch.preferences()
+            ));
         }
         return metadata;
     }
@@ -740,13 +1091,78 @@ public class ConversationWorkflow {
                 conversationId,
                 facts.origin(),
                 facts.destination(),
+                facts.startDate(),
+                facts.endDate(),
                 facts.days(),
+                null,
                 facts.budget(),
                 preferences,
                 null,
                 summary,
                 Instant.now()
         );
+    }
+
+    private TaskMemory taskMemoryPatchFromBrief(String requestedConversationId, TripBriefRequest brief) {
+        if (brief == null) {
+            return null;
+        }
+        if ((brief.origin() == null || brief.origin().isBlank())
+                && (brief.destination() == null || brief.destination().isBlank())
+                && (brief.startDate() == null || brief.startDate().isBlank())
+                && (brief.endDate() == null || brief.endDate().isBlank())
+                && brief.days() == null
+                && (brief.travelers() == null || brief.travelers().isBlank())
+                && (brief.budget() == null || brief.budget().isBlank())
+                && brief.preferences().isEmpty()) {
+            return null;
+        }
+        String conversationId = requestedConversationId == null || requestedConversationId.isBlank()
+                ? UUID.randomUUID().toString()
+                : requestedConversationId.trim();
+        return new TaskMemory(
+                conversationId,
+                normalizeText(brief.origin()),
+                normalizeText(brief.destination()),
+                normalizeText(brief.startDate()),
+                normalizeText(brief.endDate()),
+                brief.days(),
+                normalizeText(brief.travelers()),
+                normalizeText(brief.budget()),
+                brief.preferences().stream().map(this::normalizeText).filter(java.util.Objects::nonNull).toList(),
+                null,
+                null,
+                Instant.now()
+        );
+    }
+
+    private String renderBriefAsMessage(TaskMemory briefPatch) {
+        List<String> parts = new java.util.ArrayList<>();
+        if (briefPatch.destination() != null) {
+            parts.add("Destination: " + briefPatch.destination());
+        }
+        if (briefPatch.origin() != null) {
+            parts.add("Origin: " + briefPatch.origin());
+        }
+        if (briefPatch.startDate() != null) {
+            parts.add("Start Date: " + briefPatch.startDate());
+        }
+        if (briefPatch.endDate() != null) {
+            parts.add("End Date: " + briefPatch.endDate());
+        }
+        if (briefPatch.days() != null) {
+            parts.add("Days: " + briefPatch.days());
+        }
+        if (briefPatch.travelers() != null) {
+            parts.add("Travelers: " + briefPatch.travelers());
+        }
+        if (briefPatch.budget() != null) {
+            parts.add("Budget: " + briefPatch.budget());
+        }
+        if (!briefPatch.preferences().isEmpty()) {
+            parts.add("Preferences: " + String.join(", ", briefPatch.preferences()));
+        }
+        return parts.isEmpty() ? IMAGE_ONLY_MESSAGE_EN : String.join(" | ", parts);
     }
 
     private String buildImageFactsSummary(ConversationImageFacts facts) {
@@ -875,6 +1291,12 @@ public class ConversationWorkflow {
             String answer,
             Map<String, Object> metadata,
             TravelPlan travelPlan
+    ) {
+    }
+
+    private record ReplanScopeSelection(
+            String scope,
+            Integer dayNumber
     ) {
     }
 

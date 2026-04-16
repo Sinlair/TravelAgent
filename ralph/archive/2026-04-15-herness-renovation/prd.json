@@ -1,0 +1,298 @@
+{
+  "project": "TravelAgent",
+  "branchName": "ralph/herness-renovation",
+  "description": "System-level TravelAgent renovation to standardize chat response contracts, planner stage visibility, feedback traceability, and cross-panel UI state handling.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add unified conversation response DTO",
+      "description": "As a backend developer, I want a single response DTO for chat results so that every specialist returns a stable top-level contract.",
+      "acceptanceCriteria": [
+        "Define a chat response DTO or equivalent schema with stable top-level fields for agentType, answer, travelPlan, timeline, feedbackTarget, and issues",
+        "Optional blocks serialize as explicit null or empty collections instead of omitted fields",
+        "The chat controller returns the unified DTO for successful requests",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Map all specialists to the unified response contract",
+      "description": "As a backend developer, I want WEATHER, GEO, GENERAL, and TRAVEL_PLANNER outputs normalized so that the frontend does not need specialist-specific parsing branches.",
+      "acceptanceCriteria": [
+        "WEATHER, GEO, GENERAL, and TRAVEL_PLANNER responses are all mapped through one response builder or equivalent adapter",
+        "Missing travelPlan, timeline, feedbackTarget, and issues fields use stable empty semantics for non-applicable specialists",
+        "The HTTP layer no longer contains per-specialist response shape branching",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Define normalized planner stage events",
+      "description": "As a backend developer, I want planner stages expressed through one event model so that execution progress is consistent across persistence and SSE.",
+      "acceptanceCriteria": [
+        "Introduce a planner event model with stage, status, message, startedAt, and endedAt fields",
+        "Planner events can represent running, completed, failed, and repaired outcomes or clear equivalents",
+        "Non-planner responses expose an empty timeline collection instead of planner-specific placeholders",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Persist and stream normalized planner events",
+      "description": "As a backend developer, I want normalized planner events stored and streamed so that the same stage data is visible in history and live updates.",
+      "acceptanceCriteria": [
+        "SSE timeline messages use the normalized planner event shape",
+        "Persisted timeline records keep stage, status, message, and timestamps from planner execution",
+        "Repair and failure paths emit distinct normalized events",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add structured missing-information summary",
+      "description": "As a travel planning user, I want the system to tell me what facts are missing so that I know how to complete an incomplete request.",
+      "acceptanceCriteria": [
+        "Planner responses expose a structured missingInformation list or equivalent field for required travel facts",
+        "Each missing item includes a stable category such as destination, date, budget, or companions",
+        "When required facts are missing, the final answer text stays consistent with the structured list",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add structured constraint summary",
+      "description": "As a travel planning user, I want a structured summary of validation and repair outcomes so that I can judge whether a plan is ready to use.",
+      "acceptanceCriteria": [
+        "Planner responses expose a constraintSummary block with a status of passed, repaired, or risk, or clear equivalents",
+        "Constraint summary includes structured issue items for validation failures or repair actions",
+        "Final answer text does not contradict the structured constraint summary",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Expose versioned feedback targets in chat results",
+      "description": "As a product analyst, I want each response to expose a stable feedback target so that later feedback can be tied to the exact answer or plan version.",
+      "acceptanceCriteria": [
+        "Chat responses include a stable feedback target identifier and scope for answer, plan, or overall evaluation",
+        "Planner results expose a stable plan version or equivalent revision identifier",
+        "Non-planner responses still expose a valid answer-level feedback target",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Persist feedback reason labels and version linkage",
+      "description": "As a backend developer, I want feedback records to store scope, version linkage, and reasons so that feedback data is analyzable after the renovation.",
+      "acceptanceCriteria": [
+        "Feedback persistence stores feedback target id, scope, reason labels, and optional free-text comment",
+        "Existing feedback reads remain backward compatible or are migrated safely",
+        "Stored feedback can be joined back to the related answer or plan version",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Update feedback submit and export APIs",
+      "description": "As a product analyst, I want feedback APIs to accept and expose structured reasons so that acceptance and rejection patterns can be summarized reliably.",
+      "acceptanceCriteria": [
+        "Feedback submit API accepts structured reason labels for partially_accept and reject outcomes",
+        "Accept flow remains supported without requiring a reason label",
+        "Feedback export or summary output includes target id, scope, and reason labels",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Create a shared frontend conversation result adapter",
+      "description": "As a frontend developer, I want one adapter for chat responses so that all panels consume the same normalized view model.",
+      "acceptanceCriteria": [
+        "Add a shared frontend adapter or view model layer for the unified chat response contract",
+        "The adapter derives panel state values for loading, partial, success, empty, and error",
+        "Core panels can read normalized answer, travelPlan, timeline, feedback target, and issue fields from the shared adapter",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Refactor the chat result card to use the shared view model",
+      "description": "As a user, I want the chat result card to show answer status, missing facts, and plan risk consistently so that incomplete results are understandable.",
+      "acceptanceCriteria": [
+        "The chat result card reads normalized answer, missing information, and constraint summary data from the shared view model",
+        "Incomplete planner responses render a visible partial state instead of a generic success state",
+        "The card shows clear status copy for empty and error cases",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Refactor the itinerary panel to use the shared view model",
+      "description": "As a user, I want the itinerary panel to stay in sync with the chat answer so that plan details never disagree across panels.",
+      "acceptanceCriteria": [
+        "The itinerary panel reads travelPlan and related status data from the shared view model",
+        "When travelPlan is absent, the panel renders empty or partial state instead of a generic error",
+        "Destination and date summary shown in the itinerary panel matches the chat answer for the same response",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Refactor the map panel to use the shared view model",
+      "description": "As a user, I want the map panel to explain when map data is unavailable so that partial planner results do not look broken.",
+      "acceptanceCriteria": [
+        "The map panel reads normalized locations or map state from the shared view model",
+        "Missing map data renders an empty or partial explanation instead of a silent blank panel",
+        "Map content shown for a successful planner response matches the same response's itinerary context",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Refactor the feedback panel for versioned targets and reason tags",
+      "description": "As a user, I want feedback actions tied to the exact response version so that my accept or reject action is recorded against the correct result.",
+      "acceptanceCriteria": [
+        "Feedback UI submits the normalized feedback target id and scope from the shared view model",
+        "Partially Accept and Reject allow selecting structured reason tags and adding an optional comment",
+        "Accept remains a one-click action for the current response",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Add shared cross-panel state rendering",
+      "description": "As a user, I want all major panels to use the same status patterns so that loading, partial completion, and errors are predictable everywhere.",
+      "acceptanceCriteria": [
+        "Chat, itinerary, map, and feedback panels all render loading, partial, success, empty, and error states",
+        "SSE interruption or API failure surfaces a recovery action without requiring a full page refresh",
+        "Shared status copy or shared status components are used across the affected panels",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Add an execution timeline panel",
+      "description": "As a user, I want to inspect the execution timeline so that I can understand when the system generated, validated, repaired, or failed a plan.",
+      "acceptanceCriteria": [
+        "The UI shows planner timeline entries with stage, status, timestamp, and message",
+        "Repair, failure, and tool-provider related events are visually distinguishable in the timeline",
+        "The timeline remains readable on desktop and mobile layouts",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Add backend regression tests for the Herness contract",
+      "description": "As a maintainer, I want automated backend regression coverage for the renovated contract so that future changes do not silently break core conversation flows.",
+      "acceptanceCriteria": [
+        "Add backend regression coverage for representative planner, weather, geo, and feedback flows",
+        "Regression tests assert the unified response contract, normalized timeline shape, and error-path behavior",
+        "Standard backend test commands execute the new coverage",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Add frontend regression tests for shared view model states",
+      "description": "As a maintainer, I want automated frontend regression coverage for the shared view model so that panel state behavior stays consistent after future UI changes.",
+      "acceptanceCriteria": [
+        "Add frontend tests for shared view model derivation logic",
+        "Add UI tests for loading, partial, success, empty, and error rendering across the affected panels",
+        "Standard frontend test commands execute the new coverage",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Update architecture and development documentation",
+      "description": "As a maintainer, I want the renovation contract and validation commands documented so that implementation details and operating instructions stay aligned.",
+      "acceptanceCriteria": [
+        "Update architecture or development docs to describe the unified response contract, timeline semantics, and feedback linkage fields",
+        "Document the backend and frontend regression commands needed for the renovated workflow",
+        "Docs reference the finalized Herness branch or feature name consistently",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}
+

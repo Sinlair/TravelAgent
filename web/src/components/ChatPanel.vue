@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Send, Image, MessageSquare, Info, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-vue-next'
 import type {
   ChatImageAttachmentRequest,
@@ -40,6 +40,14 @@ const feedbackEditorLabel = ref<'PARTIAL' | 'REJECTED' | ''>('')
 const feedbackScope = ref<FeedbackTargetScope>('ANSWER')
 const feedbackNote = ref('')
 const feedbackReasonLabels = ref<string[]>([])
+const briefOrigin = ref('')
+const briefDestination = ref('')
+const briefStartDate = ref('')
+const briefEndDate = ref('')
+const briefDays = ref('')
+const briefTravelers = ref('')
+const briefBudget = ref('')
+const briefPreferences = ref('')
 
 const MAX_ATTACHMENTS = 4
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
@@ -165,6 +173,8 @@ const copy = computed(() => (props.preferChinese
       briefMissingLabel: '\u8fd8\u7f3a',
       briefScore: (done: number, total: number) => `${done}/${total}`,
       followUpLabel: '\u4e0b\u4e00\u53e5\u53ef\u4ee5\u8fd9\u6837\u8865\u5145',
+      briefEditorTitle: '\u76f4\u63a5\u4fee\u6539\u65c5\u884c\u7ea6\u675f',
+      briefApply: '\u5e94\u7528\u7ea6\u675f',
       composerTitle: '\u7ee7\u7eed\u8865\u5145\u6216\u6539\u65b9\u6848',
       composerBody: '\u76f4\u63a5\u7528\u53e5\u5b50\u63cf\u8ff0\u53d8\u66f4\uff0c\u4f8b\u5982\u8c03\u6574\u8282\u594f\u3001\u63a7\u5236\u9884\u7b97\u3001\u66f4\u6362\u4f4f\u5bbf\u533a\u57df\u3002',
       slotMissing: '\u5f85\u8865\u5145',
@@ -182,7 +192,10 @@ const copy = computed(() => (props.preferChinese
       memoryLabels: {
         origin: '\u51fa\u53d1\u5730',
         destination: '\u76ee\u7684\u5730',
+        startDate: '\u5f00\u59cb\u65e5\u671f',
+        endDate: '\u7ed3\u675f\u65e5\u671f',
         days: '\u5929\u6570',
+        travelers: '\u540c\u884c\u4eba',
         budget: '\u9884\u7b97',
         preference: '\u504f\u597d'
       },
@@ -214,6 +227,8 @@ const copy = computed(() => (props.preferChinese
       briefMissingLabel: 'Still missing',
       briefScore: (done: number, total: number) => `${done}/${total}`,
       followUpLabel: 'Useful next messages',
+      briefEditorTitle: 'Edit trip constraints directly',
+      briefApply: 'Apply brief',
       composerTitle: 'Add a refinement or correction',
       composerBody: 'Write the next change directly, for example adjust pacing, tighten budget, or switch the stay area.',
       slotMissing: 'Pending',
@@ -231,7 +246,10 @@ const copy = computed(() => (props.preferChinese
       memoryLabels: {
         origin: 'Origin',
         destination: 'Destination',
+        startDate: 'Start Date',
+        endDate: 'End Date',
         days: 'Days',
+        travelers: 'Travelers',
         budget: 'Budget',
         preference: 'Preference'
       },
@@ -276,10 +294,22 @@ const briefSummary = computed(() => {
       complete: Boolean(memory.destination)
     },
     {
+      key: 'startDate',
+      label: copy.value.memoryLabels.startDate,
+      value: normalizeDisplayText(memory.startDate) || copy.value.slotMissing,
+      complete: Boolean(memory.startDate)
+    },
+    {
       key: 'days',
       label: copy.value.memoryLabels.days,
       value: memory.days ? String(memory.days) : copy.value.slotMissing,
       complete: Boolean(memory.days)
+    },
+    {
+      key: 'travelers',
+      label: copy.value.memoryLabels.travelers,
+      value: normalizeDisplayText(memory.travelers) || copy.value.slotMissing,
+      complete: Boolean(memory.travelers)
     },
     {
       key: 'budget',
@@ -372,11 +402,29 @@ const memoryTags = computed(() => {
   return [
     memory.origin ? `${copy.value.memoryLabels.origin}: ${memory.origin}` : '',
     memory.destination ? `${copy.value.memoryLabels.destination}: ${normalizeDisplayText(memory.destination)}` : '',
+    memory.startDate ? `${copy.value.memoryLabels.startDate}: ${normalizeDisplayText(memory.startDate)}` : '',
+    memory.endDate ? `${copy.value.memoryLabels.endDate}: ${normalizeDisplayText(memory.endDate)}` : '',
     memory.days ? `${copy.value.memoryLabels.days}: ${memory.days}` : '',
+    memory.travelers ? `${copy.value.memoryLabels.travelers}: ${normalizeDisplayText(memory.travelers)}` : '',
     memory.budget ? `${copy.value.memoryLabels.budget}: ${normalizeDisplayText(memory.budget)}` : '',
     ...memory.preferences.map(item => `${copy.value.memoryLabels.preference}: ${localizePreference(item)}`)
   ].filter(Boolean)
 })
+
+watch(
+  () => props.detail?.taskMemory,
+  memory => {
+    briefOrigin.value = memory?.origin ?? ''
+    briefDestination.value = memory?.destination ?? ''
+    briefStartDate.value = memory?.startDate ?? ''
+    briefEndDate.value = memory?.endDate ?? ''
+    briefDays.value = memory?.days == null ? '' : String(memory.days)
+    briefTravelers.value = memory?.travelers ?? ''
+    briefBudget.value = memory?.budget ?? ''
+    briefPreferences.value = memory?.preferences.join(', ') ?? ''
+  },
+  { immediate: true }
+)
 
 const recognizedImageFacts = computed(() => {
   const facts = pendingImageContext.value?.facts
@@ -427,6 +475,27 @@ function submit() {
   input.value = ''
   attachments.value = []
   attachmentError.value = ''
+}
+
+function applyBrief() {
+  const preferences = briefPreferences.value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+  emit('send', {
+    message: input.value || undefined,
+    brief: {
+      origin: briefOrigin.value || undefined,
+      destination: briefDestination.value || undefined,
+      startDate: briefStartDate.value || undefined,
+      endDate: briefEndDate.value || undefined,
+      days: briefDays.value ? Number(briefDays.value) : undefined,
+      travelers: briefTravelers.value || undefined,
+      budget: briefBudget.value || undefined,
+      preferences
+    }
+  })
+  input.value = ''
 }
 
 function confirmImageContext() {
@@ -814,6 +883,52 @@ function markdownToHtml(markdown: string) {
       <div v-if="briefSummary.missing.length" class="brief-card__missing">
         <span>{{ copy.briefMissingLabel }}</span>
         <p>{{ briefSummary.missing.join(' / ') }}</p>
+      </div>
+
+      <div class="brief-card__grid">
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.origin }}</span>
+          <input v-model="briefOrigin" class="message__feedback-note" type="text" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.destination }}</span>
+          <input v-model="briefDestination" class="message__feedback-note" type="text" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.startDate }}</span>
+          <input v-model="briefStartDate" class="message__feedback-note" type="date" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.endDate }}</span>
+          <input v-model="briefEndDate" class="message__feedback-note" type="date" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.days }}</span>
+          <input v-model="briefDays" class="message__feedback-note" type="number" min="1" max="30" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.travelers }}</span>
+          <input v-model="briefTravelers" class="message__feedback-note" type="text" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.budget }}</span>
+          <input v-model="briefBudget" class="message__feedback-note" type="text" />
+        </label>
+        <label class="brief-card__slot">
+          <span>{{ copy.memoryLabels.preference }}</span>
+          <input v-model="briefPreferences" class="message__feedback-note" type="text" />
+        </label>
+      </div>
+
+      <div class="message__actions">
+        <button
+          type="button"
+          class="message__feedback-choice message__feedback-choice--active"
+          :disabled="sending"
+          @click="applyBrief"
+        >
+          {{ copy.briefApply }}
+        </button>
       </div>
     </article>
 

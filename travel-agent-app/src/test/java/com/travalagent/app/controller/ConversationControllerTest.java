@@ -234,12 +234,28 @@ class ConversationControllerTest {
         }
 
         @Override
-        public List<FeedbackDatasetRecord> exportFeedbackDataset(int limit) {
+        public List<FeedbackDatasetRecord> exportFeedbackDataset(
+                int limit,
+                String destination,
+                String agentType,
+                String targetScope,
+                String reasonLabel,
+                String planVersionFrom,
+                String planVersionTo
+        ) {
             return exportFeedbackDatasetResponse;
         }
 
         @Override
-        public FeedbackLoopSummaryResponse feedbackLoopSummary(int limit) {
+        public FeedbackLoopSummaryResponse feedbackLoopSummary(
+                int limit,
+                String destination,
+                String agentType,
+                String targetScope,
+                String reasonLabel,
+                String planVersionFrom,
+                String planVersionTo
+        ) {
             return feedbackLoopSummaryResponse;
         }
     }

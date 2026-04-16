@@ -1,0 +1,39 @@
+spring:
+  ai:
+    mcp:
+      client:
+        enabled: false
+        initialized: false
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
+      - org.springframework.ai.vectorstore.milvus.autoconfigure.MilvusVectorStoreAutoConfiguration
+  datasource:
+    url: jdbc:sqlite:${TRAVEL_AGENT_LOCAL_DEMO_DB:./data/travel-agent-local-demo.db}
+
+travel:
+  agent:
+    tool-provider: LOCAL
+    memory-provider: SQLITE
+    amap:
+      api-key:
+      mock-when-missing-key: true
+      mock-on-error: true
+    memory:
+      milvus:
+        enabled: false
+      simple:
+        enabled: false
+    knowledge:
+      vector:
+        enabled: false
+
+management:
+  tracing:
+    sampling:
+      probability: 0.0

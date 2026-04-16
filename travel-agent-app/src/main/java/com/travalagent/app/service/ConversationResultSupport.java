@@ -31,14 +31,15 @@ public final class ConversationResultSupport {
             String conversationId,
             String assistantMessageId,
             AgentType agentType,
-            TravelPlan travelPlan
+            TravelPlan travelPlan,
+            String planVersion
     ) {
         boolean hasTravelPlan = travelPlan != null;
         return new ChatResponseFeedbackTarget(
                 assistantMessageId == null || assistantMessageId.isBlank() ? conversationId : assistantMessageId,
                 conversationId,
                 hasTravelPlan ? "OVERALL" : "ANSWER",
-                travelPlan == null || travelPlan.updatedAt() == null ? null : travelPlan.updatedAt().toString(),
+                hasTravelPlan ? planVersion : null,
                 agentType,
                 hasTravelPlan,
                 hasTravelPlan ? PLAN_SCOPES : DEFAULT_SCOPES
@@ -53,8 +54,14 @@ public final class ConversationResultSupport {
         if (taskMemory == null || isBlank(taskMemory.destination())) {
             codes.add("destination");
         }
+        if (taskMemory == null || isBlank(taskMemory.startDate())) {
+            codes.add("startDate");
+        }
         if (taskMemory == null || taskMemory.days() == null) {
             codes.add("days");
+        }
+        if (taskMemory == null || isBlank(taskMemory.travelers())) {
+            codes.add("travelers");
         }
         if (taskMemory == null || isBlank(taskMemory.budget())) {
             codes.add("budget");
@@ -191,6 +198,7 @@ public final class ConversationResultSupport {
             case "startDate" -> new ConversationMissingInformationItem("startDate", "Start Date", "Add the departure or arrival date.");
             case "endDate" -> new ConversationMissingInformationItem("endDate", "End Date", "Add the return date if it is fixed.");
             case "days" -> new ConversationMissingInformationItem("days", "Trip Length", "Add how many days this trip should take.");
+            case "travelers" -> new ConversationMissingInformationItem("travelers", "Travelers", "Add who is traveling, such as solo, couple, family, or friends.");
             case "budget" -> new ConversationMissingInformationItem("budget", "Budget", "Add a budget cap or target range.");
             case "hotelName" -> new ConversationMissingInformationItem("hotelName", "Hotel", "Confirm the hotel name if the stay is already booked.");
             case "hotelArea" -> new ConversationMissingInformationItem("hotelArea", "Hotel Area", "Add the preferred hotel area.");

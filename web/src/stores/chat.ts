@@ -1,16 +1,25 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { apiDelete, apiGet, apiPost } from '../api/client'
+import { apiDelete, apiGet, apiPatch, apiPost } from '../api/client'
 import type {
   ChatRequest,
   ChatResponse,
+  ConversationChecklistUpdateRequest,
   ConversationDetailResponse,
   ConversationFeedback,
   ConversationFeedbackRequest,
   ConversationSession,
   FeedbackLoopSummaryResponse,
-  TimelineEvent
+  TimelineEvent,
+  TravelPlan
 } from '../types/api'
+
+type FeedbackLoopFilters = {
+  destination?: string
+  agentType?: string
+  targetScope?: string
+  reasonLabel?: string
+}
 
 export const useChatStore = defineStore('chat', () => {
   const conversations = ref<ConversationSession[]>([])
@@ -22,6 +31,12 @@ export const useChatStore = defineStore('chat', () => {
   const feedbackLoopLoading = ref(false)
   const feedbackLoopStale = ref(true)
   const feedbackLoopLimit = ref(200)
+  const feedbackLoopFilters = ref<FeedbackLoopFilters>({
+    destination: '',
+    agentType: '',
+    targetScope: '',
+    reasonLabel: ''
+  })
   const loading = ref(false)
   const errorMessage = ref('')
   const streamError = ref('')
@@ -60,7 +75,21 @@ export const useChatStore = defineStore('chat', () => {
   async function sendMessage(payload: ChatRequest) {
     const trimmedMessage = payload.message?.trim() ?? ''
     const attachments = payload.attachments ?? []
-    if ((!trimmedMessage && attachments.length === 0) || sending.value) {
+    const brief = payload.brief
+    const hasReplan = Boolean(payload.replanScope?.scope)
+    const hasBrief = Boolean(
+      brief && (
+        brief.origin ||
+        brief.destination ||
+        brief.startDate ||
+        brief.endDate ||
+        brief.days ||
+        brief.travelers ||
+        brief.budget ||
+        (brief.preferences?.length ?? 0) > 0
+      )
+    )
+    if ((!trimmedMessage && attachments.length === 0 && !hasBrief && !hasReplan) || sending.value) {
       return
     }
     sending.value = true
@@ -69,8 +98,10 @@ export const useChatStore = defineStore('chat', () => {
       const response = await apiPost<ChatResponse>('/api/conversations/chat', {
         conversationId: currentConversationId.value || undefined,
         message: trimmedMessage || undefined,
+        brief: hasBrief ? brief : undefined,
         attachments,
-        imageContextAction: payload.imageContextAction
+        imageContextAction: payload.imageContextAction,
+        replanScope: payload.replanScope
       })
       streamError.value = ''
       await loadConversations()
@@ -120,15 +151,49 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function loadFeedbackLoopSummary(limit = feedbackLoopLimit.value) {
+  async function updateChecklist(payload: ConversationChecklistUpdateRequest) {
+    if (!currentConversationId.value) {
+      return
+    }
+    try {
+      const updatedPlan = await apiPatch<TravelPlan>(
+        `/api/conversations/${currentConversationId.value}/checklist`,
+        payload
+      )
+      if (detail.value?.conversation.conversationId === currentConversationId.value) {
+        detail.value.travelPlan = updatedPlan
+      }
+      errorMessage.value = ''
+    } catch (error) {
+      errorMessage.value = formatError(error)
+    }
+  }
+
+  async function loadFeedbackLoopSummary(
+    limit = feedbackLoopLimit.value,
+    filters: FeedbackLoopFilters = feedbackLoopFilters.value
+  ) {
     if (feedbackLoopLoading.value) {
       return
     }
     feedbackLoopLoading.value = true
     feedbackLoopLimit.value = limit
+    feedbackLoopFilters.value = {
+      destination: filters.destination ?? '',
+      agentType: filters.agentType ?? '',
+      targetScope: filters.targetScope ?? '',
+      reasonLabel: filters.reasonLabel ?? ''
+    }
     try {
+      const params = new URLSearchParams({
+        limit: String(limit)
+      })
+      if (feedbackLoopFilters.value.destination) params.set('destination', feedbackLoopFilters.value.destination)
+      if (feedbackLoopFilters.value.agentType) params.set('agentType', feedbackLoopFilters.value.agentType)
+      if (feedbackLoopFilters.value.targetScope) params.set('targetScope', feedbackLoopFilters.value.targetScope)
+      if (feedbackLoopFilters.value.reasonLabel) params.set('reasonLabel', feedbackLoopFilters.value.reasonLabel)
       feedbackLoopSummary.value = await apiGet<FeedbackLoopSummaryResponse>(
-        `/api/conversations/feedback/summary?limit=${limit}`
+        `/api/conversations/feedback/summary?${params.toString()}`
       )
       feedbackLoopStale.value = false
       feedbackLoopError.value = ''
@@ -196,6 +261,7 @@ export const useChatStore = defineStore('chat', () => {
     feedbackLoopLoading,
     feedbackLoopStale,
     feedbackLoopLimit,
+    feedbackLoopFilters,
     loading,
     errorMessage,
     streamError,
@@ -205,6 +271,7 @@ export const useChatStore = defineStore('chat', () => {
     openConversation,
     sendMessage,
     submitFeedback,
+    updateChecklist,
     loadFeedbackLoopSummary,
     deleteConversation,
     newConversation,

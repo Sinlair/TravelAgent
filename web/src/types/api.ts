@@ -82,7 +82,10 @@ export interface TaskMemory {
   conversationId: string
   origin?: string
   destination?: string
+  startDate?: string
+  endDate?: string
   days?: number
+  travelers?: string
   budget?: string
   preferences: string[]
   pendingQuestion?: string
@@ -150,6 +153,8 @@ export interface TravelTransitLeg {
   steps: TravelTransitStep[]
   polyline: string[]
   source?: string
+  confidence?: number | null
+  freshness?: string | null
 }
 
 export interface TravelHotelRecommendation {
@@ -163,6 +168,8 @@ export interface TravelHotelRecommendation {
   latitude?: string
   source?: string
   bookingUrl?: string
+  confidence?: number | null
+  freshness?: string | null
 }
 
 export interface TravelPlanStop {
@@ -187,6 +194,7 @@ export interface TravelPlanStop {
 
 export interface TravelPlanDay {
   dayNumber: number
+  date?: string | null
   theme: string
   startTime: string
   endTime: string
@@ -229,6 +237,13 @@ export interface TravelKnowledgeRetrievalResult {
   selections: TravelKnowledgeSelection[]
 }
 
+export interface TravelChecklistItem {
+  key: string
+  title: string
+  details: string
+  confirmed: boolean
+}
+
 export interface TravelPlan {
   conversationId: string
   title: string
@@ -247,6 +262,8 @@ export interface TravelPlan {
   knowledgeRetrieval?: TravelKnowledgeRetrievalResult | null
   constraintRelaxed?: boolean
   adjustmentSuggestions?: string[]
+  checklist?: TravelChecklistItem[]
+  refreshedSections?: string[]
   updatedAt: string
 }
 
@@ -285,11 +302,34 @@ export interface ChatImageAttachmentRequest {
   dataUrl: string
 }
 
+export interface TripBriefRequest {
+  origin?: string
+  destination?: string
+  startDate?: string
+  endDate?: string
+  days?: number
+  travelers?: string
+  budget?: string
+  preferences?: string[]
+}
+
+export interface ReplanScopeRequest {
+  scope: 'HOTEL_AREA' | 'DAY'
+  dayNumber?: number
+}
+
 export interface ChatRequest {
   conversationId?: string
   message?: string
+  brief?: TripBriefRequest
   attachments?: ChatImageAttachmentRequest[]
   imageContextAction?: 'CONFIRM' | 'DISMISS'
+  replanScope?: ReplanScopeRequest
+}
+
+export interface ConversationChecklistUpdateRequest {
+  itemKey: string
+  confirmed: boolean
 }
 
 export interface FeedbackBreakdownItem {
@@ -377,6 +417,17 @@ export interface ConversationConstraintSummary {
   issues: ConversationConstraintIssue[]
 }
 
+export interface TravelPlanVersionDiffResponse {
+  latestVersionId: string
+  previousVersionId: string
+  latestCreatedAt: string
+  previousCreatedAt: string
+  dateSummary: string
+  hotelSummary: string
+  budgetSummary: string
+  stopHighlights: string[]
+}
+
 export interface ChatResponse {
   conversationId: string
   agentType: AgentType
@@ -402,4 +453,5 @@ export interface ConversationDetailResponse {
   issues: ChatResponseIssue[]
   missingInformation: ConversationMissingInformationItem[]
   constraintSummary: ConversationConstraintSummary
+  recentVersionDiff: TravelPlanVersionDiffResponse | null
 }

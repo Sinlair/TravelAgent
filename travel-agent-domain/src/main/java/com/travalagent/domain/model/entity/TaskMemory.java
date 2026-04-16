@@ -10,7 +10,10 @@ public record TaskMemory(
         String conversationId,
         String origin,
         String destination,
+        String startDate,
+        String endDate,
         Integer days,
+        String travelers,
         String budget,
         List<String> preferences,
         String pendingQuestion,
@@ -23,7 +26,7 @@ public record TaskMemory(
     }
 
     public static TaskMemory empty(String conversationId) {
-        return new TaskMemory(conversationId, null, null, null, null, List.of(), null, null, Instant.now());
+        return new TaskMemory(conversationId, null, null, null, null, null, null, null, List.of(), null, null, Instant.now());
     }
 
     public TaskMemory merge(TaskMemory candidate) {
@@ -34,13 +37,30 @@ public record TaskMemory(
                 conversationId,
                 chooseText(candidate.origin, origin),
                 chooseText(candidate.destination, destination),
+                chooseText(candidate.startDate, startDate),
+                chooseText(candidate.endDate, endDate),
                 candidate.days != null ? candidate.days : days,
+                chooseText(candidate.travelers, travelers),
                 chooseText(candidate.budget, budget),
                 mergePreferences(preferences, candidate.preferences),
                 chooseText(candidate.pendingQuestion, pendingQuestion),
                 chooseText(candidate.summary, summary),
                 Instant.now()
         );
+    }
+
+    public TaskMemory(
+            String conversationId,
+            String origin,
+            String destination,
+            Integer days,
+            String budget,
+            List<String> preferences,
+            String pendingQuestion,
+            String summary,
+            Instant updatedAt
+    ) {
+        this(conversationId, origin, destination, null, null, days, null, budget, preferences, pendingQuestion, summary, updatedAt);
     }
 
     private static String chooseText(String preferred, String fallback) {

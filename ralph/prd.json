@@ -1,16 +1,16 @@
 {
   "project": "TravelAgent",
-  "branchName": "ralph/herness-renovation",
-  "description": "System-level TravelAgent renovation to standardize chat response contracts, planner stage visibility, feedback traceability, and cross-panel UI state handling.",
+  "branchName": "ralph/mvp-to-beta-productization",
+  "description": "Close the productization gap from the current TravelAgent MVP to an internal beta by adding real travel constraints, trust signals, execution checklists, version history, and quality operations.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Add unified conversation response DTO",
-      "description": "As a backend developer, I want a single response DTO for chat results so that every specialist returns a stable top-level contract.",
+      "title": "Extend task memory with real trip constraint fields",
+      "description": "As a backend developer, I want task memory to persist origin, start date, end date, and traveler type so that planning uses real travel constraints instead of only free-form text.",
       "acceptanceCriteria": [
-        "Define a chat response DTO or equivalent schema with stable top-level fields for agentType, answer, travelPlan, timeline, feedbackTarget, and issues",
-        "Optional blocks serialize as explicit null or empty collections instead of omitted fields",
-        "The chat controller returns the unified DTO for successful requests",
+        "Task memory or equivalent persistence includes origin, startDate, endDate, and travelers fields",
+        "Existing conversation detail reads remain backward compatible when those fields are absent",
+        "Chat and conversation detail payloads expose the new fields consistently",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -20,12 +20,12 @@
     },
     {
       "id": "US-002",
-      "title": "Map all specialists to the unified response contract",
-      "description": "As a backend developer, I want WEATHER, GEO, GENERAL, and TRAVEL_PLANNER outputs normalized so that the frontend does not need specialist-specific parsing branches.",
+      "title": "Add structured brief fields to the chat request flow",
+      "description": "As a backend developer, I want the chat flow to accept structured trip brief updates so that the UI can send constrained edits without relying on prompt wording.",
       "acceptanceCriteria": [
-        "WEATHER, GEO, GENERAL, and TRAVEL_PLANNER responses are all mapped through one response builder or equivalent adapter",
-        "Missing travelPlan, timeline, feedbackTarget, and issues fields use stable empty semantics for non-applicable specialists",
-        "The HTTP layer no longer contains per-specialist response shape branching",
+        "Chat request handling accepts structured brief fields or an equivalent patch object for destination, dates, budget, travelers, and preferences",
+        "Structured brief updates merge into persisted task memory within the same conversation",
+        "The planner still works for pure free-form text requests",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -35,27 +35,28 @@
     },
     {
       "id": "US-003",
-      "title": "Define normalized planner stage events",
-      "description": "As a backend developer, I want planner stages expressed through one event model so that execution progress is consistent across persistence and SSE.",
+      "title": "Add trip brief editor to the chat workspace",
+      "description": "As a user, I want to edit destination, dates, budget, and traveler info directly in the UI so that I can correct the trip brief without crafting another complex message.",
       "acceptanceCriteria": [
-        "Introduce a planner event model with stage, status, message, startedAt, and endedAt fields",
-        "Planner events can represent running, completed, failed, and repaired outcomes or clear equivalents",
-        "Non-planner responses expose an empty timeline collection instead of planner-specific placeholders",
+        "The chat workspace shows editable fields for destination, dates, budget, travelers, and preferences",
+        "Missing brief fields are visually marked instead of rendering as silent blanks",
+        "Saving or applying the brief triggers a chat request with the structured values",
         "Tests pass",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-004",
-      "title": "Persist and stream normalized planner events",
-      "description": "As a backend developer, I want normalized planner events stored and streamed so that the same stage data is visible in history and live updates.",
+      "title": "Generate dated itinerary windows when dates are known",
+      "description": "As a user, I want daily plans tied to real dates so that the itinerary feels like an actual trip instead of an abstract day sequence.",
       "acceptanceCriteria": [
-        "SSE timeline messages use the normalized planner event shape",
-        "Persisted timeline records keep stage, status, message, and timestamps from planner execution",
-        "Repair and failure paths emit distinct normalized events",
+        "When startDate is present, generated itinerary days include real dates in order",
+        "When dates are missing, the planner remains usable and marks the result as estimate mode",
+        "Task memory and plan payloads keep date-derived fields aligned",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -65,27 +66,28 @@
     },
     {
       "id": "US-005",
-      "title": "Add structured missing-information summary",
-      "description": "As a travel planning user, I want the system to tell me what facts are missing so that I know how to complete an incomplete request.",
+      "title": "Display real travel dates in the itinerary UI",
+      "description": "As a user, I want to see actual dates next to Day 1 and Day 2 so that I can judge the itinerary against a real departure window.",
       "acceptanceCriteria": [
-        "Planner responses expose a structured missingInformation list or equivalent field for required travel facts",
-        "Each missing item includes a stable category such as destination, date, budget, or companions",
-        "When required facts are missing, the final answer text stays consistent with the structured list",
+        "The itinerary panel shows both day index and actual date when a dated plan exists",
+        "Estimate-mode plans clearly explain that dates are not locked yet",
+        "Date rendering stays consistent across overview and daily itinerary sections",
         "Tests pass",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-006",
-      "title": "Add structured constraint summary",
-      "description": "As a travel planning user, I want a structured summary of validation and repair outcomes so that I can judge whether a plan is ready to use.",
+      "title": "Standardize trust metadata on travel recommendations",
+      "description": "As a backend developer, I want hotels, POIs, and routes to expose consistent source and confidence fields so that the UI can explain how trustworthy each recommendation is.",
       "acceptanceCriteria": [
-        "Planner responses expose a constraintSummary block with a status of passed, repaired, or risk, or clear equivalents",
-        "Constraint summary includes structured issue items for validation failures or repair actions",
-        "Final answer text does not contradict the structured constraint summary",
+        "Hotels, POI matches, and route objects include stable trust metadata such as source, confidence, freshness, or equivalent fields",
+        "Fallback or estimated recommendations are explicitly marked in structured payloads",
+        "New trust fields are backward compatible for existing consumers",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -95,27 +97,28 @@
     },
     {
       "id": "US-007",
-      "title": "Expose versioned feedback targets in chat results",
-      "description": "As a product analyst, I want each response to expose a stable feedback target so that later feedback can be tied to the exact answer or plan version.",
+      "title": "Surface recommendation trust states in the UI",
+      "description": "As a user, I want visible trust states on hotels, POIs, and routes so that I can tell which recommendations are grounded and which still need confirmation.",
       "acceptanceCriteria": [
-        "Chat responses include a stable feedback target identifier and scope for answer, plan, or overall evaluation",
-        "Planner results expose a stable plan version or equivalent revision identifier",
-        "Non-planner responses still expose a valid answer-level feedback target",
+        "Hotel cards, POI detail areas, and route detail areas display a consistent trust state label or badge",
+        "Fallback recommendations include explanatory copy instead of only a raw source code",
+        "Trust styling remains consistent across chat, itinerary, and map-related surfaces",
         "Tests pass",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-008",
-      "title": "Persist feedback reason labels and version linkage",
-      "description": "As a backend developer, I want feedback records to store scope, version linkage, and reasons so that feedback data is analyzable after the renovation.",
+      "title": "Add partial replan request support",
+      "description": "As a backend developer, I want the API to accept a scoped replan request so that users can regenerate only the affected part of a trip.",
       "acceptanceCriteria": [
-        "Feedback persistence stores feedback target id, scope, reason labels, and optional free-text comment",
-        "Existing feedback reads remain backward compatible or are migrated safely",
-        "Stored feedback can be joined back to the related answer or plan version",
+        "The chat request flow accepts a partial replan scope for at least hotel area and a specific day",
+        "Scoped replan requests identify the target day or planning slice explicitly",
+        "Unscoped requests continue to behave as full replans",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -125,12 +128,12 @@
     },
     {
       "id": "US-009",
-      "title": "Update feedback submit and export APIs",
-      "description": "As a product analyst, I want feedback APIs to accept and expose structured reasons so that acceptance and rejection patterns can be summarized reliably.",
+      "title": "Implement partial replan for hotel area and day-level changes",
+      "description": "As a user, I want the system to regenerate only the hotel area or one day plan so that a local correction does not discard the rest of the itinerary.",
       "acceptanceCriteria": [
-        "Feedback submit API accepts structured reason labels for partially_accept and reject outcomes",
-        "Accept flow remains supported without requiring a reason label",
-        "Feedback export or summary output includes target id, scope, and reason labels",
+        "Scoped hotel-area replans preserve unaffected daily itinerary structure",
+        "Scoped day replans preserve unaffected days and stable version context",
+        "The response indicates which part of the plan was regenerated",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -140,29 +143,29 @@
     },
     {
       "id": "US-010",
-      "title": "Create a shared frontend conversation result adapter",
-      "description": "As a frontend developer, I want one adapter for chat responses so that all panels consume the same normalized view model.",
+      "title": "Add partial replan controls to the UI",
+      "description": "As a user, I want to trigger a hotel-area or day-specific replan from the workspace so that local corrections are discoverable and low effort.",
       "acceptanceCriteria": [
-        "Add a shared frontend adapter or view model layer for the unified chat response contract",
-        "The adapter derives panel state values for loading, partial, success, empty, and error",
-        "Core panels can read normalized answer, travelPlan, timeline, feedback target, and issue fields from the shared adapter",
+        "The UI provides scoped replan actions for at least hotel area and individual days",
+        "After a scoped replan, the UI clearly marks which section was refreshed",
+        "Unchanged itinerary sections remain visible rather than resetting the full workspace",
         "Tests pass",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-011",
-      "title": "Refactor the chat result card to use the shared view model",
-      "description": "As a user, I want the chat result card to show answer status, missing facts, and plan risk consistently so that incomplete results are understandable.",
+      "title": "Generate a pre-departure checklist with each structured plan",
+      "description": "As a user, I want the system to generate a pre-departure checklist so that I can move from reading a plan to preparing an actual trip.",
       "acceptanceCriteria": [
-        "The chat result card reads normalized answer, missing information, and constraint summary data from the shared view model",
-        "Incomplete planner responses render a visible partial state instead of a generic success state",
-        "The card shows clear status copy for empty and error cases",
+        "Structured planner responses include a checklist or equivalent block for accommodation, transport, tickets, weather, and travel essentials",
+        "Checklist items distinguish confirmed and pending states",
+        "Checklist generation is available on every structured planner result, not only on manual export",
         "Tests pass",
-        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 11,
@@ -171,14 +174,13 @@
     },
     {
       "id": "US-012",
-      "title": "Refactor the itinerary panel to use the shared view model",
-      "description": "As a user, I want the itinerary panel to stay in sync with the chat answer so that plan details never disagree across panels.",
+      "title": "Persist checklist state for a conversation",
+      "description": "As a backend developer, I want checklist state stored with the conversation so that users do not lose pre-departure progress after reload.",
       "acceptanceCriteria": [
-        "The itinerary panel reads travelPlan and related status data from the shared view model",
-        "When travelPlan is absent, the panel renders empty or partial state instead of a generic error",
-        "Destination and date summary shown in the itinerary panel matches the chat answer for the same response",
+        "Checklist item state persists for the active conversation",
+        "Conversation detail reads return the latest checklist state",
+        "Older conversations without checklist state remain readable",
         "Tests pass",
-        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 12,
@@ -187,30 +189,29 @@
     },
     {
       "id": "US-013",
-      "title": "Refactor the map panel to use the shared view model",
-      "description": "As a user, I want the map panel to explain when map data is unavailable so that partial planner results do not look broken.",
+      "title": "Render an interactive pre-departure checklist panel",
+      "description": "As a user, I want to view and toggle a trip checklist in the UI so that the workspace helps me prepare, not only generate.",
       "acceptanceCriteria": [
-        "The map panel reads normalized locations or map state from the shared view model",
-        "Missing map data renders an empty or partial explanation instead of a silent blank panel",
-        "Map content shown for a successful planner response matches the same response's itinerary context",
+        "The workspace shows a checklist panel or equivalent section for the active plan",
+        "Users can toggle checklist item state and see pending counts update immediately",
+        "The UI clearly distinguishes confirmed and pending items",
         "Tests pass",
         "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-014",
-      "title": "Refactor the feedback panel for versioned targets and reason tags",
-      "description": "As a user, I want feedback actions tied to the exact response version so that my accept or reject action is recorded against the correct result.",
+      "title": "Persist plan version snapshots",
+      "description": "As a backend developer, I want every important plan regeneration to create a version snapshot so that users and feedback analytics can refer to a stable plan revision.",
       "acceptanceCriteria": [
-        "Feedback UI submits the normalized feedback target id and scope from the shared view model",
-        "Partially Accept and Reject allow selecting structured reason tags and adding an optional comment",
-        "Accept remains a one-click action for the current response",
+        "Generating a new plan or scoped replan saves a version snapshot with timestamp and input summary",
+        "Feedback records can reference a stable plan version identifier",
+        "Existing single-plan conversation reads remain backward compatible",
         "Tests pass",
-        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 14,
@@ -219,14 +220,13 @@
     },
     {
       "id": "US-015",
-      "title": "Add shared cross-panel state rendering",
-      "description": "As a user, I want all major panels to use the same status patterns so that loading, partial completion, and errors are predictable everywhere.",
+      "title": "Expose recent plan version diffs",
+      "description": "As a backend developer, I want an API view of recent plan changes so that the UI can show what changed between the last two versions.",
       "acceptanceCriteria": [
-        "Chat, itinerary, map, and feedback panels all render loading, partial, success, empty, and error states",
-        "SSE interruption or API failure surfaces a recovery action without requiring a full page refresh",
-        "Shared status copy or shared status components are used across the affected panels",
+        "Conversation detail or a companion endpoint exposes the latest plan version and its previous version diff",
+        "The diff summarizes at least date, hotel, budget, and key stop changes",
+        "The diff response remains usable when only one version exists",
         "Tests pass",
-        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 15,
@@ -235,43 +235,43 @@
     },
     {
       "id": "US-016",
-      "title": "Add an execution timeline panel",
-      "description": "As a user, I want to inspect the execution timeline so that I can understand when the system generated, validated, repaired, or failed a plan.",
+      "title": "Render recent version comparison in the UI",
+      "description": "As a user, I want to compare the latest plan with the previous version so that I understand what the system actually changed.",
       "acceptanceCriteria": [
-        "The UI shows planner timeline entries with stage, status, timestamp, and message",
-        "Repair, failure, and tool-provider related events are visually distinguishable in the timeline",
-        "The timeline remains readable on desktop and mobile layouts",
+        "The UI shows a readable recent-version comparison for dates, hotel area, budget, and key stop changes",
+        "The comparison does not require raw JSON diff output",
+        "The comparison is available after a regeneration without leaving the workspace",
         "Tests pass",
         "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     },
     {
       "id": "US-017",
-      "title": "Add backend regression tests for the Herness contract",
-      "description": "As a maintainer, I want automated backend regression coverage for the renovated contract so that future changes do not silently break core conversation flows.",
+      "title": "Add internal beta quality scenario fixtures and runner",
+      "description": "As a product team member, I want standard internal-beta travel scenarios to be replayable so that we can detect regressions in core cities and common use cases.",
       "acceptanceCriteria": [
-        "Add backend regression coverage for representative planner, weather, geo, and feedback flows",
-        "Regression tests assert the unified response contract, normalized timeline shape, and error-path behavior",
-        "Standard backend test commands execute the new coverage",
+        "Add a reusable scenario set covering city short trips, family travel, low-budget planning, and screenshot-assisted intake",
+        "A standard command runs the scenarios and records whether they returned a structured plan, fallback, or high-risk outcome",
+        "Scenario outputs are readable by the product team without manual log digging",
         "Tests pass",
         "Typecheck passes"
       ],
       "priority": 17,
       "passes": true,
-      "notes": ""
+      "notes": "Verified on 2026-04-16 by running the scenario replay against the new local-demo startup profile."
     },
     {
       "id": "US-018",
-      "title": "Add frontend regression tests for shared view model states",
-      "description": "As a maintainer, I want automated frontend regression coverage for the shared view model so that panel state behavior stays consistent after future UI changes.",
+      "title": "Add backend filters for quality operations summary",
+      "description": "As an operator, I want feedback and quality summaries filtered by city, agent, version, and reason labels so that I can quickly isolate the most harmful internal-beta failures.",
       "acceptanceCriteria": [
-        "Add frontend tests for shared view model derivation logic",
-        "Add UI tests for loading, partial, success, empty, and error rendering across the affected panels",
-        "Standard frontend test commands execute the new coverage",
+        "Feedback summary or export APIs support filters for destination, agent type, version range, and reason labels",
+        "Summary output includes frequent failure buckets and representative cases",
+        "Structured export remains available for offline analysis",
         "Tests pass",
         "Typecheck passes"
       ],
@@ -281,18 +281,19 @@
     },
     {
       "id": "US-019",
-      "title": "Update architecture and development documentation",
-      "description": "As a maintainer, I want the renovation contract and validation commands documented so that implementation details and operating instructions stay aligned.",
+      "title": "Add quality operations filters to the feedback UI",
+      "description": "As an operator, I want a filtered feedback operations view in the product so that internal-beta issue review does not require ad hoc SQL or raw exports.",
       "acceptanceCriteria": [
-        "Update architecture or development docs to describe the unified response contract, timeline semantics, and feedback linkage fields",
-        "Document the backend and frontend regression commands needed for the renovated workflow",
-        "Docs reference the finalized Herness branch or feature name consistently",
+        "The feedback operations UI supports filters for destination, agent type, version scope, and reason labels",
+        "The view shows top failure reasons and representative findings using the filtered dataset",
+        "The interface remains usable without exposing raw developer logs",
+        "Tests pass",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 19,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Implementation and automated checks passed on 2026-04-16, but browser verification via dev-browser skill was not available in this environment."
     }
   ]
 }
-

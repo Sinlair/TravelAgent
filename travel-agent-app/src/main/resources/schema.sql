@@ -24,7 +24,10 @@ CREATE TABLE IF NOT EXISTS task_memory (
     conversation_id TEXT PRIMARY KEY,
     origin TEXT,
     destination TEXT,
+    start_date TEXT,
+    end_date TEXT,
     days INTEGER,
+    travelers TEXT,
     budget TEXT,
     preferences_json TEXT,
     pending_question TEXT,
@@ -36,6 +39,15 @@ CREATE TABLE IF NOT EXISTS travel_plan_snapshot (
     conversation_id TEXT PRIMARY KEY,
     plan_json TEXT NOT NULL,
     updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS travel_plan_version (
+    version_id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    input_summary TEXT,
+    scope TEXT NOT NULL,
+    plan_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS conversation_timeline (

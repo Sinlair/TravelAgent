@@ -86,7 +86,7 @@ class ConversationWorkflowTest {
     @Test
     void executeRunsPlannerWorkflowAndPersistsOutputs() {
         String conversationId = "conversation-1";
-        ChatRequest request = new ChatRequest(conversationId, "Plan a 3 day Hangzhou trip with a 3000 CNY budget", List.of(), null);
+        ChatRequest request = new ChatRequest(conversationId, "Plan a 3 day Hangzhou trip with a 3000 CNY budget", null, List.of(), null);
         TaskMemory storedTaskMemory = TaskMemory.empty(conversationId);
         TaskMemory workingMemory = new TaskMemory(
                 conversationId,
@@ -180,13 +180,21 @@ class ConversationWorkflowTest {
         assertEquals(AgentType.TRAVEL_PLANNER, response.agentType());
         assertEquals("Here is your itinerary.", response.answer());
         assertSame(updatedMemory, response.taskMemory());
-        assertSame(travelPlan, response.travelPlan());
+        assertEquals(travelPlan.title(), response.travelPlan().title());
+        assertEquals(travelPlan.hotelArea(), response.travelPlan().hotelArea());
+        assertFalse(response.travelPlan().checklist().isEmpty());
         assertSame(timeline, response.timeline());
         assertNotNull(response.feedbackTarget());
         assertEquals("OVERALL", response.feedbackTarget().scope());
-        assertTrue(response.issues().isEmpty());
+        assertEquals(List.of("startDate", "travelers"), response.missingInformation().stream()
+                .map(item -> item.code())
+                .toList());
+        assertEquals(List.of("CLARIFICATION_REQUIRED"), response.issues().stream()
+                .map(item -> item.code())
+                .toList());
 
-        verify(conversationRepository).saveTravelPlan(travelPlan);
+        verify(conversationRepository).saveTravelPlan(any(TravelPlan.class));
+        verify(conversationRepository).saveTravelPlanVersion(any());
         verify(longTermMemoryRepository).saveMemory(eq(conversationId), eq("TRAVEL_PLANNER"), eq("Summary"), anyMap());
         verify(timelinePublisher, atLeastOnce()).publish(any(TimelineEvent.class));
     }
@@ -196,6 +204,7 @@ class ConversationWorkflowTest {
         String conversationId = "conversation-images";
         ChatRequest request = new ChatRequest(
                 conversationId,
+                null,
                 null,
                 List.of(new ChatImageAttachmentRequest(
                         "hotel.png",
@@ -245,7 +254,7 @@ class ConversationWorkflowTest {
     @Test
     void executeConfirmedImageContextPassesSummaryToPlanner() {
         String conversationId = "conversation-images-confirm";
-        ChatRequest request = new ChatRequest(conversationId, null, List.of(), "CONFIRM");
+        ChatRequest request = new ChatRequest(conversationId, null, null, List.of(), "CONFIRM");
         TaskMemory storedTaskMemory = TaskMemory.empty(conversationId);
         TaskMemory updatedMemory = TaskMemory.empty(conversationId);
         ConversationImageContext pendingImageContext = new ConversationImageContext(
@@ -338,7 +347,7 @@ class ConversationWorkflowTest {
     @Test
     void executeIgnoresPendingImageContextMetadataFromEarlierMessages() {
         String conversationId = "conversation-ignore-pending";
-        ChatRequest request = new ChatRequest(conversationId, "Please plan the trip without using the old screenshot", List.of(), null);
+        ChatRequest request = new ChatRequest(conversationId, "Please plan the trip without using the old screenshot", null, List.of(), null);
         TaskMemory storedTaskMemory = TaskMemory.empty(conversationId);
         TaskMemory workingMemory = new TaskMemory(
                 conversationId,

@@ -2,16 +2,21 @@ package com.travalagent.app.service;
 
 import com.travalagent.app.dto.ChatRequest;
 import com.travalagent.app.dto.ChatResponse;
+import com.travalagent.app.dto.ConversationChecklistUpdateRequest;
 import com.travalagent.app.dto.ConversationDetailResponse;
 import com.travalagent.app.dto.ConversationFeedbackRequest;
 import com.travalagent.app.dto.FeedbackBreakdownItem;
 import com.travalagent.app.dto.FeedbackDatasetRecord;
 import com.travalagent.app.dto.FeedbackLoopFinding;
 import com.travalagent.app.dto.FeedbackLoopSummaryResponse;
+import com.travalagent.app.dto.TravelPlanVersionDiffResponse;
 import com.travalagent.domain.model.entity.ConversationFeedback;
 import com.travalagent.domain.model.entity.ConversationSession;
 import com.travalagent.domain.model.entity.TaskMemory;
+import com.travalagent.domain.model.entity.TravelChecklistItem;
 import com.travalagent.domain.model.entity.TravelPlan;
+import com.travalagent.domain.model.entity.TravelPlanDay;
+import com.travalagent.domain.model.entity.TravelPlanVersionSnapshot;
 import com.travalagent.domain.model.valobj.AgentType;
 import com.travalagent.domain.repository.ConversationRepository;
 import com.travalagent.infrastructure.gateway.tool.AmapMcpGateway;
@@ -21,6 +26,7 @@ import io.micrometer.observation.annotation.Observed;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -67,6 +73,8 @@ public class ConversationApplicationService {
         var travelPlan = conversationRepository.findTravelPlan(conversationId).orElse(null);
         var feedback = conversationRepository.findFeedback(conversationId).orElse(null);
         var imageContextCandidate = conversationRepository.findPendingImageContext(conversationId).orElse(null);
+        var recentVersions = conversationRepository.listTravelPlanVersions(conversationId, 2);
+        var currentPlanVersion = recentVersions.isEmpty() ? null : recentVersions.getFirst().createdAt().toString();
         var resultMetadata = ConversationResultSupport.extractResultMetadata(messages);
         return new ConversationDetailResponse(
                 session,
@@ -80,7 +88,8 @@ public class ConversationApplicationService {
                         conversationId,
                         latestAssistantMessageId(messages),
                         session.lastAgent(),
-                        travelPlan
+                        travelPlan,
+                        currentPlanVersion
                 ),
                 ConversationResultSupport.buildIssues(
                         taskMemory,
@@ -89,8 +98,30 @@ public class ConversationApplicationService {
                         ConversationResultSupport.buildConstraintSummary(session.lastAgent(), travelPlan, resultMetadata)
                 ),
                 ConversationResultSupport.buildMissingInformation(taskMemory, imageContextCandidate),
-                ConversationResultSupport.buildConstraintSummary(session.lastAgent(), travelPlan, resultMetadata)
+                ConversationResultSupport.buildConstraintSummary(session.lastAgent(), travelPlan, resultMetadata),
+                buildRecentVersionDiff(recentVersions)
         );
+    }
+
+    @Observed(name = "travel.agent.update-checklist")
+    public TravelPlan updateChecklist(String conversationId, ConversationChecklistUpdateRequest request) {
+        if (request.itemKey() == null || request.itemKey().isBlank()) {
+            throw new AppException(ResponseCode.INVALID_REQUEST, "Checklist item key is required");
+        }
+        TravelPlan travelPlan = conversationRepository.findTravelPlan(conversationId)
+                .orElseThrow(() -> new AppException(ResponseCode.INVALID_REQUEST, "Conversation plan not found"));
+        boolean matched = travelPlan.checklist().stream().anyMatch(item -> item.key().equals(request.itemKey().trim()));
+        if (!matched) {
+            throw new AppException(ResponseCode.INVALID_REQUEST, "Checklist item not found");
+        }
+        List<TravelChecklistItem> updatedChecklist = travelPlan.checklist().stream()
+                .map(item -> item.key().equals(request.itemKey().trim())
+                        ? new TravelChecklistItem(item.key(), item.title(), item.details(), request.confirmed())
+                        : item)
+                .toList();
+        TravelPlan updatedPlan = travelPlan.withExecutionContext(updatedChecklist, travelPlan.refreshedSections(), Instant.now());
+        conversationRepository.saveTravelPlan(updatedPlan);
+        return updatedPlan;
     }
 
     @Observed(name = "travel.agent.save-feedback")
@@ -140,9 +171,26 @@ public class ConversationApplicationService {
     }
 
     @Observed(name = "travel.agent.export-feedback-dataset")
-    public List<FeedbackDatasetRecord> exportFeedbackDataset(int limit) {
+    public List<FeedbackDatasetRecord> exportFeedbackDataset(
+            int limit,
+            String destination,
+            String agentType,
+            String targetScope,
+            String reasonLabel,
+            String planVersionFrom,
+            String planVersionTo
+    ) {
         int normalizedLimit = normalizeLimit(limit);
-        return conversationRepository.listFeedback(normalizedLimit).stream()
+        return filterFeedback(
+                conversationRepository.listFeedback(1000),
+                destination,
+                agentType,
+                targetScope,
+                reasonLabel,
+                planVersionFrom,
+                planVersionTo
+        ).stream()
+                .limit(normalizedLimit)
                 .map(feedback -> {
                     String conversationId = feedback.conversationId();
                     var conversation = conversationRepository.findConversation(conversationId).orElseThrow();
@@ -161,9 +209,25 @@ public class ConversationApplicationService {
     }
 
     @Observed(name = "travel.agent.feedback-loop-summary")
-    public FeedbackLoopSummaryResponse feedbackLoopSummary(int limit) {
+    public FeedbackLoopSummaryResponse feedbackLoopSummary(
+            int limit,
+            String destination,
+            String agentType,
+            String targetScope,
+            String reasonLabel,
+            String planVersionFrom,
+            String planVersionTo
+    ) {
         int normalizedLimit = normalizeLimit(limit);
-        List<ConversationFeedback> feedbacks = conversationRepository.listFeedback(normalizedLimit);
+        List<ConversationFeedback> feedbacks = filterFeedback(
+                conversationRepository.listFeedback(1000),
+                destination,
+                agentType,
+                targetScope,
+                reasonLabel,
+                planVersionFrom,
+                planVersionTo
+        ).stream().limit(normalizedLimit).toList();
         long acceptedCount = feedbacks.stream().filter(this::isAccepted).count();
         long partialCount = feedbacks.stream().filter(this::isPartial).count();
         long rejectedCount = feedbacks.stream().filter(this::isRejected).count();
@@ -439,7 +503,10 @@ public class ConversationApplicationService {
         metadata.put("agentType", agentType == null ? null : agentType.name());
         metadata.put("origin", taskMemory.origin());
         metadata.put("destination", taskMemory.destination());
+        metadata.put("startDate", taskMemory.startDate());
+        metadata.put("endDate", taskMemory.endDate());
         metadata.put("days", taskMemory.days());
+        metadata.put("travelers", taskMemory.travelers());
         metadata.put("budget", taskMemory.budget());
         metadata.put("preferences", taskMemory.preferences());
         if (travelPlan != null) {
@@ -464,5 +531,153 @@ public class ConversationApplicationService {
             }
         }
         return null;
+    }
+
+    private List<ConversationFeedback> filterFeedback(
+            List<ConversationFeedback> feedbacks,
+            String destination,
+            String agentType,
+            String targetScope,
+            String reasonLabel,
+            String planVersionFrom,
+            String planVersionTo
+    ) {
+        return feedbacks.stream()
+                .filter(feedback -> matchesText(feedback.destination(), destination))
+                .filter(feedback -> agentType == null || agentType.isBlank()
+                        || (feedback.agentType() != null && feedback.agentType().name().equalsIgnoreCase(agentType.trim())))
+                .filter(feedback -> targetScope == null || targetScope.isBlank()
+                        || (feedback.targetScope() != null && feedback.targetScope().equalsIgnoreCase(targetScope.trim())))
+                .filter(feedback -> {
+                    if (reasonLabel == null || reasonLabel.isBlank()) {
+                        return true;
+                    }
+                    String normalized = reasonLabel.trim().toLowerCase(Locale.ROOT);
+                    return feedback.reasonLabels().stream().anyMatch(label -> label.equalsIgnoreCase(normalized))
+                            || (feedback.reasonCode() != null && feedback.reasonCode().equalsIgnoreCase(normalized));
+                })
+                .filter(feedback -> withinVersionWindow(feedback.planVersion(), planVersionFrom, planVersionTo))
+                .toList();
+    }
+
+    private boolean matchesText(String source, String filter) {
+        if (filter == null || filter.isBlank()) {
+            return true;
+        }
+        return source != null && source.toLowerCase(Locale.ROOT).contains(filter.trim().toLowerCase(Locale.ROOT));
+    }
+
+    private boolean withinVersionWindow(String planVersion, String from, String to) {
+        if ((from == null || from.isBlank()) && (to == null || to.isBlank())) {
+            return true;
+        }
+        if (planVersion == null || planVersion.isBlank()) {
+            return false;
+        }
+        Instant value = parseInstant(planVersion);
+        Instant fromValue = parseInstant(from);
+        Instant toValue = parseInstant(to);
+        if (value == null) {
+            return false;
+        }
+        if (fromValue != null && value.isBefore(fromValue)) {
+            return false;
+        }
+        return toValue == null || !value.isAfter(toValue);
+    }
+
+    private Instant parseInstant(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(raw.trim());
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
+    }
+
+    private TravelPlanVersionDiffResponse buildRecentVersionDiff(List<TravelPlanVersionSnapshot> recentVersions) {
+        if (recentVersions == null || recentVersions.size() < 2) {
+            return null;
+        }
+        TravelPlanVersionSnapshot latest = recentVersions.get(0);
+        TravelPlanVersionSnapshot previous = recentVersions.get(1);
+        return new TravelPlanVersionDiffResponse(
+                latest.versionId(),
+                previous.versionId(),
+                latest.createdAt().toString(),
+                previous.createdAt().toString(),
+                describeDateChange(previous.travelPlan(), latest.travelPlan()),
+                describeHotelChange(previous.travelPlan(), latest.travelPlan()),
+                describeBudgetChange(previous.travelPlan(), latest.travelPlan()),
+                describeStopChanges(previous.travelPlan(), latest.travelPlan())
+        );
+    }
+
+    private String describeDateChange(TravelPlan previous, TravelPlan latest) {
+        String previousWindow = dateWindow(previous);
+        String latestWindow = dateWindow(latest);
+        if (previousWindow.equals(latestWindow)) {
+            return "Dates unchanged";
+        }
+        return previousWindow + " -> " + latestWindow;
+    }
+
+    private String describeHotelChange(TravelPlan previous, TravelPlan latest) {
+        String previousHotel = previous.hotelArea() == null ? "Unknown" : previous.hotelArea();
+        String latestHotel = latest.hotelArea() == null ? "Unknown" : latest.hotelArea();
+        if (previousHotel.equals(latestHotel)) {
+            return "Hotel area unchanged";
+        }
+        return previousHotel + " -> " + latestHotel;
+    }
+
+    private String describeBudgetChange(TravelPlan previous, TravelPlan latest) {
+        String previousBudget = budgetWindow(previous);
+        String latestBudget = budgetWindow(latest);
+        if (previousBudget.equals(latestBudget)) {
+            return "Budget range unchanged";
+        }
+        return previousBudget + " -> " + latestBudget;
+    }
+
+    private List<String> describeStopChanges(TravelPlan previous, TravelPlan latest) {
+        List<String> changes = new ArrayList<>();
+        int maxDays = Math.max(previous.days().size(), latest.days().size());
+        for (int i = 0; i < maxDays; i++) {
+            TravelPlanDay previousDay = i < previous.days().size() ? previous.days().get(i) : null;
+            TravelPlanDay latestDay = i < latest.days().size() ? latest.days().get(i) : null;
+            String previousStops = previousDay == null ? "" : previousDay.stops().stream().map(stop -> stop.name()).limit(3).collect(Collectors.joining(", "));
+            String latestStops = latestDay == null ? "" : latestDay.stops().stream().map(stop -> stop.name()).limit(3).collect(Collectors.joining(", "));
+            if (!previousStops.equals(latestStops)) {
+                String label = "Day " + (latestDay != null ? latestDay.dayNumber() : previousDay.dayNumber());
+                changes.add(label + ": " + normalizeDiffText(previousStops) + " -> " + normalizeDiffText(latestStops));
+            }
+        }
+        return changes.stream().limit(4).toList();
+    }
+
+    private String dateWindow(TravelPlan plan) {
+        if (plan.days().isEmpty()) {
+            return "No dated window";
+        }
+        String start = plan.days().getFirst().date();
+        String end = plan.days().getLast().date();
+        if (start == null || start.isBlank()) {
+            return "Estimate mode";
+        }
+        if (end == null || end.isBlank() || start.equals(end)) {
+            return start;
+        }
+        return start + " to " + end;
+    }
+
+    private String budgetWindow(TravelPlan plan) {
+        return plan.estimatedTotalMin() + "-" + plan.estimatedTotalMax();
+    }
+
+    private String normalizeDiffText(String value) {
+        return value == null || value.isBlank() ? "No key stops" : value;
     }
 }

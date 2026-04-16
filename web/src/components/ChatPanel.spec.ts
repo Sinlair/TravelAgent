@@ -57,6 +57,7 @@ const detail: ConversationDetailResponse = {
     hasRisk: false,
     issues: []
   },
+  recentVersionDiff: null,
   imageContextCandidate: {
     conversationId: 'conversation-1',
     summary: '- Hotel: West Lake\n- Check-in: Friday night',

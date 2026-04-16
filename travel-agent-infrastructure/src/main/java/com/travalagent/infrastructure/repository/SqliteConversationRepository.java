@@ -11,6 +11,7 @@ import com.travalagent.domain.model.entity.ConversationImageContext;
 import com.travalagent.domain.model.entity.ConversationSession;
 import com.travalagent.domain.model.entity.TaskMemory;
 import com.travalagent.domain.model.entity.TravelPlan;
+import com.travalagent.domain.model.entity.TravelPlanVersionSnapshot;
 import com.travalagent.domain.model.entity.TimelineEvent;
 import com.travalagent.domain.model.valobj.AgentType;
 import com.travalagent.domain.model.valobj.ExecutionStage;
@@ -53,6 +54,8 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
     public SqliteConversationRepository(JdbcClient jdbcClient, ObjectMapper objectMapper) {
         this.jdbcClient = jdbcClient;
         this.objectMapper = objectMapper;
+        ensureTaskMemoryColumns();
+        ensureTravelPlanVersionTable();
     }
 
     @Override
@@ -147,7 +150,7 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
     @Override
     public Optional<TaskMemory> findTaskMemory(String conversationId) {
         return jdbcClient.sql("""
-                        SELECT conversation_id, origin, destination, days, budget, preferences_json, pending_question, summary, updated_at
+                        SELECT conversation_id, origin, destination, start_date, end_date, days, travelers, budget, preferences_json, pending_question, summary, updated_at
                         FROM task_memory
                         WHERE conversation_id = :conversationId
                         """)
@@ -187,12 +190,15 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
     public void saveTaskMemory(TaskMemory taskMemory) {
         jdbcClient.sql("""
                         INSERT INTO task_memory
-                        (conversation_id, origin, destination, days, budget, preferences_json, pending_question, summary, updated_at)
-                        VALUES (:conversationId, :origin, :destination, :days, :budget, :preferencesJson, :pendingQuestion, :summary, :updatedAt)
+                        (conversation_id, origin, destination, start_date, end_date, days, travelers, budget, preferences_json, pending_question, summary, updated_at)
+                        VALUES (:conversationId, :origin, :destination, :startDate, :endDate, :days, :travelers, :budget, :preferencesJson, :pendingQuestion, :summary, :updatedAt)
                         ON CONFLICT(conversation_id) DO UPDATE SET
                           origin = excluded.origin,
                           destination = excluded.destination,
+                          start_date = excluded.start_date,
+                          end_date = excluded.end_date,
                           days = excluded.days,
+                          travelers = excluded.travelers,
                           budget = excluded.budget,
                           preferences_json = excluded.preferences_json,
                           pending_question = excluded.pending_question,
@@ -202,7 +208,10 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 .param("conversationId", taskMemory.conversationId())
                 .param("origin", taskMemory.origin())
                 .param("destination", taskMemory.destination())
+                .param("startDate", taskMemory.startDate())
+                .param("endDate", taskMemory.endDate())
                 .param("days", taskMemory.days())
+                .param("travelers", taskMemory.travelers())
                 .param("budget", taskMemory.budget())
                 .param("preferencesJson", writeJson(taskMemory.preferences()))
                 .param("pendingQuestion", taskMemory.pendingQuestion())
@@ -313,6 +322,37 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
     }
 
     @Override
+    public List<TravelPlanVersionSnapshot> listTravelPlanVersions(String conversationId, int limit) {
+        int normalizedLimit = limit <= 0 ? 10 : limit;
+        return jdbcClient.sql("""
+                        SELECT version_id, conversation_id, input_summary, scope, plan_json, created_at
+                        FROM travel_plan_version
+                        WHERE conversation_id = :conversationId
+                        ORDER BY created_at DESC
+                        LIMIT :limit
+                        """)
+                .param("conversationId", conversationId)
+                .param("limit", normalizedLimit)
+                .query(this::mapTravelPlanVersion)
+                .list();
+    }
+
+    @Override
+    public void saveTravelPlanVersion(TravelPlanVersionSnapshot versionSnapshot) {
+        jdbcClient.sql("""
+                        INSERT INTO travel_plan_version (version_id, conversation_id, input_summary, scope, plan_json, created_at)
+                        VALUES (:versionId, :conversationId, :inputSummary, :scope, :planJson, :createdAt)
+                        """)
+                .param("versionId", versionSnapshot.versionId())
+                .param("conversationId", versionSnapshot.conversationId())
+                .param("inputSummary", versionSnapshot.inputSummary())
+                .param("scope", versionSnapshot.scope())
+                .param("planJson", writeJson(versionSnapshot.travelPlan()))
+                .param("createdAt", versionSnapshot.createdAt().toString())
+                .update();
+    }
+
+    @Override
     public void saveTimeline(TimelineEvent timelineEvent) {
         jdbcClient.sql("""
                         INSERT INTO conversation_timeline (id, conversation_id, stage, message, details_json, created_at)
@@ -346,6 +386,9 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 .param("conversationId", conversationId)
                 .update();
         jdbcClient.sql("DELETE FROM travel_plan_snapshot WHERE conversation_id = :conversationId")
+                .param("conversationId", conversationId)
+                .update();
+        jdbcClient.sql("DELETE FROM travel_plan_version WHERE conversation_id = :conversationId")
                 .param("conversationId", conversationId)
                 .update();
         jdbcClient.sql("DELETE FROM conversation_timeline WHERE conversation_id = :conversationId")
@@ -439,7 +482,10 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 rs.getString("conversation_id"),
                 rs.getString("origin"),
                 rs.getString("destination"),
+                rs.getString("start_date"),
+                rs.getString("end_date"),
                 readInteger(rs, "days"),
+                rs.getString("travelers"),
                 rs.getString("budget"),
                 readStringList(rs.getString("preferences_json")),
                 rs.getString("pending_question"),
@@ -495,6 +541,17 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 Instant.parse(rs.getString("created_at")),
                 readTimelineInstant(persistedDetails, "startedAt", rs.getString("created_at")),
                 readTimelineInstant(persistedDetails, "endedAt", rs.getString("created_at"))
+        );
+    }
+
+    private TravelPlanVersionSnapshot mapTravelPlanVersion(ResultSet rs, int rowNum) throws SQLException {
+        return new TravelPlanVersionSnapshot(
+                rs.getString("version_id"),
+                rs.getString("conversation_id"),
+                rs.getString("input_summary"),
+                rs.getString("scope"),
+                readTravelPlan(rs.getString("plan_json")),
+                Instant.parse(rs.getString("created_at"))
         );
     }
 
@@ -649,6 +706,34 @@ public class SqliteConversationRepository implements ConversationRepository, Lon
                 .map(String::valueOf)
                 .filter(item -> !item.isBlank())
                 .toList();
+    }
+
+    private void ensureTaskMemoryColumns() {
+        ensureColumn("task_memory", "start_date", "TEXT");
+        ensureColumn("task_memory", "end_date", "TEXT");
+        ensureColumn("task_memory", "travelers", "TEXT");
+    }
+
+    private void ensureTravelPlanVersionTable() {
+        jdbcClient.sql("""
+                        CREATE TABLE IF NOT EXISTS travel_plan_version (
+                            version_id TEXT PRIMARY KEY,
+                            conversation_id TEXT NOT NULL,
+                            input_summary TEXT,
+                            scope TEXT NOT NULL,
+                            plan_json TEXT NOT NULL,
+                            created_at TEXT NOT NULL
+                        )
+                        """)
+                .update();
+    }
+
+    private void ensureColumn(String table, String column, String type) {
+        try {
+            jdbcClient.sql("ALTER TABLE " + table + " ADD COLUMN " + column + " " + type).update();
+        } catch (Exception ignored) {
+            // Column already exists or the database engine rejected a duplicate migration.
+        }
     }
 }
 

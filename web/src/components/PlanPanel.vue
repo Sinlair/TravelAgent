@@ -70,6 +70,7 @@ const copy = computed(() => (props.preferChinese
       hotelArea: '\u5efa\u8bae\u4f4f\u5bbf\u533a\u57df',
       tripLength: '\u884c\u7a0b\u5929\u6570',
       currentWeather: '\u5f53\u524d\u5929\u6c14',
+      estimateMode: '\u65e5\u671f\u8fd8\u672a\u9501\u5b9a\uff0c\u5f53\u524d\u6309\u4f30\u7b97\u6a21\u5f0f\u5c55\u793a',
       matched: '\u5339\u914d\u5730\u70b9',
       district: '\u6240\u5728\u533a\u57df',
       coordinates: '\u5750\u6807',
@@ -158,6 +159,7 @@ const copy = computed(() => (props.preferChinese
       hotelArea: 'Recommended Stay Area',
       tripLength: 'Trip Length',
       currentWeather: 'Current Weather',
+      estimateMode: 'Dates are still in estimate mode until the trip window is locked.',
       matched: 'Matched',
       district: 'District',
       coordinates: 'Coordinates',
@@ -246,6 +248,7 @@ const visibleHotels = computed(() => props.travelPlan?.hotels.slice(0, 3) ?? [])
 const visibleChecks = computed(() => props.travelPlan?.checks ?? [])
 const visibleBudget = computed(() => props.travelPlan?.budget ?? [])
 const visibleDays = computed(() => props.travelPlan?.days ?? [])
+const estimateMode = computed(() => visibleDays.value.length > 0 && visibleDays.value.every(day => !day.date))
 
 const overviewStats = computed(() => {
   if (!props.travelPlan) {
@@ -933,11 +936,13 @@ function getSectionIcon(id: SectionId) {
           <Calendar :size="16" />
           {{ copy.itinerary }}
         </div>
+        <p v-if="estimateMode" class="plan-section__note">{{ copy.estimateMode }}</p>
         <div class="itinerary-list">
           <article v-for="day in visibleDays" :key="day.dayNumber" class="itinerary-day">
             <div class="itinerary-day__header">
               <div>
                 <p class="itinerary-day__eyebrow">{{ copy.day(day.dayNumber) }}</p>
+                <p v-if="day.date" class="itinerary-day__date">{{ day.date }}</p>
                 <h4>{{ normalizeDisplayText(day.theme) }}</h4>
                 <p class="itinerary-day__window">{{ copy.timeWindow(day.startTime, day.endTime) }}</p>
               </div>
@@ -1184,10 +1189,12 @@ function getSectionIcon(id: SectionId) {
 .glance-card p,
 .stay-card p,
 .budget-card p,
+.plan-section__note,
 .route-card p,
 .route-step p,
 .location-card__note,
 .itinerary-day__window,
+.itinerary-day__date,
 .itinerary-stop__head p,
 .itinerary-stop__content > p {
   margin: 0;
@@ -1456,6 +1463,14 @@ function getSectionIcon(id: SectionId) {
 
 .itinerary-day__window {
   margin-top: 6px;
+}
+
+.itinerary-day__date {
+  margin-top: 4px;
+  color: var(--accent-deep);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .itinerary-day__meta {

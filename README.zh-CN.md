@@ -152,7 +152,12 @@
 - 如果要跑 Milvus 或容器化部署，需要 Docker Desktop
 - 如果要重跑知识采集和清洗脚本，需要 Python 3
 
-### 1. 准备环境变量
+### 1. 选择启动模式
+
+- 在线模式：使用真实的 OpenAI 对话能力，以及可选的 MCP sidecar。
+- 本地演示模式：不依赖 OpenAI、MCP 或 Milvus，使用本地启发式逻辑、Amap mock 数据和 stub chat/vector 依赖完成启动。适合做本地起服验证、前端联调和自包含脚本回放。
+
+### 2. 为在线模式准备环境变量
 
 创建 `.env.travel-agent`，内容可参考 `.env.travel-agent.example`。
 
@@ -166,13 +171,34 @@
 - `VITE_AMAP_WEB_KEY`
 - `VITE_AMAP_SECURITY_JS_CODE`
 
-### 2. 启动后端
+### 3. 启动后端
+
+从仓库根目录启动时，请直接指定模块 `pom.xml`。
+如果使用 `-pl travel-agent-app -am spring-boot:run`，Maven 会把 `spring-boot:run` 打到聚合 `pom.xml`，并报 `Unable to find a suitable main class`。
+
+在线模式：
 
 ```bash
-./mvnw -pl travel-agent-app -am spring-boot:run
+./mvnw -f travel-agent-app/pom.xml spring-boot:run
 ```
 
-### 3. 启动前端
+```powershell
+.\mvnw.cmd -f travel-agent-app\pom.xml spring-boot:run
+```
+
+本地演示模式：
+
+```bash
+./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run
+```
+
+```powershell
+.\mvnw.cmd "-Dspring-boot.run.profiles=local-demo" -f travel-agent-app\pom.xml spring-boot:run
+```
+
+在 PowerShell 里，`-D...` 参数要像上面这样整体加引号；不加引号时，PowerShell 会把它拆开，Maven 会把它识别成非法生命周期参数。
+
+### 4. 启动前端
 
 ```bash
 cd web
@@ -180,10 +206,16 @@ npm ci
 npm run dev
 ```
 
-### 4. 可选：启动 MCP sidecar
+### 5. 可选：启动 MCP sidecar
+
+只有在线模式并且需要 `travel.agent.tool-provider=MCP` 时才需要。
 
 ```bash
-./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run
+./mvnw -f travel-agent-amap-mcp-server/pom.xml spring-boot:run
+```
+
+```powershell
+.\mvnw.cmd -f travel-agent-amap-mcp-server\pom.xml spring-boot:run
 ```
 
 默认地址：
@@ -191,7 +223,7 @@ npm run dev
 - 后端：`http://localhost:8080`
 - 前端：`http://localhost:5173`
 
-### 5. 停止
+### 6. 停止
 
 停止运行中的后端、前端和可选 MCP 终端即可，使用 `Ctrl + C`。
 
@@ -200,7 +232,11 @@ npm run dev
 ### 后端
 
 ```bash
-SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -pl travel-agent-app -am spring-boot:run
+SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -f travel-agent-app/pom.xml spring-boot:run
+```
+
+```bash
+./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run
 ```
 
 ### 前端
@@ -224,21 +260,27 @@ npm run build
 | --- | --- |
 | 后端测试 | `./mvnw -B test` |
 | 后端 smoke 集成测试 | `./mvnw -pl travel-agent-app -am -Dtest=TravelAgentSmokeIntegrationTest test` |
+| 启动后端（在线模式） | `./mvnw -f travel-agent-app/pom.xml spring-boot:run` |
+| 启动后端（本地演示模式） | `./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run` |
 | 离线反馈评测 | `python scripts/analyze_feedback_loop.py` |
+| 质量场景回放 | `python scripts/run_quality_scenarios.py --base-url http://localhost:8080` |
 | 后端打包 | `./mvnw -pl travel-agent-app -am -DskipTests package` |
 | 前端测试 | `cd web && npm run test` |
 | 前端构建 | `cd web && npm run build` |
-| 可选 MCP 服务 | `./mvnw -pl travel-agent-amap-mcp-server -am spring-boot:run` |
+| 可选 MCP 服务 | `./mvnw -f travel-agent-amap-mcp-server/pom.xml spring-boot:run` |
 
 ## 质量与评测
 
 - CI 会运行后端测试，以及前端测试和生产构建。
 - 后端测试套件已经包含一条进程内 smoke 集成测试：
   `TravelAgentSmokeIntegrationTest` 会启动应用，检查 `/actuator/health`，并验证 `/api/conversations/chat` 可以返回 `agentType=TRAVEL_PLANNER` 和结构化 `travelPlan`。
+- 仓库现在也包含一个已经验证可启动的 `local-demo` profile。它可以在没有 OpenAI 和 MCP 的情况下启动后端，适合做本地 smoke 检查和脚本回放，但不代表生产级规划质量。
 - 统一结果契约也有对应回归覆盖：
   后端测试覆盖聊天响应结构，前端测试覆盖聊天、行程和时间线面板的共享状态渲染。
 - 可以通过 `python scripts/analyze_feedback_loop.py` 做离线反馈分析。
   该脚本默认读取 `data/travel-agent.db`，并把 JSON 与 Markdown 报告写到 `data/exports/`。
+- 质量场景回放命令为 `python scripts/run_quality_scenarios.py --base-url http://localhost:8080`。
+  `local-demo` profile 足以验证回放链路本身是否正常；如果要看更接近真实产品质量的结果，仍应使用带真实模型配置的在线模式。
 
 ## 项目结构
 

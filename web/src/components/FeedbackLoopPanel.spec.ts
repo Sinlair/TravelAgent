@@ -63,8 +63,8 @@ describe('FeedbackLoopPanel', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('Aggregate View')
-    expect(wrapper.text()).toContain('Recent Feedback Performance')
+    expect(wrapper.text()).toContain('Operations')
+    expect(wrapper.text()).toContain('Feedback Operations Panel')
     expect(wrapper.text()).toContain('New feedback arrived. This view may be stale.')
     expect(wrapper.text()).toContain('38.89%')
     expect(wrapper.text()).toContain('72.22%')
@@ -86,9 +86,17 @@ describe('FeedbackLoopPanel', () => {
       }
     })
 
-    await wrapper.get('.feedback-loop-panel__select').setValue('500')
+    await wrapper.findAll('select')[1].setValue('OVERALL')
+    await wrapper.findAll('select')[2].setValue('500')
+    await wrapper.find('input').setValue('Hangzhou')
     await wrapper.get('.feedback-loop-panel__action').trigger('click')
 
-    expect(wrapper.emitted('refresh')).toEqual([[500]])
+    expect(wrapper.emitted('refresh')).toEqual([[
+      {
+        limit: 500,
+        destination: 'Hangzhou',
+        targetScope: 'OVERALL'
+      }
+    ]])
   })
 })

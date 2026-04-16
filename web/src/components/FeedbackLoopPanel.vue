@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import type { FeedbackBreakdownItem, FeedbackLoopSummaryResponse } from '../types/api'
+
+type FeedbackFilters = {
+  destination?: string
+  agentType?: string
+  targetScope?: string
+  reasonLabel?: string
+}
 
 const props = withDefaults(defineProps<{
   summary: FeedbackLoopSummaryResponse | null
@@ -9,46 +16,69 @@ const props = withDefaults(defineProps<{
   errorMessage: string
   preferChinese?: boolean
   initialLimit: number
+  initialFilters?: FeedbackFilters
 }>(), {
-  preferChinese: true
+  preferChinese: true,
+  initialFilters: () => ({})
 })
 
 const emit = defineEmits<{
-  refresh: [limit: number]
+  refresh: [payload: { limit: number } & FeedbackFilters]
 }>()
 
-const selectedLimit = ref(props.initialLimit)
+const form = reactive({
+  limit: props.initialLimit,
+  destination: props.initialFilters?.destination ?? '',
+  agentType: props.initialFilters?.agentType ?? '',
+  targetScope: props.initialFilters?.targetScope ?? '',
+  reasonLabel: props.initialFilters?.reasonLabel ?? ''
+})
 
 watch(() => props.initialLimit, value => {
-  selectedLimit.value = value
+  form.limit = value
 })
+
+watch(() => props.initialFilters, value => {
+  form.destination = value?.destination ?? ''
+  form.agentType = value?.agentType ?? ''
+  form.targetScope = value?.targetScope ?? ''
+  form.reasonLabel = value?.reasonLabel ?? ''
+}, { deep: true })
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: '汇总分析',
-      title: '最近反馈表现',
-      hint: '这里展示的是最近一批会话的汇总结果，不是当前聊天里的即时反馈。',
-      empty: '还没有拉取最近反馈汇总。点击刷新后，这里会显示接受率、失败模式和建议动作。',
+      eyebrow: '运营',
+      title: '反馈运营面板',
+      hint: '按城市、agent、反馈范围和原因标签筛一遍，就能快速看到最近内部测试最容易失真的区域。',
       refresh: '刷新',
-      loading: '分析中...',
-      stale: '已有新的反馈到达，当前视图可能已经过时。',
+      loading: '加载中...',
+      stale: '有新的反馈写入，当前视图可能已经过时。',
       generatedAt: '生成时间',
       sample: '样本数',
-      accepted: '直接接受',
+      accepted: '直接接受率',
       usable: '可用率',
       coverage: '结构化方案覆盖率',
-      reasons: '高频原因码',
+      reasons: '高频原因',
       destinations: '高频目的地',
-      findings: '关键洞察',
-      noFindings: '当前样本里还没有明显的风险模式。',
-      sampled: '采样范围',
+      agents: '高频 Agent',
+      findings: '关键发现',
+      noFindings: '当前筛选范围内还没有明显的失败模式。',
+      destination: '目的地',
+      destinationPlaceholder: '例如 Hangzhou / 杭州',
+      agentType: 'Agent',
+      targetScope: '反馈范围',
+      reasonLabel: '原因标签',
+      reasonPlaceholder: '例如 not_useful',
+      any: '全部',
+      answer: '答案',
+      plan: '行程',
+      overall: '整体',
       sampleWord: '样本'
     }
   : {
-      eyebrow: 'Aggregate View',
-      title: 'Recent Feedback Performance',
-      hint: 'This panel shows an aggregate view of recent sessions, not the immediate feedback for the current chat.',
-      empty: 'No recent feedback summary loaded yet. Refresh to see adoption, failure patterns, and suggested next actions.',
+      eyebrow: 'Operations',
+      title: 'Feedback Operations Panel',
+      hint: 'Filter by city, agent, target scope, and reason label to isolate the most harmful internal-beta failures quickly.',
       refresh: 'Refresh',
       loading: 'Loading...',
       stale: 'New feedback arrived. This view may be stale.',
@@ -57,11 +87,21 @@ const copy = computed(() => (props.preferChinese
       accepted: 'Accepted',
       usable: 'Usable',
       coverage: 'Structured plan coverage',
-      reasons: 'Top reason codes',
+      reasons: 'Top reasons',
       destinations: 'Top destinations',
+      agents: 'Top agents',
       findings: 'Key findings',
-      noFindings: 'No strong risk patterns surfaced in the current sample.',
-      sampled: 'Sampled',
+      noFindings: 'No strong failure pattern is visible in the current filter.',
+      destination: 'Destination',
+      destinationPlaceholder: 'Example: Hangzhou',
+      agentType: 'Agent',
+      targetScope: 'Scope',
+      reasonLabel: 'Reason label',
+      reasonPlaceholder: 'Example: not_useful',
+      any: 'Any',
+      answer: 'Answer',
+      plan: 'Plan',
+      overall: 'Overall',
       sampleWord: 'Sample'
     }))
 
@@ -76,11 +116,14 @@ function breakdownLabel(item: FeedbackBreakdownItem) {
 }
 
 function refresh() {
-  emit('refresh', Number(selectedLimit.value))
+  emit('refresh', {
+    limit: Number(form.limit),
+    destination: form.destination || undefined,
+    agentType: form.agentType || undefined,
+    targetScope: form.targetScope || undefined,
+    reasonLabel: form.reasonLabel || undefined
+  })
 }
-
-const destinationItems = computed(() => props.summary?.topDestinations.slice(0, 4) ?? [])
-const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? [])
 </script>
 
 <template>
@@ -91,17 +134,48 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
         <h2>{{ copy.title }}</h2>
         <p class="feedback-loop-panel__hint">{{ copy.hint }}</p>
       </div>
-      <div class="feedback-loop-panel__controls">
-        <select v-model="selectedLimit" class="feedback-loop-panel__select" :disabled="loading">
+      <button class="feedback-loop-panel__action" :disabled="loading" @click="refresh">
+        {{ loading ? copy.loading : copy.refresh }}
+      </button>
+    </div>
+
+    <div class="feedback-loop-panel__filters">
+      <label class="feedback-loop-panel__field">
+        <span>{{ copy.destination }}</span>
+        <input v-model="form.destination" :placeholder="copy.destinationPlaceholder" />
+      </label>
+      <label class="feedback-loop-panel__field">
+        <span>{{ copy.agentType }}</span>
+        <select v-model="form.agentType">
+          <option value="">{{ copy.any }}</option>
+          <option value="TRAVEL_PLANNER">TRAVEL_PLANNER</option>
+          <option value="WEATHER">WEATHER</option>
+          <option value="GEO">GEO</option>
+          <option value="GENERAL">GENERAL</option>
+        </select>
+      </label>
+      <label class="feedback-loop-panel__field">
+        <span>{{ copy.targetScope }}</span>
+        <select v-model="form.targetScope">
+          <option value="">{{ copy.any }}</option>
+          <option value="ANSWER">{{ copy.answer }}</option>
+          <option value="PLAN">{{ copy.plan }}</option>
+          <option value="OVERALL">{{ copy.overall }}</option>
+        </select>
+      </label>
+      <label class="feedback-loop-panel__field">
+        <span>{{ copy.reasonLabel }}</span>
+        <input v-model="form.reasonLabel" :placeholder="copy.reasonPlaceholder" />
+      </label>
+      <label class="feedback-loop-panel__field">
+        <span>{{ copy.sample }}</span>
+        <select v-model="form.limit">
           <option :value="50">50</option>
           <option :value="100">100</option>
           <option :value="200">200</option>
           <option :value="500">500</option>
         </select>
-        <button class="feedback-loop-panel__action" :disabled="loading" @click="refresh">
-          {{ loading ? copy.loading : copy.refresh }}
-        </button>
-      </div>
+      </label>
     </div>
 
     <p v-if="stale && summary" class="feedback-loop-panel__stale">{{ copy.stale }}</p>
@@ -129,14 +203,14 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
 
       <div class="feedback-loop-panel__meta">
         <span>{{ copy.generatedAt }}: {{ new Date(summary.generatedAt).toLocaleString() }}</span>
-        <span>{{ copy.sampled }}: {{ summary.sampleCount }} / {{ summary.limitApplied }}</span>
+        <span>{{ copy.sampleWord }}: {{ summary.sampleCount }} / {{ summary.limitApplied }}</span>
       </div>
 
       <div class="feedback-loop-panel__grid">
         <section class="feedback-loop-panel__section">
           <div class="feedback-loop-panel__section-title">{{ copy.reasons }}</div>
           <div class="feedback-loop-panel__list">
-            <article v-for="item in reasonItems" :key="`reason-${item.key}`" class="feedback-loop-panel__list-item">
+            <article v-for="item in summary.topReasonCodes.slice(0, 4)" :key="`reason-${item.key}`" class="feedback-loop-panel__list-item">
               <strong>{{ item.key }}</strong>
               <p>{{ breakdownLabel(item) }}</p>
             </article>
@@ -146,7 +220,17 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
         <section class="feedback-loop-panel__section">
           <div class="feedback-loop-panel__section-title">{{ copy.destinations }}</div>
           <div class="feedback-loop-panel__list">
-            <article v-for="item in destinationItems" :key="`destination-${item.key}`" class="feedback-loop-panel__list-item">
+            <article v-for="item in summary.topDestinations.slice(0, 4)" :key="`destination-${item.key}`" class="feedback-loop-panel__list-item">
+              <strong>{{ item.key }}</strong>
+              <p>{{ breakdownLabel(item) }}</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="feedback-loop-panel__section">
+          <div class="feedback-loop-panel__section-title">{{ copy.agents }}</div>
+          <div class="feedback-loop-panel__list">
+            <article v-for="item in summary.topAgentTypes.slice(0, 4)" :key="`agent-${item.key}`" class="feedback-loop-panel__list-item">
               <strong>{{ item.key }}</strong>
               <p>{{ breakdownLabel(item) }}</p>
             </article>
@@ -169,12 +253,126 @@ const reasonItems = computed(() => props.summary?.topReasonCodes.slice(0, 4) ?? 
             <p>{{ item.recommendation }}</p>
           </article>
         </div>
-        <div v-else class="timeline-empty">{{ copy.noFindings }}</div>
+        <div v-else class="timeline-empty">
+          {{ copy.noFindings }}
+        </div>
       </section>
     </div>
 
     <div v-else class="timeline-empty">
-      {{ copy.empty }}
+      {{ copy.noFindings }}
     </div>
   </section>
 </template>
+
+<style scoped>
+.feedback-loop-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.feedback-loop-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.feedback-loop-panel__hint,
+.feedback-loop-panel__meta,
+.feedback-loop-panel__finding p,
+.feedback-loop-panel__list-item p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.feedback-loop-panel__action,
+.feedback-loop-panel__field input,
+.feedback-loop-panel__field select {
+  border-radius: 12px;
+  border: 1px solid rgba(24, 50, 74, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font: inherit;
+}
+
+.feedback-loop-panel__action {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.feedback-loop-panel__filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.feedback-loop-panel__field {
+  display: grid;
+  gap: 6px;
+}
+
+.feedback-loop-panel__field span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.feedback-loop-panel__field input,
+.feedback-loop-panel__field select {
+  padding: 9px 10px;
+}
+
+.feedback-loop-panel__stale {
+  margin: 0;
+  color: var(--accent-deep);
+}
+
+.feedback-loop-panel__body,
+.feedback-loop-panel__grid,
+.feedback-loop-panel__list,
+.feedback-loop-panel__finding-list {
+  display: grid;
+  gap: 12px;
+}
+
+.feedback-loop-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.feedback-loop-panel__stat,
+.feedback-loop-panel__list-item,
+.feedback-loop-panel__finding,
+.feedback-loop-panel__section {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(24, 50, 74, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.feedback-loop-panel__stat span,
+.feedback-loop-panel__section-title {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.feedback-loop-panel__finding-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 1100px) {
+  .feedback-loop-panel__filters,
+  .feedback-loop-panel__stats,
+  .feedback-loop-panel__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-loop-panel__header {
+    flex-direction: column;
+  }
+}
+</style>

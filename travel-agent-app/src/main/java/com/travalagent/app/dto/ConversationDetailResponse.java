@@ -21,7 +21,8 @@ public record ConversationDetailResponse(
         ChatResponseFeedbackTarget feedbackTarget,
         List<ChatResponseIssue> issues,
         List<ConversationMissingInformationItem> missingInformation,
-        ConversationConstraintSummary constraintSummary
+        ConversationConstraintSummary constraintSummary,
+        TravelPlanVersionDiffResponse recentVersionDiff
 ) {
     public ConversationDetailResponse {
         timeline = timeline == null ? List.of() : List.copyOf(timeline);

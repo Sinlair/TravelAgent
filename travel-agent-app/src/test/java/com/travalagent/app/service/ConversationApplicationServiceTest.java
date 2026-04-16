@@ -25,7 +25,7 @@ class ConversationApplicationServiceTest {
 
     @Test
     void feedbackLoopSummaryAggregatesFailureSignals() {
-        when(conversationRepository.listFeedback(200)).thenReturn(List.of(
+        when(conversationRepository.listFeedback(1000)).thenReturn(List.of(
                 new ConversationFeedback(
                         "conversation-1",
                         "ACCEPTED",
@@ -97,7 +97,7 @@ class ConversationApplicationServiceTest {
                 )
         ));
 
-        FeedbackLoopSummaryResponse summary = service.feedbackLoopSummary(0);
+        FeedbackLoopSummaryResponse summary = service.feedbackLoopSummary(0, null, null, null, null, null, null);
 
         assertThat(summary.limitApplied()).isEqualTo(200);
         assertThat(summary.sampleCount()).isEqualTo(3);

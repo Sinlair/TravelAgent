@@ -1,82 +1,98 @@
 # Ralph Progress Log
-Started: 2026-04-14 23:30 +08:00
+Started: 2026-04-15 22:54 +08:00
 ---
 
 ## Codebase Patterns
-- `ConversationWorkflow` has three chat response exit paths: staged image context, dismissed image context, and finalized assistant reply. Shared response contract changes should be funneled through one helper instead of editing those branches independently.
-- `/api/conversations/chat` is wrapped by `ConversationController` in `ApiResponse`, and the frontend contract mirror lives in `web/src/types/api.ts`.
+- `ConversationWorkflow` remains the contract hub for chat requests, plan persistence, and structured result shaping; shared response changes should still flow through `ConversationResultSupport` and `web/src/types/api.ts`.
+- Productization features now span a stable cross-layer path: backend DTO/domain contract -> SQLite persistence -> `ConversationDetailResponse` -> Pinia store -> workspace panels.
 
-## 2026-04-14 23:59 +08:00 - US-001
-- Implemented a unified chat response contract with stable `feedbackTarget` and `issues` fields in addition to the existing `agentType`, `answer`, `travelPlan`, and `timeline` fields.
-- Added a shared `buildChatResponse(...)` path in `ConversationWorkflow` so staged image-context responses, dismiss responses, and finalized agent responses all emit the same contract shape.
-- Added lightweight issue emission for clarification-required and image-confirmation-required flows, and added a stable answer-scoped feedback target based on the saved assistant message id.
-- Synced the frontend API types to the new contract fields.
-- Files changed:
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatResponse.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatResponseFeedbackTarget.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatResponseIssue.java`
+## 2026-04-15 23:40 +08:00 - US-001 through US-007
+- Completed the real trip-constraint pass by persisting `origin`, `startDate`, `endDate`, and `travelers`, and by accepting structured brief patches directly in chat requests.
+- Added the trip-brief editor to the workspace and kept free-form chat requests backward compatible.
+- Derived real itinerary dates from `startDate` and surfaced estimate-mode messaging when dates are still not locked.
+- Kept trust metadata consistent on hotels and transit legs, and preserved the UI grounding / fallback visibility already in the plan surfaces.
+- Key files changed:
+  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatRequest.java`
+  - `travel-agent-app/src/main/java/com/travalagent/app/dto/TripBriefRequest.java`
   - `travel-agent-app/src/main/java/com/travalagent/app/service/ConversationWorkflow.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/controller/ConversationControllerTest.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/service/ConversationWorkflowTest.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/integration/TravelAgentSmokeIntegrationTest.java`
-  - `web/src/types/api.ts`
-- Verification:
-  - Passed: `.\mvnw.cmd -pl travel-agent-app -am -Dsurefire.failIfNoSpecifiedTests=false -Dtest=ConversationWorkflowTest,ConversationControllerTest test`
-  - Blocked by pre-existing issue: `TravelAgentSmokeIntegrationTest` currently fails on duplicate `vectorStore` bean registration in the test configuration.
-  - Blocked by pre-existing issue: `web` build currently fails on an unrelated TypeScript comparison error in `web/src/components/PlanPanel.vue`.
-- Learnings for future iterations:
-  - The app already mirrors backend API contracts manually in `web/src/types/api.ts`, so backend response changes should update that file in the same iteration.
-  - The existing smoke integration test setup needs cleanup before it can serve as a stable regression gate for later Ralph stories.
----
-
-## 2026-04-15 00:49 +08:00 - US-002 through US-019
-- Completed the remaining Herness backlog in one pass across backend, persistence, frontend state handling, feedback linkage, tests, and docs.
-- Expanded the backend contract with structured `missingInformation`, `constraintSummary`, richer `feedbackTarget`, normalized timeline statuses, and detail-response parity.
-- Added feedback version linkage through `targetId`, `targetScope`, `planVersion`, and `reasonLabels`, while keeping SQLite backward compatible by storing the new fields in `conversation_feedback.metadata_json`.
-- Added a shared frontend result view model so chat, plan, map, timeline, and feedback UI read the same derived state and consistently cover `loading`, `partial`, `success`, `empty`, and `error`.
-- Improved feedback UX so `Accept` remains one-click while `Partially Accept` and `Reject` support structured reason tags, scope selection, and optional notes.
-- Added live-timeline retry handling for SSE disconnects and normalized timeline status rendering.
-- Fixed the previously blocking frontend type error in `PlanPanel.vue` and the backend smoke-test bean conflict in `TravelAgentSmokeIntegrationTest`.
-- Added contract notes to `docs/system-architecture.md` and `docs/herness-contract.md`.
-- Files changed:
-  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/ConversationFeedback.java`
-  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TimelineEvent.java`
-  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/valobj/TimelineEventStatus.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatResponse.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ChatResponseFeedbackTarget.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationConstraintIssue.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationConstraintSummary.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationDetailResponse.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationFeedbackRequest.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationMissingInformationItem.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/service/ConversationApplicationService.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/service/ConversationResultSupport.java`
-  - `travel-agent-app/src/main/java/com/travalagent/app/service/ConversationWorkflow.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/controller/ConversationControllerTest.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/integration/TravelAgentSmokeIntegrationTest.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/service/ConversationApplicationServiceTest.java`
-  - `travel-agent-app/src/test/java/com/travalagent/app/service/ConversationWorkflowTest.java`
-  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/valobj/TimelineEventStatus.java`
-  - `travel-agent-infrastructure/src/main/java/com/travalagent/infrastructure/gateway/llm/TravelPlannerAgent.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TaskMemory.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelPlanDay.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelHotelRecommendation.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelTransitLeg.java`
   - `travel-agent-infrastructure/src/main/java/com/travalagent/infrastructure/repository/SqliteConversationRepository.java`
-  - `web/src/App.vue`
   - `web/src/components/ChatPanel.vue`
-  - `web/src/components/ChatPanel.spec.ts`
-  - `web/src/components/PlanMap.vue`
   - `web/src/components/PlanPanel.vue`
-  - `web/src/components/TimelinePanel.vue`
-  - `web/src/components/TimelinePanel.spec.ts`
   - `web/src/stores/chat.ts`
   - `web/src/types/api.ts`
-  - `web/src/utils/conversationResult.ts`
-  - `docs/system-architecture.md`
-  - `docs/herness-contract.md`
-- Verification:
-  - Passed: `mvnw.cmd -B test`
-  - Passed: `cd web && npm.cmd run build`
-  - Passed: `cd web && npm.cmd run test`
-  - Not run: browser verification via `dev-browser` skill was not available in this environment.
-- Learnings for future iterations:
-  - The persisted conversation detail response now carries enough data to rebuild the same frontend result state after reload, so future UI changes should prefer the shared result view model instead of re-deriving panel logic independently.
-  - Timeline status normalization is persisted inside timeline payload metadata, which keeps old SQLite schema compatible while still exposing richer event fields to the UI.
 ---
+
+## 2026-04-15 23:40 +08:00 - US-008 through US-016
+- Added scoped replan support for `HOTEL_AREA` and `DAY`, including request contract, workflow merge logic, and workspace controls that refresh only the affected slice.
+- Added persistent pre-departure checklist items, a checklist update endpoint, and an execution panel that lets the user confirm or reopen checklist items.
+- Added plan version snapshot persistence and recent-version diff summaries exposed through conversation detail and rendered in the workspace.
+- Key files changed:
+  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ReplanScopeRequest.java`
+  - `travel-agent-app/src/main/java/com/travalagent/app/dto/ConversationChecklistUpdateRequest.java`
+  - `travel-agent-app/src/main/java/com/travalagent/app/dto/TravelPlanVersionDiffResponse.java`
+  - `travel-agent-app/src/main/java/com/travalagent/app/controller/ConversationController.java`
+  - `travel-agent-app/src/main/java/com/travalagent/app/service/ConversationApplicationService.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelChecklistItem.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelPlan.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/model/entity/TravelPlanVersionSnapshot.java`
+  - `travel-agent-domain/src/main/java/com/travalagent/domain/repository/ConversationRepository.java`
+  - `travel-agent-app/src/main/resources/schema.sql`
+  - `web/src/components/PlanExecutionPanel.vue`
+  - `web/src/App.vue`
+---
+
+## 2026-04-15 23:40 +08:00 - US-017 through US-019
+- Added internal-beta quality scenario fixtures plus a replay runner that writes JSON and Markdown reports for product review.
+- Extended feedback summary / export filters to support destination, agent type, feedback scope, reason label, and plan-version time-window filtering.
+- Mounted a filtered feedback operations panel in the workspace so product and ops can inspect recent failures without raw logs.
+- Key files changed:
+  - `scripts/quality-scenarios.json`
+  - `scripts/run_quality_scenarios.py`
+  - `web/src/components/FeedbackLoopPanel.vue`
+  - `web/src/stores/chat.ts`
+---
+
+## Verification
+- Passed: `.\mvnw.cmd -B test`
+- Passed: `cd web && npm.cmd run build`
+- Passed: `cd web && npm.cmd run test`
+- Passed: `python .\scripts\run_quality_scenarios.py --help`
+- Not run: full quality-scenario replay, because it requires a running app instance with usable planner/model configuration.
+- Not run: browser-only visual verification via `dev-browser`, because that skill/tooling was not available in this environment.
+
+## Outcome
+- The current `ralph/prd.json` (`ralph/mvp-to-beta-productization`) is now aligned with the codebase and no longer points at an unrelated progress log.
+
+---
+
+## 2026-04-16 00:51 +08:00 - PRD status reconciliation
+- Re-ran `.\mvnw.cmd -B test`, `cd web && npm.cmd run build`, and `cd web && npm.cmd run test`; all passed on the current worktree.
+- Confirmed that the frontend build still performs `vue-tsc --noEmit`, so the rerun build covered the frontend typecheck gate.
+- Attempted to run the quality-scenario replay against a locally booted app using the existing `browser-test` / local-tooling path, but the scripted runtime path was not startable as-is in this environment; the replay therefore remains unverified.
+- Updated `ralph/prd.json` status flags to reflect actual evidence:
+  - Passed: `US-001`, `US-002`, `US-004`, `US-006`, `US-008`, `US-009`, `US-011`, `US-012`, `US-014`, `US-015`, `US-018`
+  - Still pending with notes: `US-003`, `US-005`, `US-007`, `US-010`, `US-013`, `US-016`, `US-017`, `US-019`
+
+---
+
+## 2026-04-16 09:48 +08:00 - Local demo startup and quality replay
+- Root-cause analysis for startup failures:
+  - `spring-boot:run` from the repository root with `-pl travel-agent-app -am` targets the aggregator POM and fails because the root project has no `mainClass`.
+  - In PowerShell, unquoted `-Dspring-boot.run.profiles=...` arguments are split before Maven receives them.
+- Added a main-source `local-demo` profile so the application can boot without OpenAI, MCP, or Milvus by wiring stub chat/vector dependencies and local tool settings.
+- Verified the backend boots with:
+  - `.\mvnw.cmd "-Dspring-boot.run.profiles=local-demo" -f travel-agent-app\pom.xml spring-boot:run`
+- Verified runtime behavior on the local-demo instance:
+  - `GET /actuator/health` returned `UP`
+  - `POST /api/conversations/chat` returned `code=0000`, `agentType=TRAVEL_PLANNER`, and a structured `travelPlan`
+- Ran `python .\scripts\run_quality_scenarios.py --base-url http://localhost:8080 --output-dir .\data\exports\quality-reports`, which successfully wrote JSON and Markdown reports.
+- Updated `README.md` and `README.zh-CN.md` to document:
+  - the correct module-scoped Spring Boot launch commands
+  - the PowerShell quoting requirement for `-D...`
+  - the new local-demo startup path
+  - the quality-scenario replay command
+- Updated `ralph/prd.json` so `US-017` is now marked passed.
