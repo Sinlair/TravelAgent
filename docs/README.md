@@ -9,9 +9,10 @@
 根据你的角色选择对应的文档：
 
 ### 👤 我是新用户
-1. [项目总览](project-overview.md) - 了解项目是什么
-2. [README.md](../README.md) - 快速开始
-3. [RAG 功能文档](rag-feature-guide.md) - 核心功能说明
+1. [项目介绍文档集](project-introduction/README.md) - 系统化了解项目是什么、能做什么、怎么设计
+2. [项目总览](project-overview.md) - 了解项目是什么
+3. [README.md](../README.md) - 快速开始
+4. [RAG 功能文档](rag-feature-guide.md) - 核心功能说明
 
 ### 👨‍💻 我是开发者
 1. [开发指南](development-guide.md) - 环境搭建和开发流程
@@ -37,6 +38,7 @@
 
 | 文档 | 描述 | 大小 | 链接 |
 |------|------|------|------|
+| **项目介绍文档集** | 按主题拆分的详细项目介绍、能力说明与设计方法 | - | [查看](project-introduction/README.md) |
 | **项目总览** | 项目介绍、功能、路线图 | 12 KB | [查看](project-overview.md) |
 | **README** | 项目快速开始 | 12 KB | [查看](../README.md) |
 | **中文 README** | 中文版介绍 | 11 KB | [查看](../README.zh-CN.md) |

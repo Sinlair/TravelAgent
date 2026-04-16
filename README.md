@@ -329,6 +329,8 @@ npm run build
 
 ## Docs
 
+- [`docs/project-introduction/README.md`](./docs/project-introduction/README.md)
+- [`docs/project-introduction.zh-CN.md`](./docs/project-introduction.zh-CN.md)
 - [`docs/system-architecture.md`](./docs/system-architecture.md)
 - [`docs/herness-contract.md`](./docs/herness-contract.md)
 - [`docs/knowledge-rag.md`](./docs/knowledge-rag.md)

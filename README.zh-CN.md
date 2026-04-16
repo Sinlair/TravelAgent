@@ -311,6 +311,7 @@ npm run build
 
 ## 文档
 
+- [`docs/project-introduction/README.md`](./docs/project-introduction/README.md)
 - [`docs/system-architecture.md`](./docs/system-architecture.md)
 - [`docs/herness-contract.md`](./docs/herness-contract.md)
 - [`docs/knowledge-rag.md`](./docs/knowledge-rag.md)
