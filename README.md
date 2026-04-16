@@ -87,6 +87,10 @@ This codebase follows a DDD-inspired layered design with ports-and-adapters char
 - `travel-agent-amap-mcp-server`: standalone MCP server for Amap-backed tools
 - `web`: Vue 3 frontend workspace
 
+This repository does not use a separate "Herness architecture" as its base system design.
+The underlying architecture remains layered DDD plus ports-and-adapters with orchestrated multi-agent execution.
+In this codebase, `Herness` refers to a renovation layer that standardized result contracts, planner-stage visibility, feedback traceability, and cross-panel UI state handling on top of the existing TravelAgent architecture.
+
 System architecture:
 
 Repository architecture:
@@ -130,6 +134,21 @@ The planner is intentionally explicit:
 6. Render a structured answer plus the persisted `TravelPlan`.
 
 This makes the backend easier to inspect and evolve than a single hidden prompt chain.
+
+## Herness Renovation
+
+The `Herness` renovation was a system-level cleanup of how TravelAgent exposes and consumes planning results.
+It did not replace the base architecture; it normalized the product-facing contract around it.
+
+Main outcomes:
+
+- Unified conversation result shape across live chat execution and persisted conversation detail views
+- Normalized planner status fields such as `feedbackTarget`, `issues`, `missingInformation`, `constraintSummary`, and timeline status metadata
+- Shared frontend result-view handling so chat, itinerary, map, timeline, and feedback panels stay in sync
+- Stronger feedback traceability through versioned targets and reason labels
+- Clearer regression and verification guidance for contract-level changes
+
+See [`docs/herness-contract.md`](./docs/herness-contract.md) for the field-level contract guide.
 
 ## Tech Stack
 
