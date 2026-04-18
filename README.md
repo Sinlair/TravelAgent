@@ -170,12 +170,7 @@ See [`docs/herness-contract.md`](./docs/herness-contract.md) for the field-level
 - Docker Desktop if you want Milvus or containerized deployment
 - Python 3 only if you need to rerun collection and cleaning scripts
 
-### 1. Choose a startup mode
-
-- Online mode: uses the real OpenAI-backed chat stack and the optional MCP sidecar.
-- Local demo mode: boots without OpenAI, MCP, or Milvus by using local heuristics, mock Amap data, and stub chat/vector dependencies. This is useful for local boot verification, UI work, and self-contained script replay.
-
-### 2. Prepare environment variables for online mode
+### 1. Prepare environment variables
 
 Create `.env.travel-agent` from `.env.travel-agent.example`.
 
@@ -189,51 +184,18 @@ Important settings:
 - `VITE_AMAP_WEB_KEY`
 - `VITE_AMAP_SECURITY_JS_CODE`
 
-### 3. Start the backend
-
-From the repository root, run Spring Boot against the module `pom.xml`.
-`spring-boot:run` with `-pl travel-agent-app -am` targets the aggregator `pom.xml` and fails with `Unable to find a suitable main class`.
-
-Online mode:
+### 2. Start the backend
 
 ```bash
 ./mvnw -f travel-agent-app/pom.xml spring-boot:run
 ```
 
-```powershell
-.\mvnw.cmd -f travel-agent-app\pom.xml spring-boot:run
-```
-
-Local demo mode:
-
-```bash
-./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run
-```
-
-```powershell
-.\mvnw.cmd "-Dspring-boot.run.profiles=local-demo" -f travel-agent-app\pom.xml spring-boot:run
-```
-
-In PowerShell, keep the `-D...` property quoted exactly as shown. Without quotes, PowerShell splits the argument and Maven treats it as an invalid lifecycle phase.
-
-### 4. Start the frontend
+### 3. Start the frontend
 
 ```bash
 cd web
 npm ci
 npm run dev
-```
-
-### 5. Optional: start the MCP sidecar
-
-Only needed for online mode when you want `travel.agent.tool-provider=MCP`.
-
-```bash
-./mvnw -f travel-agent-amap-mcp-server/pom.xml spring-boot:run
-```
-
-```powershell
-.\mvnw.cmd -f travel-agent-amap-mcp-server\pom.xml spring-boot:run
 ```
 
 Default endpoints:
@@ -241,64 +203,24 @@ Default endpoints:
 - Backend: `http://localhost:8080`
 - Frontend: `http://localhost:5173`
 
-### 6. Stop the stack
+### 4. Stop the stack
 
-Stop the running backend, frontend, and optional MCP terminals with `Ctrl + C`.
+Stop the running backend and frontend terminals with `Ctrl + C`.
 
-## Development
+## Development Notes
 
-### Backend
-
-```bash
-SPRING_AI_OPENAI_API_KEY="<your-openai-key>" ./mvnw -f travel-agent-app/pom.xml spring-boot:run
-```
-
-```bash
-./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run
-```
-
-### Frontend
-
-```bash
-cd web
-npm ci
-npm run dev
-```
-
-### Frontend build
-
-```bash
-cd web
-npm run build
-```
-
-## Common Commands
-
-| Task | Command |
-| --- | --- |
-| Backend tests | `./mvnw -B test` |
-| Backend smoke integration | `./mvnw -pl travel-agent-app -am -Dtest=TravelAgentSmokeIntegrationTest test` |
-| Backend start (online) | `./mvnw -f travel-agent-app/pom.xml spring-boot:run` |
-| Backend start (local demo) | `./mvnw -f travel-agent-app/pom.xml "-Dspring-boot.run.profiles=local-demo" spring-boot:run` |
-| Offline feedback evaluation | `python scripts/analyze_feedback_loop.py` |
-| Quality scenario replay | `python scripts/run_quality_scenarios.py --base-url http://localhost:8080` |
-| Backend package | `./mvnw -pl travel-agent-app -am -DskipTests package` |
-| Frontend tests | `cd web && npm run test` |
-| Frontend build | `cd web && npm run build` |
-| Optional MCP server | `./mvnw -f travel-agent-amap-mcp-server/pom.xml spring-boot:run` |
+- Use the root README for the minimum startup path only.
+- Advanced startup variants, local-demo mode, MCP sidecar setup, and debugging or evaluation commands live in [`docs/development-guide.md`](./docs/development-guide.md) and [`docs/operations.md`](./docs/operations.md).
+- Architecture, contract, and product walkthrough docs are indexed under [`docs/README.md`](./docs/README.md).
 
 ## Quality and Evaluation
 
 - CI covers backend tests plus frontend tests and production build.
 - The backend test suite includes an in-process smoke integration:
   `TravelAgentSmokeIntegrationTest` boots the app, checks `/actuator/health`, and verifies that `/api/conversations/chat` can return `agentType=TRAVEL_PLANNER` with a structured `travelPlan`.
-- The repository also includes a verified `local-demo` startup profile. It can boot the backend without OpenAI or MCP and is suitable for smoke checks and local script replay, but it does not represent production planner quality.
 - The normalized result contract is covered on both sides:
   backend tests assert the chat response shape, and frontend tests cover shared result-state rendering for chat, plan, and timeline panels.
-- Offline feedback analysis is available through `python scripts/analyze_feedback_loop.py`.
-  It reads `data/travel-agent.db` by default and writes JSON plus Markdown reports under `data/exports/`.
-- Quality scenario replay is available through `python scripts/run_quality_scenarios.py --base-url http://localhost:8080`.
-  The `local-demo` profile is sufficient to validate the replay pipeline itself; use an online profile with real model credentials when you need representative scenario outcomes.
+- Detailed testing, replay, and local verification workflows are documented in [`docs/development-guide.md`](./docs/development-guide.md) and [`docs/operations.md`](./docs/operations.md).
 
 ## Project Structure
 
