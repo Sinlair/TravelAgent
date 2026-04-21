@@ -14,13 +14,17 @@
         "budget": "2500 CNY",
         "preferences": ["tea houses", "West Lake", "relaxed pace"]
       }
+    },
+    "expect": {
+      "outcome": "structured_plan",
+      "agentType": "TRAVEL_PLANNER"
     }
   },
   {
     "id": "beijing-family-trip",
     "title": "Beijing family trip",
     "request": {
-      "message": "Plan a family-friendly 3 day Beijing trip with light walking and easy metro access.",
+      "message": "Plan a family-friendly 3 day Beijing trip with Forbidden City, Temple of Heaven, and Summer Palace, keeping walking light and metro access easy.",
       "brief": {
         "origin": "Guangzhou",
         "destination": "Beijing",
@@ -29,8 +33,12 @@
         "days": 3,
         "travelers": "family with parents",
         "budget": "4500 CNY",
-        "preferences": ["family friendly", "light walking", "metro access"]
+        "preferences": ["Forbidden City", "Temple of Heaven", "Summer Palace", "family friendly", "light walking", "metro access"]
       }
+    },
+    "expect": {
+      "outcome": "structured_plan",
+      "agentType": "TRAVEL_PLANNER"
     }
   },
   {
@@ -48,6 +56,10 @@
         "budget": "1200 CNY",
         "preferences": ["local food", "public transit", "budget travel"]
       }
+    },
+    "expect": {
+      "outcome": "structured_plan",
+      "agentType": "TRAVEL_PLANNER"
     }
   },
   {
@@ -76,6 +88,10 @@
         "budget": "2200 CNY",
         "preferences": ["West Lake", "night walk", "local food"]
       }
+    },
+    "expect": {
+      "outcome": "structured_plan",
+      "agentType": "TRAVEL_PLANNER"
     }
   }
 ]

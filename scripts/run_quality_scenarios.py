@@ -5,6 +5,7 @@ import pathlib
 import sys
 import urllib.error
 import urllib.request
+from collections import Counter
 from datetime import datetime, timezone
 
 
@@ -58,11 +59,51 @@ def run_scenario(base_url: str, scenario: dict) -> dict:
     }
 
 
+def summarize_results(results: list[dict]) -> dict:
+    outcome_counts = Counter(item["outcome"] for item in results)
+    return {
+        "totalScenarios": len(results),
+        "structuredPlanCount": outcome_counts.get("structured_plan", 0),
+        "highRiskCount": outcome_counts.get("high_risk", 0),
+        "fallbackCount": outcome_counts.get("fallback", 0),
+    }
+
+
+def evaluate_expectations(results: list[dict], scenarios: list[dict]) -> list[dict]:
+    failures = []
+    for scenario, result in zip(scenarios, results):
+        expected = scenario.get("expect") or {}
+        mismatches = []
+        expected_outcome = expected.get("outcome")
+        expected_agent_type = expected.get("agentType")
+        if expected_outcome and result["outcome"] != expected_outcome:
+            mismatches.append(f"expected outcome {expected_outcome}, got {result['outcome']}")
+        if expected_agent_type and result.get("agentType") != expected_agent_type:
+            mismatches.append(f"expected agentType {expected_agent_type}, got {result.get('agentType') or '-'}")
+        if mismatches:
+            failures.append(
+                {
+                    "id": scenario["id"],
+                    "title": scenario["title"],
+                    "mismatches": mismatches,
+                }
+            )
+    return failures
+
+
 def write_markdown(output_path: pathlib.Path, generated_at: str, results: list[dict]):
+    summary = summarize_results(results)
     lines = [
         "# Quality Scenario Report",
         "",
         f"Generated: {generated_at}",
+        "",
+        "## Summary",
+        "",
+        f"- Total scenarios: {summary['totalScenarios']}",
+        f"- Structured plans: {summary['structuredPlanCount']}",
+        f"- High-risk plans: {summary['highRiskCount']}",
+        f"- Fallbacks: {summary['fallbackCount']}",
         "",
         "| Scenario | Outcome | Agent | Issues | Plan Version |",
         "| --- | --- | --- | --- | --- |",
@@ -85,7 +126,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default=str(pathlib.Path("quality-reports")),
+        default=str(pathlib.Path("data") / "exports" / "quality-reports"),
         help="Directory for JSON and Markdown reports",
     )
     args = parser.parse_args()
@@ -105,11 +146,38 @@ def main() -> int:
         return 1
 
     generated_at = datetime.now(timezone.utc).isoformat()
+    summary = summarize_results(results)
+    failures = evaluate_expectations(results, scenarios)
     json_path = output_dir / "quality-scenarios.latest.json"
     md_path = output_dir / "quality-scenarios.latest.md"
-    json_path.write_text(json.dumps({"generatedAt": generated_at, "results": results}, indent=2), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(
+            {
+                "generatedAt": generated_at,
+                "summary": summary,
+                "failures": failures,
+                "results": results,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     write_markdown(md_path, generated_at, results)
 
+    if failures:
+        print("Scenario expectations failed:", file=sys.stderr)
+        for failure in failures:
+            print(f"- {failure['id']}: {'; '.join(failure['mismatches'])}", file=sys.stderr)
+        print(f"Wrote {json_path}")
+        print(f"Wrote {md_path}")
+        return 1
+
+    print(
+        "Quality replay passed: "
+        f"{summary['structuredPlanCount']} structured, "
+        f"{summary['highRiskCount']} high-risk, "
+        f"{summary['fallbackCount']} fallback."
+    )
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
     return 0
