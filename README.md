@@ -163,6 +163,9 @@ See [`docs/herness-contract.md`](./docs/herness-contract.md) for the field-level
 
 ## Quick Start
 
+The default local-development path below assumes macOS Terminal with `zsh` or `bash`.
+For the fuller Mac-first walkthrough, see [`docs/development-guide.md`](./docs/development-guide.md).
+
 ### Prerequisites
 
 - Java 21
@@ -205,12 +208,13 @@ Default endpoints:
 
 ### 4. Stop the stack
 
-Stop the running backend and frontend terminals with `Ctrl + C`.
+Stop the running backend and frontend Terminal tabs with `Control-C`.
 
 ## Development Notes
 
 - Use the root README for the minimum startup path only.
-- Advanced startup variants, local-demo mode, MCP sidecar setup, and debugging or evaluation commands live in [`docs/development-guide.md`](./docs/development-guide.md) and [`docs/operations.md`](./docs/operations.md).
+- The Mac-first local setup, `JAVA_HOME` notes, local-demo mode, and replay commands live in [`docs/development-guide.md`](./docs/development-guide.md) and [`docs/operations.md`](./docs/operations.md).
+- Advanced startup variants, MCP sidecar setup, and broader repository notes also live in [`docs/development-guide.md`](./docs/development-guide.md).
 - Architecture, contract, and product walkthrough docs are indexed under [`docs/README.md`](./docs/README.md).
 
 ## Quality and Evaluation

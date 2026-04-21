@@ -26,10 +26,12 @@ The current SQLite persistence keeps these values inside `conversation_feedback.
 
 ## Verification Commands
 
+These commands assume macOS Terminal with `zsh` or `bash`.
+
 ```bash
-mvnw.cmd -B test
-cd web && npm.cmd run build
-cd web && npm.cmd run test
+./mvnw -B test
+cd web && npm run build
+cd web && npm run test
 ```
 
 ## Notes

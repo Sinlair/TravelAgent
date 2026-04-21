@@ -1,4 +1,4 @@
-# TravelAgent 部署指南
+﻿# TravelAgent 部署指南
 
 ## 📖 目录
 
@@ -54,8 +54,7 @@ cp .env.travel-agent.example .env.travel-agent
 # 编辑 .env.travel-agent，填写必要的 API Key
 
 # 3. 编译项目
-./mvnw clean install  # Linux/Mac
-mvnw.cmd clean install  # Windows
+./mvnw clean install  # macOS / Linux
 
 # 4. 启动后端
 ./mvnw spring-boot:run -pl travel-agent-app
@@ -66,7 +65,7 @@ npm install
 npm run dev
 
 # 6. 访问应用
-# 前端: http://localhost:3000
+# 前端: http://localhost:5173
 # 后端: http://localhost:8080
 ```
 
@@ -80,27 +79,27 @@ npm run dev
 
 ```bash
 # 启动 Milvus 及相关依赖 (etcd, MinIO)
-docker-compose -f docker-compose.milvus.yml up -d
+docker compose -f docker-compose.milvus.yml up -d
 
 # 检查服务状态
-docker-compose -f docker-compose.milvus.yml ps
+docker compose -f docker-compose.milvus.yml ps
 
 # 查看日志
-docker-compose -f docker-compose.milvus.yml logs -f
+docker compose -f docker-compose.milvus.yml logs -f
 ```
 
 #### 2. 启动应用
 
 ```bash
 # 构建并启动应用
-docker-compose -f docker-compose.app.yml up -d --build
+docker compose -f docker-compose.app.yml up -d --build
 
 # 检查服务状态
-docker-compose -f docker-compose.app.yml ps
+docker compose -f docker-compose.app.yml ps
 
 # 查看日志
-docker-compose -f docker-compose.app.yml logs -f travel-agent-app
-docker-compose -f docker-compose.app.yml logs -f travel-agent-web
+docker compose -f docker-compose.app.yml logs -f travel-agent-app
+docker compose -f docker-compose.app.yml logs -f travel-agent-web
 ```
 
 #### 3. 访问服务
@@ -120,12 +119,12 @@ http://localhost:8080/swagger-ui.html
 
 ```bash
 # 停止所有服务
-docker-compose -f docker-compose.milvus.yml down
-docker-compose -f docker-compose.app.yml down
+docker compose -f docker-compose.milvus.yml down
+docker compose -f docker-compose.app.yml down
 
 # 停止并删除数据卷 (⚠️ 会删除所有数据)
-docker-compose -f docker-compose.milvus.yml down -v
-docker-compose -f docker-compose.app.yml down -v
+docker compose -f docker-compose.milvus.yml down -v
+docker compose -f docker-compose.app.yml down -v
 ```
 
 ### 方式 2: 手动 Docker 构建
@@ -359,15 +358,15 @@ echo "🔨 编译项目..."
 
 # 3. 构建 Docker 镜像
 echo "🐳 构建镜像..."
-docker-compose -f docker-compose.app.yml build
+docker compose -f docker-compose.app.yml build
 
 # 4. 停止旧服务
 echo "⏹️  停止旧服务..."
-docker-compose -f docker-compose.app.yml down
+docker compose -f docker-compose.app.yml down
 
 # 5. 启动新服务
 echo "▶️  启动新服务..."
-docker-compose -f docker-compose.app.yml up -d
+docker compose -f docker-compose.app.yml up -d
 
 # 6. 健康检查
 echo "🏥 健康检查..."
@@ -376,7 +375,7 @@ if curl -f http://localhost:8080/actuator/health; then
     echo "✅ 部署成功！"
 else
     echo "❌ 健康检查失败，回滚..."
-    docker-compose -f docker-compose.app.yml down
+    docker compose -f docker-compose.app.yml down
     echo "🔄 回滚完成，请检查日志"
     exit 1
 fi
@@ -596,13 +595,13 @@ volumes:
 
 ```bash
 # 查看实时日志
-docker-compose -f docker-compose.app.yml logs -f travel-agent-app
+docker compose -f docker-compose.app.yml logs -f travel-agent-app
 
 # 查看最近 100 行
-docker-compose -f docker-compose.app.yml logs --tail=100 travel-agent-app
+docker compose -f docker-compose.app.yml logs --tail=100 travel-agent-app
 
 # 导出日志
-docker-compose -f docker-compose.app.yml logs travel-agent-app > app.log
+docker compose -f docker-compose.app.yml logs travel-agent-app > app.log
 ```
 
 ### 4. 备份策略
@@ -617,7 +616,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 echo "📦 开始备份..."
 
 # 1. 备份数据库
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools backup \
   --collection travel_knowledge \
   --output /backup/milvus_${TIMESTAMP}
@@ -644,13 +643,13 @@ echo "✅ 备份完成！"
 
 ```bash
 # 1. 检查日志
-docker-compose -f docker-compose.app.yml logs travel-agent-app
+docker compose -f docker-compose.app.yml logs travel-agent-app
 
 # 2. 检查环境变量
-docker-compose -f docker-compose.app.yml exec travel-agent-app env
+docker compose -f docker-compose.app.yml exec travel-agent-app env
 
 # 3. 检查数据库连接
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools status
 
 # 4. 检查端口占用
@@ -665,13 +664,13 @@ lsof -i :8080
 curl http://localhost:9091/health
 
 # 2. 检查集合是否存在
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools list-collections
 
 # 3. 重建集合
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools drop-collection --name travel_knowledge
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools create-collection --name travel_knowledge
 
 # 4. 重新导入数据
@@ -711,7 +710,7 @@ ENV JAVA_OPTS="-Xms2g -Xmx4g -XX:+UseG1GC"
 curl http://localhost:8080/actuator/metrics/http.server.requests
 
 # 3. 检查数据库性能
-docker-compose -f docker-compose.milvus.yml exec standalone \
+docker compose -f docker-compose.milvus.yml exec standalone \
   milvus-tools query-performance
 
 # 4. 添加缓存
@@ -760,3 +759,4 @@ spring:
 **文档版本**: v1.0.0  
 **最后更新**: 2026-04-11  
 **维护者**: TravelAgent Team
+

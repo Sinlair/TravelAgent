@@ -1,4 +1,4 @@
-# TravelAgent 项目总览
+﻿# TravelAgent 项目总览
 
 > 🤖 基于 AI 的智能旅行规划助手
 
@@ -218,11 +218,11 @@ cp .env.travel-agent.example .env.travel-agent
 cd web && npm install && npm run dev  # 前端
 
 # 方式 2: Docker (推荐)
-docker-compose -f docker-compose.milvus.yml up -d
-docker-compose -f docker-compose.app.yml up -d
+docker compose -f docker-compose.milvus.yml up -d
+docker compose -f docker-compose.app.yml up -d
 
 # 4. 访问应用
-# 前端: http://localhost:3000 (本地) 或 http://localhost:80 (Docker)
+# 前端: http://localhost:5173 (本地) 或 http://localhost:80 (Docker)
 # 后端: http://localhost:8080
 ```
 
@@ -482,3 +482,4 @@ git push origin feature/amazing-feature
 [⬆ 返回顶部](#travelagent-项目总览)
 
 </div>
+

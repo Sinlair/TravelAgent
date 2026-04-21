@@ -1,5 +1,7 @@
 # Release Checklist
 
+All commands below assume macOS Terminal with `zsh` or `bash`.
+
 ## Environment
 
 - Create `.env.travel-agent` from [`.env.travel-agent.example`](../.env.travel-agent.example).

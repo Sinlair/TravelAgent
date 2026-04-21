@@ -192,7 +192,8 @@ npm run dev
 ## 开发说明
 
 - 根 README 只保留最基本的启动路径。
-- 更完整的启动变体、本地 demo、MCP sidecar、调试命令和验收命令，请查看 [`docs/development-guide.md`](./docs/development-guide.md) 和 [`docs/operations.md`](./docs/operations.md)。
+- 站在 macOS Terminal 角度的本地开发路径、`JAVA_HOME` 配置、local-demo 和评测回放命令，请先看 [`docs/development-guide.md`](./docs/development-guide.md) 和 [`docs/operations.md`](./docs/operations.md)。
+- 更完整的启动变体、MCP sidecar 和补充调试说明，也请查看 [`docs/development-guide.md`](./docs/development-guide.md)。
 - 架构、契约、项目介绍和专题文档，请从 [`docs/README.md`](./docs/README.md) 开始。
 
 ## 质量与评测

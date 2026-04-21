@@ -1,4 +1,4 @@
-# TravelAgent 功能改进 TODO
+﻿# TravelAgent 功能改进 TODO
 
 > 本文档从**功能和用户体验**角度记录改进计划，重点关注 RAG 知识库、旅行规划质量和用户交互体验。
 
@@ -833,7 +833,7 @@ docker run -d -p 9200:9200 -p 9300:9300 \
   elasticsearch:8.11.0
 
 # 2. 确认 Milvus 运行中
-docker-compose -f docker-compose.milvus.yml up -d
+docker compose -f docker-compose.milvus.yml up -d
 ```
 
 **Step 2: 准备测试数据** (1天)
@@ -873,3 +873,4 @@ docker-compose -f docker-compose.milvus.yml up -d
 - [系统架构文档](./docs/system-architecture.md)
 - [多模态路线图](./docs/multimodal-roadmap.md)
 - [AI Agent 指南](./agent.md)
+
