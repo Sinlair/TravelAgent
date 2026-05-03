@@ -17,7 +17,7 @@ public class InfrastructureConfig {
 
     @Bean
     @ConditionalOnMissingBean(VectorStore.class)
-    VectorStore vectorStore(EmbeddingModel embeddingModel) {
+    VectorStore vectorStore(@Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
         return SimpleVectorStore.builder(embeddingModel).build();
     }
 

@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Send, Image, MessageSquare, Info, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-vue-next'
+import {
+  Send,
+  Image,
+  MessageSquare,
+  Info,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  MapPin,
+  CalendarDays,
+  WalletCards,
+  Heart
+} from 'lucide-vue-next'
 import type {
   ChatImageAttachmentRequest,
   ChatRequest,
@@ -178,9 +191,16 @@ const copy = computed(() => (props.preferChinese
       composerTitle: '\u7ee7\u7eed\u8865\u5145\u6216\u6539\u65b9\u6848',
       composerBody: '\u76f4\u63a5\u7528\u53e5\u5b50\u63cf\u8ff0\u53d8\u66f4\uff0c\u4f8b\u5982\u8c03\u6574\u8282\u594f\u3001\u63a7\u5236\u9884\u7b97\u3001\u66f4\u6362\u4f4f\u5bbf\u533a\u57df\u3002',
       slotMissing: '\u5f85\u8865\u5145',
-      emptyTitle: '\u5148\u628a\u76ee\u7684\u5730\u3001\u5929\u6570\u548c\u9884\u7b97\u8bf4\u6e05\u695a',
+      emptyTitle: '\u5148\u8bf4\u4e00\u53e5\u65c5\u884c\u9700\u6c42',
       emptyBody: '\u4f60\u53ef\u4ee5\u76f4\u63a5\u63cf\u8ff0\u65c5\u884c\u9700\u6c42\uff0c\u4e5f\u53ef\u4ee5\u7c98\u8d34\u6216\u62d6\u62fd\u622a\u56fe\uff0c\u8ba9\u7cfb\u7edf\u4ece\u56fe\u7247\u91cc\u8865\u5145\u65c5\u884c\u4fe1\u606f\u3002',
-      quickStart: '\u53ef\u4ee5\u76f4\u63a5\u4ece\u8fd9\u4e9b\u793a\u4f8b\u5f00\u59cb',
+      quickStart: '\u4e5f\u53ef\u4ee5\u76f4\u63a5\u5957\u7528\u4e00\u4e2a\u573a\u666f',
+      composerLead: '\u628a\u60f3\u53bb\u7684\u5730\u65b9\u8bf4\u51fa\u6765',
+      guideLabels: {
+        destination: '\u76ee\u7684\u5730',
+        days: '\u5929\u6570',
+        budget: '\u9884\u7b97',
+        preference: '\u504f\u597d'
+      },
       user: '\u7528\u6237',
       assistant: '\u52a9\u624b',
       thinking: '\u6b63\u5728\u601d\u8003...',
@@ -205,10 +225,10 @@ const copy = computed(() => (props.preferChinese
       useFacts: '\u4f7f\u7528\u8fd9\u4e9b\u4fe1\u606f',
       ignoreFacts: '\u5ffd\u7565',
       remove: '\u79fb\u9664',
-      uploadHint: '\u652f\u6301\u7c98\u8d34\u622a\u56fe\u3001\u62d6\u62fd\u56fe\u7247\uff0c\u6216',
-      uploadAction: '\u70b9\u51fb\u4e0a\u4f20',
-      placeholder: '\u8f93\u5165\u76ee\u7684\u5730\u3001\u5929\u6570\u3001\u9884\u7b97\u3001\u504f\u597d\uff0c\u6216\u8005\u7ee7\u7eed\u8865\u5145\u8fd9\u6b21\u884c\u7a0b\u60f3\u6cd5...',
-      submit: props.sending ? '\u751f\u6210\u4e2d...' : '\u751f\u6210\u65b9\u6848',
+      uploadHint: '\u622a\u56fe\u3001\u9152\u5e97\u5355\u3001\u8def\u7ebf\u56fe',
+      uploadAction: '\u4e0a\u4f20',
+      placeholder: '\u6bd4\u5982\uff1a\u676d\u5dde 2 \u5929\uff0c\u9884\u7b97 2500\uff0c\u60f3\u8f7b\u677e\u5403\u901b',
+      submit: props.sending ? '\u751f\u6210\u4e2d' : '\u751f\u6210',
       submitHint: props.sending ? '\u8bf7\u7a0d\u5019' : 'Ctrl + Enter',
       limitError: `\u6bcf\u8f6e\u6700\u591a\u4e0a\u4f20 ${MAX_ATTACHMENTS} \u5f20\u56fe\u7247\u3002`,
       fileError: '\u4ec5\u652f\u6301 PNG\u3001JPEG\u3001WEBP\u3001GIF\uff0c\u4e14\u5355\u5f20\u56fe\u7247\u4e0d\u80fd\u8d85\u8fc7 5 MB\u3002'
@@ -234,7 +254,14 @@ const copy = computed(() => (props.preferChinese
       slotMissing: 'Pending',
       emptyTitle: 'Start with the trip basics.',
       emptyBody: 'Describe the trip directly, or paste and drag travel screenshots so the system can pull useful facts from them.',
-      quickStart: 'Start from one of these prompts',
+      quickStart: 'Or start from one scene',
+      composerLead: 'Tell me where you want to go',
+      guideLabels: {
+        destination: 'Destination',
+        days: 'Days',
+        budget: 'Budget',
+        preference: 'Style'
+      },
       user: 'User',
       assistant: 'Assistant',
       thinking: 'Thinking...',
@@ -259,10 +286,10 @@ const copy = computed(() => (props.preferChinese
       useFacts: 'Use These Facts',
       ignoreFacts: 'Ignore',
       remove: 'Remove',
-      uploadHint: 'Paste screenshots, drag images here, or',
-      uploadAction: 'click to upload',
-      placeholder: 'Type the destination, trip length, budget, preferences, or continue refining the trip...',
-      submit: props.sending ? 'Planning...' : 'Plan Trip',
+      uploadHint: 'Screenshots, hotel bookings, route maps',
+      uploadAction: 'Upload',
+      placeholder: 'For example: Hangzhou, 2 days, 2500 budget, relaxed food trip',
+      submit: props.sending ? 'Planning' : 'Generate',
       submitHint: props.sending ? 'Please wait' : 'Ctrl + Enter',
       limitError: `You can attach up to ${MAX_ATTACHMENTS} images per turn.`,
       fileError: 'Only PNG, JPEG, WEBP, and GIF images up to 5 MB are supported.'
@@ -270,14 +297,38 @@ const copy = computed(() => (props.preferChinese
 
 const starterPrompts = computed(() => (props.preferChinese
   ? [
-      '\u676d\u5dde\u5468\u672b 2 \u5929\uff0c\u9884\u7b97 2500\uff0c\u60f3\u770b\u666f\u5403\u996d\uff0c\u8282\u594f\u8f7b\u677e',
-      '\u4e94\u4e00\u53bb\u4e0a\u6d77 3 \u5929\uff0c\u5e26\u7238\u5988\u51fa\u884c\uff0c\u4f4f\u5730\u94c1\u65c1\uff0c\u5c11\u8d70\u8def',
-      '\u6210\u90fd 4 \u5929\uff0c\u60f3\u5403\u672c\u5730\u5c0f\u9986\u5b50\uff0c\u9884\u7b97 3500\uff0c\u987a\u4fbf\u62cd\u7167'
+      {
+        title: '\u5468\u672b\u8f7b\u677e\u73a9',
+        body: '\u676d\u5dde 2 \u5929\uff0c\u9884\u7b97 2500\uff0c\u8f7b\u677e\u7f8e\u98df',
+        prompt: '\u676d\u5dde 2 \u5929\uff0c\u9884\u7b97 2500\uff0c\u8f7b\u677e\u7f8e\u98df'
+      },
+      {
+        title: '\u5e26\u7236\u6bcd\u51fa\u884c',
+        body: '\u4e0a\u6d77 3 \u5929\uff0c\u4f4f\u5730\u94c1\u65c1\uff0c\u5c11\u8d70\u8def',
+        prompt: '\u4e0a\u6d77 3 \u5929\uff0c\u5e26\u7236\u6bcd\uff0c\u4f4f\u5730\u94c1\u65c1\uff0c\u5c11\u8d70\u8def'
+      },
+      {
+        title: '\u7f8e\u98df\u62cd\u7167',
+        body: '\u6210\u90fd 4 \u5929\uff0c\u672c\u5730\u5c0f\u9986\uff0c\u987a\u4fbf\u62cd\u7167',
+        prompt: '\u6210\u90fd 4 \u5929\uff0c\u672c\u5730\u5c0f\u9986\uff0c\u987a\u4fbf\u62cd\u7167'
+      }
     ]
   : [
-      'Hangzhou for 2 days, budget 2500, scenic and food-focused, relaxed pace',
-      'Shanghai for 3 days with parents, stay near the metro, keep walking light',
-      'Chengdu for 4 days, local food, photography, budget 3500'
+      {
+        title: 'Relaxed Weekend',
+        body: 'Hangzhou, 2 days, 2500 budget, relaxed food trip',
+        prompt: 'Hangzhou, 2 days, 2500 budget, relaxed food trip'
+      },
+      {
+        title: 'With Parents',
+        body: 'Shanghai, 3 days, near metro, light walking',
+        prompt: 'Shanghai, 3 days, with parents, near metro, light walking'
+      },
+      {
+        title: 'Food And Photos',
+        body: 'Chengdu, 4 days, local food and photos',
+        prompt: 'Chengdu, 4 days, local food and photos'
+      }
     ]))
 
 const briefSummary = computed(() => {
@@ -346,7 +397,7 @@ const briefSummary = computed(() => {
 
 const followUpPrompts = computed(() => {
   if (!props.detail) {
-    return starterPrompts.value
+    return starterPrompts.value.map(item => item.prompt)
   }
 
   const prompts: string[] = []
@@ -447,6 +498,19 @@ const recognizedImageFacts = computed(() => {
 const missingImageFacts = computed(() => {
   const missingFields = pendingImageContext.value?.facts?.missingFields ?? []
   return missingFields.map(field => factLabels.value[field] ?? field)
+})
+
+const displayErrorMessage = computed(() => {
+  const message = props.errorMessage.trim()
+  if (!message) {
+    return ''
+  }
+  if (/^HTTP\s+\d+$/i.test(message)) {
+    return props.preferChinese
+      ? '\u670d\u52a1\u6682\u65f6\u4e0d\u53ef\u7528\uff0c\u8bf7\u7a0d\u540e\u518d\u8bd5\u3002'
+      : 'The service is temporarily unavailable. Please try again.'
+  }
+  return message
 })
 
 const resultStatusCards = computed(() => {
@@ -834,7 +898,7 @@ function markdownToHtml(markdown: string) {
 </script>
 
 <template>
-  <section class="panel chat-panel">
+  <section class="panel chat-panel" :class="{ 'chat-panel--empty': !detail, 'chat-panel--active': detail }">
     <div class="panel__header">
       <div class="panel__header-info">
         <div class="panel__icon-badge">
@@ -885,7 +949,7 @@ function markdownToHtml(markdown: string) {
         <p>{{ briefSummary.missing.join(' / ') }}</p>
       </div>
 
-      <div class="brief-card__grid">
+      <div class="brief-card__grid brief-card__editor">
         <label class="brief-card__slot">
           <span>{{ copy.memoryLabels.origin }}</span>
           <input v-model="briefOrigin" class="message__feedback-note" type="text" />
@@ -920,7 +984,7 @@ function markdownToHtml(markdown: string) {
         </label>
       </div>
 
-      <div class="message__actions">
+      <div class="message__actions brief-card__apply">
         <button
           type="button"
           class="message__feedback-choice message__feedback-choice--active"
@@ -967,15 +1031,17 @@ function markdownToHtml(markdown: string) {
       <div v-if="!detail" class="chat-empty">
         <h3>{{ copy.emptyTitle }}</h3>
         <p>{{ copy.emptyBody }}</p>
+        <div class="chat-empty__header">{{ copy.quickStart }}</div>
         <div class="chat-empty__prompts">
           <button
             v-for="prompt in starterPrompts"
-            :key="prompt"
+            :key="prompt.prompt"
             type="button"
             class="chat-empty__prompt"
-            @click="applyPrompt(prompt)"
+            @click="applyPrompt(prompt.prompt)"
           >
-            {{ prompt }}
+            <strong>{{ prompt.title }}</strong>
+            <span>{{ prompt.body }}</span>
           </button>
         </div>
         <span class="chat-empty__hint">{{ copy.quickStart }}</span>
@@ -1100,9 +1166,9 @@ function markdownToHtml(markdown: string) {
     </div>
 
     <div class="composer">
-      <div v-if="errorMessage" class="composer__error">
+      <div v-if="displayErrorMessage" class="composer__error">
         <AlertCircle :size="14" />
-        <span>{{ errorMessage }}</span>
+        <span>{{ displayErrorMessage }}</span>
       </div>
       <div v-if="attachmentError" class="composer__error">
         <AlertCircle :size="14" />
@@ -1190,10 +1256,33 @@ function markdownToHtml(markdown: string) {
         @dragleave="onDragLeave"
         @drop.prevent="onDrop"
       >
+        <div v-if="!detail" class="composer__intro">
+          <strong>{{ copy.composerLead }}</strong>
+        </div>
+        <div v-if="!detail" class="composer__guide">
+          <span>
+            <MapPin :size="14" />
+            {{ copy.guideLabels.destination }}
+          </span>
+          <span>
+            <CalendarDays :size="14" />
+            {{ copy.guideLabels.days }}
+          </span>
+          <span>
+            <WalletCards :size="14" />
+            {{ copy.guideLabels.budget }}
+          </span>
+          <span>
+            <Heart :size="14" />
+            {{ copy.guideLabels.preference }}
+          </span>
+        </div>
         <p class="composer__hint">
-          <Image :size="14" />
-          {{ copy.uploadHint }}
-          <button type="button" class="composer__upload-link" @click="openFilePicker">{{ copy.uploadAction }}</button>
+          <span>{{ copy.uploadHint }}</span>
+          <button type="button" class="composer__upload-link" :title="copy.uploadAction" @click="openFilePicker">
+            <Image :size="14" />
+            {{ copy.uploadAction }}
+          </button>
         </p>
         <textarea
           v-model="input"
@@ -1202,7 +1291,13 @@ function markdownToHtml(markdown: string) {
           @keydown.ctrl.enter.prevent="submit"
           @paste="onPaste"
         />
-        <button class="composer__submit" :disabled="sending" @click="submit">
+        <button
+          class="composer__submit"
+          :disabled="sending"
+          :title="copy.submit"
+          :aria-label="copy.submit"
+          @click="submit"
+        >
           <Send :size="18" v-if="!sending" />
           <div class="dot-loader" v-else></div>
           <div class="composer__submit-text">

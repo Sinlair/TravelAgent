@@ -21,25 +21,25 @@ const emit = defineEmits<{
 
 const copy = computed(() => (props.preferChinese
   ? {
-      eyebrow: 'Travel Agent',
-      title: '\u884c\u7a0b\u4ed3\u5e93',
-      count: (value: number) => `${value} \u4e2a\u5df2\u4fdd\u5b58\u4f1a\u8bdd`,
-      create: '\u65b0\u5efa\u884c\u7a0b',
+      eyebrow: 'TravelAgent',
+      title: '\u6211\u7684\u884c\u7a0b',
+      count: (value: number) => value ? `${value} \u4efd\u5df2\u4fdd\u5b58` : '\u8fd8\u6ca1\u6709\u4fdd\u5b58\u884c\u7a0b',
+      create: '\u65b0\u5efa\u8ba1\u5212',
       recent: '\u6700\u8fd1\u66f4\u65b0',
-      loading: '\u6b63\u5728\u52a0\u8f7d\u4f1a\u8bdd...',
-      empty: '\u8fd8\u6ca1\u6709\u5386\u53f2\u4f1a\u8bdd\uff0c\u5148\u53d1\u4e00\u53e5\u65c5\u884c\u9700\u6c42\u3002',
-      fallback: '\u751f\u6210\u65b9\u6848\u540e\uff0c\u8fd9\u91cc\u4f1a\u663e\u793a\u4e00\u6bb5\u6458\u8981\u3002',
+      loading: '\u6b63\u5728\u52a0\u8f7d...',
+      empty: '\u4ece\u53f3\u4fa7\u8f93\u5165\u4e00\u53e5\u65c5\u884c\u9700\u6c42\uff0c\u8fd9\u91cc\u4f1a\u4fdd\u7559\u4f60\u7684\u884c\u7a0b\u3002',
+      fallback: '\u884c\u7a0b\u751f\u6210\u540e\u4f1a\u81ea\u52a8\u663e\u793a\u6458\u8981\u3002',
       remove: '\u5220\u9664'
     }
   : {
-      eyebrow: 'Travel Agent',
-      title: 'Trip Library',
-      count: (value: number) => `${value} saved sessions`,
+      eyebrow: 'TravelAgent',
+      title: 'My Trips',
+      count: (value: number) => value ? `${value} saved` : 'No saved trips yet',
       create: 'New Plan',
       recent: 'Recently Updated',
-      loading: 'Loading conversations...',
-      empty: 'No saved conversations yet. Start with a travel request.',
-      fallback: 'A short summary will appear here after the itinerary is generated.',
+      loading: 'Loading...',
+      empty: 'Start with one travel request on the right and your trips will stay here.',
+      fallback: 'A short summary appears after the itinerary is generated.',
       remove: 'Delete'
     }))
 

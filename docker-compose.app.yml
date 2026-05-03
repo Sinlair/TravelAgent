@@ -1,3 +1,5 @@
+name: travel-agent
+
 services:
   travel-agent-app:
     build:
@@ -30,8 +32,6 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
-    depends_on:
-      - travel-agent-amap-mcp-server
 
   travel-agent-amap-mcp-server:
     build:
@@ -55,7 +55,7 @@ services:
         VITE_AMAP_WEB_KEY: ${VITE_AMAP_WEB_KEY:-}
         VITE_AMAP_SECURITY_JS_CODE: ${VITE_AMAP_SECURITY_JS_CODE:-}
     ports:
-      - "8088:80"
+      - "8082:80"
     restart: unless-stopped
     depends_on:
       - travel-agent-app
